@@ -1,0 +1,8 @@
+&chk_setup
+	Ntab = 20,
+	Nmult = 10 /
+	
+&sf
+	kF0 = 2.5,
+	w = 0.7,
+	Tc0 = 1.0e10 /
