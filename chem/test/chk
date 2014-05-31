@@ -1,0 +1,17 @@
+#!/bin/bash
+
+function check_okay {
+        if [ $? -ne 0 ]
+        then
+                echo
+                echo "FAILED"
+                echo
+                exit 1
+        fi
+}
+
+./tester > test_output
+check_okay
+
+cmp --quiet test_output sample_output
+check_okay
