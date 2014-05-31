@@ -1,11 +1,11 @@
 include $(MESA_DIR)/utils/makefile_header
 
 LIB = libnucchem.a
-LIB_OBJS = nucchem_def.o nucchem_lib.o
+LIB_OBJS = nucchem_def.o nucchem_storage.o nucchem_io.o nucchem_lib.o
 DSTAR_LIB = ../../lib
 DSTAR_INC = ../../include
 
-VPATH = $(MOD_PUBLIC_DIR)
+VPATH = $(MOD_PUBLIC_DIR):$(MOD_PRIVATE_DIR)
 
 $(LIB): $(LIB_OBJS)
 	$(LIB_TOOL) $(LIB) $(LIB_OBJS)

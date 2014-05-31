@@ -1,7 +1,6 @@
 program test_nucchem
 	use nucchem_def
 	use nucchem_lib
-    use netJina_def, only: iso_name_length
 
 	integer :: j, ierr, ncharged
 	integer, dimension(2) :: indx, Z, A, N, charged_ids
@@ -10,7 +9,7 @@ program test_nucchem
 	real(dp) :: Xsum
 	type(composition_info_type) :: comp
 	
-	call nucchem_init('../../data',ierr)
+	call nucchem_init('../../data/nucchem',ierr)
 	if (failure('unable to initialize nucchem')) stop
 	
 	! check the composition average

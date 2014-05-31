@@ -6,20 +6,30 @@ module nucchem_lib
     character(len=*), parameter, private :: err_fmt = '(a,":",a,"> ",a)'
 
 contains    
-	subroutine nucchem_init(data_dir, ierr)
-        use netJina_def
-        use netJina_lib
-		character(len=*), intent(in) :: data_dir
+	subroutine nucchem_init(datadir, ierr)
+        use iso_fortran_env, only: error_unit
+        use nucchem_io
+        use nucchem_storage
+		character(len=*), intent(in) :: datadir
 		integer, intent(out) :: ierr
-        type(reaclib_data) :: reaclib
-        type(starlib_data) :: starlib
-        type(integer_dict), pointer :: rates_dict=>null(), starlib_dict=>null()
+        character(len=*),parameter :: nuclib_db = 'nuclib_db'
+        character(len=160) :: nuclib_filename
+        character(len=160) :: nuclib_cache
+        integer :: indx
 
+        nuclib_filename = trim(datadir)//'/'//nuclib_db
+        nuclib_cache = trim(datadir)//'/cache/'//nuclib_db//'.bin'
+        
         ierr = 0
-		call netJina_init(data_dir,nuclib,nuclide_dict,reaclib, &
-    &   starlib,rates_dict,starlib_dict,ierr)
+        write(error_unit,'(a)')  &
+        & 'loading nuclib from '//trim(nuclib_filename)
+        call do_load_nuclib(nuclib_filename,nuclib_cache,ierr)
+        write(error_unit,'(/,a,i0,a)')  &
+        & 'done. ',nuclib% Nnuclides, &
+        & ' nuclides retrieved. now writing nuclide dictionary...'
+        call do_parse_nuclides(ierr)
+        write(error_unit,'(/,a)') 'done.'
 
-		if (ierr /= 0) return
 		nucchem_is_initialized = .TRUE.
 	end subroutine nucchem_init
 
@@ -140,7 +150,7 @@ contains
 	! get index of nuclei given charge, neutron numbers
 	function get_nuclide_index_from_ZN(Z,N) result(indx)
 		use iso_fortran_env, only : error_unit
-        use netJina_def
+        use nucchem_def
         
         integer, intent(in) :: Z, N
 		character(len=*), parameter :: routine_name='get_nuclide_index'
@@ -152,7 +162,14 @@ contains
             indx = nuclide_not_found
             return
         end if
-        write(nuclide,'(a,i0)') trim(adjustl(element_name(Z))),N+Z
+        if (Z == 0 .and. N == 1) then
+            nuclide = 'n'
+        else if (Z == 1 .and. N == 0) then
+            nuclide = 'p'
+        else
+            write(nuclide,'(a,i0)') trim(adjustl(element_name(Z))),N+Z
+        end if
+        
         indx = get_nuclide_index(nuclide)
 	end function get_nuclide_index_from_ZN
     
