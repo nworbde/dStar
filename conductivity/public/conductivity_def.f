@@ -1,4 +1,6 @@
 module conductivity_def
+    use constants_def, only: dp
+    
 	! used for mask array to control which components are included
 	integer, parameter :: &
 			&		icond_ee	= 1,	 &
@@ -13,11 +15,11 @@ module conductivity_def
 	integer, parameter :: icond_sy06 = 1, icond_pcy = 2
 
 	type conductivity_components
-		real :: total
-		real :: ee
-		real :: ei
-		real :: eQ
-		real :: sf
+		real(dp) :: total
+		real(dp) :: ee
+		real(dp) :: ei
+		real(dp) :: eQ
+		real(dp) :: sf
 	end type conductivity_components
 
 end module conductivity_def

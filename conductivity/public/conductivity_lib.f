@@ -6,7 +6,7 @@ module conductivity_lib
 	subroutine get_thermal_conductivity(rho,T,chi,Gamma,eta,ionic,K,use_pcy,which_components)
 		use nucchem_def, only: composition_info_type
 		use eval_conductivity
-		real, intent(in) :: rho,T,Gamma,eta, chi
+		real(dp), intent(in) :: rho,T,Gamma,eta, chi
 		type(composition_info_type), intent(in) :: ionic
 		type(conductivity_components), intent(out) :: K
 		logical, intent(in), optional :: use_pcy, which_components(num_conductivity_channels)

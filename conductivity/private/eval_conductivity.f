@@ -68,13 +68,18 @@ function ee_PCY(ne,T) result(nu)
 	use constants_def
 	real(dp), intent(in) :: ne, T
 	real(dp) :: nu
-	real(dp), parameter :: yfac = sqrt(4.0*finestructure/pi)
-	real(dp), parameter :: mec2 = Melectron*clight**2
-	real(dp), parameter :: eefac = 1.5*finestructure**2*mec2/pi**3/hbar
-	real(dp), parameter :: befac = (finestructure/pi)**1.5
-	real(dp), parameter :: onesixth = 1.0/6.0
+	real(dp) :: yfac
+	real(dp) :: mec2
+	real(dp) :: eefac
+	real(dp) :: befac
+	real(dp) :: onesixth = 1.0/6.0
 	real(dp) :: plasma_theta, kF
 	real(dp) :: x, eF, beta, b2, be3, y, lJ, llJ, J0,J1,J2,J
+
+	yfac = sqrt(4.0*finestructure/pi)
+	mec2 = Melectron*clight**2
+	eefac = 1.5*finestructure**2*mec2/pi**3/hbar
+	befac = (finestructure/pi)**1.5
 	
 	kF = (3.0*pi**2*ne)**onethird
 	x = kF*hbar/Melectron/clight
@@ -101,12 +106,15 @@ function ee_SY06(ne,T) result(nu)
 	use constants_def
 	real(dp), intent(in) :: ne, T
 	real(dp) :: nu
-	real(dp), parameter :: nu_pre = 36.0*finestructure**2*hbar**2*clight/pi/boltzmann/Melectron
-	real(dp), parameter :: Tp_pre = hbar*sqrt(4.0*pi*finestructure*hbar*clight/Melectron)/boltzmann
+	real(dp) :: nu_pre
+	real(dp) :: Tp_pre
 	real(dp) :: Il, It, Ilt, I
 	real(dp) :: At, Ct, Ct1, Ct2, Alt, Blt, Clt, Clt1, Clt2
 	real(dp) :: u2, u3, u4, tu
 	real(dp) :: kF, Tp, theta, xF, eF, u, mstar
+
+    nu_pre = 36.0*finestructure**2*hbar**2*clight/pi/boltzmann/Melectron
+    Tp_pre = hbar*sqrt(4.0*pi*finestructure*hbar*clight/Melectron)/boltzmann
 
 	kF = (threepisquare*ne)**onethird
 	xF = hbar*kF/Melectron/clight
@@ -150,13 +158,17 @@ function eion(kF,Gamma_e,eta,Ye,Z,Z2,Z53,A) result(nu)
 	! 	end function eone
 	! end interface
 	real(dp), parameter :: um1 = 2.8, um2 = 12.973, onesixth = 1.0/6.0, fourthird = 4.0*onethird
-	real(dp), parameter :: electroncompton = hbar/Melectron/clight
-	real(dp), parameter :: aB = electroncompton/finestructure
-	real(dp), parameter :: eifac = fourthird*clight*finestructure**2/electroncompton/pi
+	real(dp) :: electroncompton
+	real(dp) :: aB
+	real(dp) :: eifac
 	real(dp) :: kF2,x,eF,Gamma,v,v2,kTF2,eta02,aei,qD2,beta,qi2,qs2
 	real(dp) :: Gs,Gk0,Gk1,GkZ,Gk,a0,D1,D,s,w1,w,sw,fac
 	real(dp) :: L1,L2,Lei
 	
+    electroncompton = hbar/Melectron/clight
+    aB = electroncompton/finestructure
+    eifac = fourthird*clight*finestructure**2/electroncompton/pi
+    
 	kF2 = kF**2
 	x = electroncompton*kF
 	eF = sqrt(1.0+x**2)
@@ -213,9 +225,13 @@ function eQ(kF,T,Ye,Z,Z2,A,Q) result (nu)
 	real(dp), intent(in) :: kF,T,Ye,Z,Z2,A,Q
 	real(dp) :: nu
 	real(dp) :: dZ2,kF2,x,gamma,v2,v,qs2,s,L1,L
-	real(dp), parameter :: electron_compton = hbar/Melectron/clight, mec2 = Melectron*clight**2
-	real(dp), parameter :: fac = 4.0*onethird*clight*finestructure**2/electron_compton/pi
+	real(dp) :: electron_compton, mec2
+	real(dp) :: fac
 
+    electron_compton = hbar/Melectron/clight
+    mec2 = Melectron*clight**2
+    fac = 4.0*onethird*clight*finestructure**2/electron_compton/pi
+    
 	dZ2 = Q/A
 	kF2 = kF**2
 	x = electron_compton*kF
@@ -238,12 +254,16 @@ function sPh(nn, nion, temperature, ionic)
 	real(dp), intent(in) :: nn, nion, temperature
 	type(composition_info_type), intent(in) :: ionic
 	real(dp) :: sPh
-	real(dp), parameter :: K_n = boltzmann*clight*fm_to_cm/(hbarc_n*fm_to_cm)**3
-	real(dp), parameter :: etwo = finestructure*hbarc_n
-	real(dp), parameter :: Mu_n = amu*clight2*ergs_to_mev
+	real(dp) :: K_n
+	real(dp) :: etwo
+	real(dp) :: Mu_n
 	real(dp), parameter :: anl = 10.0
 	real(dp) :: T,ai,kFn,kFe,vs,Cv,omega_p,TUm,anlt,gmix,cs,qTFe,alpha,tau_lph,wt
 	real(dp) :: Llphn,Llphu,Llph,Lsph,fu,omega
+
+	K_n = boltzmann*clight*fm_to_cm/(hbarc_n*fm_to_cm)**3
+	etwo = finestructure*hbarc_n
+	Mu_n = amu*clight2*ergs_to_mev
 	
 	! convert to nuclear units
 	T = temperature*boltzmann*ergs_to_mev
