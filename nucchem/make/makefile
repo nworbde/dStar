@@ -1,7 +1,7 @@
 include $(MESA_DIR)/utils/makefile_header
 
-LIB = libchem.a
-LIB_OBJS = chem_def.o chem_lib.o
+LIB = libnucchem.a
+LIB_OBJS = nucchem_def.o nucchem_lib.o
 DSTAR_LIB = ../../lib
 DSTAR_INC = ../../include
 

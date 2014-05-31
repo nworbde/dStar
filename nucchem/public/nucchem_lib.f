@@ -1,12 +1,12 @@
-module chem_lib
-    use chem_def
+module nucchem_lib
+    use nucchem_def
     implicit none
 
     character(len=*), parameter, private :: mod_name = 'nucchem_lib'
     character(len=*), parameter, private :: err_fmt = '(a,":",a,"> ",a)'
 
 contains    
-	subroutine chem_init(data_dir, ierr)
+	subroutine nucchem_init(data_dir, ierr)
         use netJina_def
         use netJina_lib
 		character(len=*), intent(in) :: data_dir
@@ -20,14 +20,14 @@ contains
     &   starlib,rates_dict,starlib_dict,ierr)
 
 		if (ierr /= 0) return
-		chem_is_initialized = .TRUE.
-	end subroutine chem_init
+		nucchem_is_initialized = .TRUE.
+	end subroutine nucchem_init
 
-	subroutine chem_shutdown()
+	subroutine nucchem_shutdown()
 		use utils_lib
 		call integer_dict_free(nuclide_dict)
-		chem_is_initialized = .FALSE.
-	end subroutine chem_shutdown
+		nucchem_is_initialized = .FALSE.
+	end subroutine nucchem_shutdown
 
 	subroutine compute_composition_moments(nnuclides, nuclide_ids, abunds, &
 	&   comp, Xsum, ncharged, charged_ids, Yion, abunds_are_mass_fractions, &
@@ -68,9 +68,9 @@ contains
 		if (present(renormalize_mass_fractions)) rnrm = renormalize_mass_fractions
 		
 		call clear_composition(comp)
-		if (.not. chem_is_initialized) then
+		if (.not. nucchem_is_initialized) then
 			write(error_unit,err_fmt) mod_name,routine_name, &
-			&   'chem module is not initialized'
+			&   'nucchem module is not initialized'
 			return
 		end if
 		if (abnds) then
@@ -127,8 +127,8 @@ contains
       	character(len=*), intent(in) :: nuclei
       	integer :: indx, ierr
 		character(len=*), parameter :: routine_name='get_nuclide_index'
-        if (.not. chem_is_initialized) then
-            write(error_unit,err_fmt) mod_name,routine_name,'chem module is not initialized'
+        if (.not. nucchem_is_initialized) then
+            write(error_unit,err_fmt) mod_name,routine_name,'nucchem module is not initialized'
             indx = nuclide_not_found
             return
          end if
@@ -165,4 +165,4 @@ contains
     end subroutine clear_composition
     
 
-end module chem_lib
+end module nucchem_lib

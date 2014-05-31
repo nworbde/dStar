@@ -1,6 +1,6 @@
-program test_chem
-	use chem_def
-	use chem_lib
+program test_nucchem
+	use nucchem_def
+	use nucchem_lib
     use netJina_def, only: iso_name_length
 
 	integer :: j, ierr, ncharged
@@ -10,7 +10,7 @@ program test_chem
 	real(dp) :: Xsum
 	type(composition_info_type) :: comp
 	
-	call chem_init('../../data',ierr)
+	call nucchem_init('../../data',ierr)
 	if (failure('unable to initialize nucchem')) stop
 	
 	! check the composition average
@@ -34,7 +34,7 @@ program test_chem
 	write (*,'(a10,f8.3)')'Ye = ',comp% Ye
 	write (*,'(a10,f8.3)')'<Q> = ',comp% Q
 		
-	call chem_shutdown
+	call nucchem_shutdown
 	
 	contains
 	function failure(str)
@@ -45,4 +45,4 @@ program test_chem
         failure = (ierr /= 0)
         if (failure) write (error_unit,'(a)') str
 	end function failure
-end program test_chem
+end program test_nucchem

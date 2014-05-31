@@ -5,4 +5,5 @@ data
 *.o
 *.mod
 test_output.data
+test_output
 tester
