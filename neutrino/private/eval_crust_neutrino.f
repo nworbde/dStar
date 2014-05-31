@@ -2,12 +2,12 @@ module eval_crust_neutrino
     use neutrino_def
     
     ! number of neutrino flavors, in addition to electron neutrino
-    real(dp), parameter :: cn_dn = 2.0
-    real(dp), parameter :: cn_snthtw = 0.2319
-    real(dp), parameter :: cn_cv = 0.5+2.0*cn_snthtw
-    real(dp), parameter :: cn_ca = 0.5
-    real(dp), parameter :: cn_cvp = 1.0-cn_cv
-    real(dp), parameter :: cn_cap = 1.0-cn_ca
+    real(dp), parameter :: cn_dn = 2.0_dp
+    real(dp), parameter :: cn_snthtw = 0.2319_dp
+    real(dp), parameter :: cn_cv = 0.5_dp + 2.0_dp*cn_snthtw
+    real(dp), parameter :: cn_ca = 0.5_dp
+    real(dp), parameter :: cn_cvp = 1.0_dp - cn_cv
+    real(dp), parameter :: cn_cap = 1.0_dp - cn_ca
     
     contains
     
@@ -71,7 +71,7 @@ module eval_crust_neutrino
         ! equations (4.9)-(4.10)
         rdouble = log10(2.0*r)
         x = (  17.5 + rdouble - 3.0*t )/6.0
-      y = ( -24.5 + rdouble + 3.0*t )/6.0
+        y = ( -24.5 + rdouble + 3.0*t )/6.0
         enum = min(0.0,y-1.6+1.25*x)
         if (abs(x)>0.7 .or. y < 0.0) then
             fxy = 1.0
@@ -99,6 +99,7 @@ module eval_crust_neutrino
     end subroutine plasma
 
     subroutine pair(temp, rhom, qpai )
+        use constants_def, only: onethird
         ! pair.f
         ! modified from mkfit routine
         ! Itoh et al. ApJSS 102: 411 (1996)
@@ -119,7 +120,7 @@ module eval_crust_neutrino
 
         ! equations (2.9)-(2.10)
         lam = temp/5.9302e9
-        xi = ( rhom*1.0e-9 )**( 1.0/3.0 )/lam
+        xi = ( rhom*1.0e-9 )**( onethird )/lam
 
         ! equation (2.6)
         qp1 = 10.74800*lam**2 + 0.3967*sqrt(lam) + 1.005
@@ -156,26 +157,27 @@ module eval_crust_neutrino
     end subroutine pair
 
     subroutine photo(qpho,rhom,lamb)
+        use constants_def,only: onethird
         real(dp), intent(in) :: rhom,lamb
         real(dp), intent(out) :: qpho
         real(dp) :: qp,xi,fp
         ! equation (3.2)
-        real(dp), parameter :: coe1 = 0.5*(( cn_cv**2 + cn_ca**2 ) + cn_dn*( cn_cvp**2 + cn_cap**2 ) )
+        real(dp), parameter :: coe1 = 0.5_dp*(( cn_cv**2 + cn_ca**2 ) + cn_dn*( cn_cvp**2 + cn_cap**2 ) )
         real(dp), parameter :: coe2 =  ((cn_cv**2 - cn_ca**2)  &
                 & + cn_dn*(cn_cvp**2 - cn_cap**2))/((cn_cv**2 + cn_ca**2) + cn_dn*(cn_cvp**2 + cn_cap**2))
 
         qp = cqp(rhom,lamb)
-        xi = ( rhom*1.e-9 )**( 1./3. )/lamb
+        xi = ( rhom*1.e-9_dp )**( onethird )/lamb
         call cfp(fp,lamb,xi)
-      qpho = coe1*(1.0 - coe2*qp)*rhom*lamb**5*fp
+      qpho = coe1*(1.0_dp - coe2*qp)*rhom*lamb**5*fp
     
         contains
         function cqp(rhom,lamb) result(qp)
             real(dp), intent(in) :: rhom, lamb
             real(dp) :: qp
-            qp = 0.666*(1.0 + 2.045*lamb)**(-2.066)     &
-                        &   *(1.0 + rhom*(1.875e8*lamb + 1.653e8*lamb**2        &
-                        &   + 8.499e8*lamb**3 - 1.604e8*lamb**4)**(-1))**(-1)
+            qp = 0.666_dp*(1.0_dp + 2.045_dp*lamb)**(-2.066_dp)  &
+            &   *(1.0_dp + rhom*(1.875e8_dp*lamb + 1.653e8_dp*lamb**2 &
+            &   + 8.499e8_dp*lamb**3 - 1.604e8_dp*lamb**4)**(-1))**(-1)
         end function cqp
         
     end subroutine photo
@@ -194,36 +196,36 @@ module eval_crust_neutrino
         real(dp),intent(out) :: fp
       real(dp) :: a(0:2), cc(0:2,0:6), d(0:2,1:5)
         real(dp) :: pjt,tau, c, temp
-        real(dp), parameter :: pi = 3.141592654
-        real(dp), parameter :: b(3) = (/ 6.290e-3, 7.483e-3, 3.061e-4 /) 
+        real(dp), parameter :: pi = 3.141592654_dp
+        real(dp), parameter :: b(3) = [ 6.290e-3_dp, 7.483e-3_dp, 3.061e-4_dp ]
         integer :: i, j, k
 
-        temp = lamb*5.9302e9
-        if (temp < 1.0e7) then
+        temp = lamb*5.9302e9_dp
+        if (temp < 1.0e7_dp) then
             ! print *, 'WARNING: temperature < 1.0e7 K'
             fp = 0.0
             return
         else if (temp < 1.0e8) then
             include 'c7-8.par'
             include 'd7-8.par'
-            c = 0.5654 + log10(temp/1.0e7)
-            tau = log10(temp/1.0e7)
-        else if (temp < 1.0e9) then
+            c = 0.5654 + log10(temp/1.0e7_dp)
+            tau = log10(temp/1.0e7_dp)
+        else if (temp < 1.0e9_dp) then
             include 'c8-9.par'
         include 'd8-9.par'
-        c   =  1.5654
-        tau = log10(temp/1.0e8)
+        c   =  1.5654_dp
+        tau = log10(temp/1.0e8_dp)
       else
         include 'c9.par'
         include 'd9.par'
-        c   =  1.5654
-        tau = log10(temp/1.0e9)
+        c   =  1.5654_dp
+        tau = log10(temp/1.0e9_dp)
       endif
 
         do j = 0, 2
             a(j)  = 0.5*cc(j,0) + 0.5*cc(j,6)*cos(10.0*pi*tau)
           do k = 1, 5
-            pjt = pi*float(k)*tau
+            pjt = pi*real(k,dp)*tau
             a(j)= a(j) + cc(j,k)*cos(5.0/3.0*pjt)+d(j,k)*sin( 5.0/3.0*pjt )
             end do
         end do
@@ -237,14 +239,14 @@ module eval_crust_neutrino
     end subroutine cfp
     
     subroutine pbf(kF,T,Tns,qpbf)
+        use constants_def
         ! pair-breaking and formation emissivity. Based on fmal. published by 
         ! Yakovlev & collaborators. 
         !
         ! Reduction factor follows recommendation of Steiner & Reddy (2009).
-        use constants_def
         real(dp), intent(in) :: kF,T,Tns
         real(dp), intent(out) :: qpbf
-        real(dp), parameter :: qpbf_pre = 1.17e21
+        real(dp), parameter :: qpbf_pre = 1.17e21_dp
         real(dp) :: mstar, xF, eF, R, tau, v, v2, F1, F2, F3, F, reduct
         
         tau = T/Tns
