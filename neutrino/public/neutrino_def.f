@@ -1,4 +1,4 @@
-module core_neutrino_def
+module neutrino_def
     use constants_def, only : dp
 	! routines for evaluating neutrino emissivity from uniform nuclear matter.  rates use analytical fmla. published by Yakovlev
 	! and collaborators.
@@ -32,4 +32,4 @@ module core_neutrino_def
 		real(dp) :: PBF_p	! PBF, proton
 	end type core_neutrino_emissivity_channels
 
-end module core_neutrino_def
+end module neutrino_def

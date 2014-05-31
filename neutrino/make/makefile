@@ -1,7 +1,7 @@
 include $(MESA_DIR)/utils/makefile_header
 
-LIB = libcoreneutrino.a
-LIB_OBJS = core_neutrino_def.o eval_core_neutrino.o core_neutrino_lib.o
+LIB = libneutrino.a
+LIB_OBJS = neutrino_def.o eval_core_neutrino.o neutrino_lib.o
 DSTAR_LIB = ../../lib
 DSTAR_INC = ../../include
 

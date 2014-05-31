@@ -1,7 +1,7 @@
 include $(MESA_DIR)/utils/makefile_header
 
 DSTAR_LIB_DIR = ../../../lib
-LOAD_LOCAL = -L$(LOCAL_LIB_DIR) -L$(DSTAR_LIB_DIR) -lsuperfluid -lcoreneutrino -lconstants
+LOAD_LOCAL = -L$(LOCAL_LIB_DIR) -L$(DSTAR_LIB_DIR) -lsuperfluid -lneutrino -lconstants
 LOAD_OTHER = -L$(MESA_LIB_DIR) -linterp_1d -lconst -lutils
 DSTAR_INC = ../../../include
 

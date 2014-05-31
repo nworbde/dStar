@@ -1,5 +1,5 @@
 module eval_core_neutrino
-	use core_neutrino_def
+	use neutrino_def
     use constants_def
 	real(dp), parameter :: threepithird = threepisquare**one_third
 

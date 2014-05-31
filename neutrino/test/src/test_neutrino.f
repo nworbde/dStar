@@ -3,8 +3,8 @@ program test_neutrino
     use constants_lib
 	use superfluid_def
 	use superfluid_lib
-	use core_neutrino_def
-	use core_neutrino_lib
+	use neutrino_def
+	use neutrino_lib
 
 	type(core_neutrino_emissivity_channels) :: neu
 	logical, dimension(num_core_nu_channels) :: which_channels
