@@ -12,6 +12,10 @@ function check_okay {
 }
 
 this_module=${PWD##*/}
+./fetch_data
+check_okay
+cp -r data/Tc_data ../data
+check_okay
 ./build_and_test
 check_okay
 cd make

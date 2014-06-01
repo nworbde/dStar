@@ -1,0 +1,117 @@
+#!/bin/bash
+
+function check_okay {
+    if [ $? -ne 0 ]; then
+        echo
+        pwd
+        echo "FAILED"
+        echo
+        exit 1
+    fi
+}
+
+function verify_datafile {
+    db=$1
+    key_cksm=$2
+    chk=`which md5`
+    this_cksm=`$chk -q $db`
+    if [ $this_cksm !=  $key_cksm ]; then
+        echo "FAILED"
+        echo "checksum is  $this_cksm"
+        echo "compare with $key_cksm"
+        return 1
+    fi
+    return 0
+}
+
+sf_datafiles=(  ao85_n3.data \
+                ao85_p1.data \
+                ao85m1_n3.data \
+                bcll92_n3.data \
+                bcll92_p1.data \
+                ccdk93_n1.data \
+                ccdk93_p1.data \
+                ccy72-ms_p1.data \
+                ccy72-ps_p1.data \
+                eeho96_p1.data \
+                gc_n1.data \
+                gipsf08-2_n1.data \
+                gipsf08-3_n1.data \
+                gipsf08_n1.data \
+                hgrr70_n3.data \
+                ns_p1.data \
+                sfb03_n1.data \
+                t72_n3.data \
+                t73_p1.data \
+                wap_n1.data )
+
+chksums=(   749634fe8af4e9717c9265fd9d5933cf \
+            ed5bf01953385e03159637144d4087b8 \
+            9e4ac3bef5298995f81a4746cc581d31 \
+            108d2691b51d5f3cfe9171919a1b7361 \
+            33de5b97bb5a38bd8b1098e7fb0f7736 \
+            9170339be543bd3738a135e66946c4fd \
+            317db31079c50f5ae9d9eb1692ed6888 \
+            e12a93654a0dda58ea82328e41634dfe \
+            89713eb78e83d2760ef0fdff6c2c60e9 \
+            f7a492f90a2673a145f5e71c1e396977 \
+            0579ed7198cb3ec2e54e97435f3ff653 \
+            44aea46eac25f9bbf309e5fb7dbac8ce \
+            c725dbb426d425484c8ca701bd625dc8 \
+            14d13849af180451e033c4f2923f954d \
+            317332c72ad1c82be8e054d93db0a500 \
+            34e1eff4dfc7214224fdbb24130ebabc \
+            21ae9c01cb03f7e37a907c99b9d8ad51 \
+            5fb43177f856a5e87c72a577b545d177 \
+            a197991ea1c060f61a909b49bc2ef231 \
+            fd432bb9821ab2d4e951c33a3a7e52ae )
+
+URL=https://dl.dropboxusercontent.com/u/52649885/dStar/Tc_data.tar.bz2
+
+echo
+echo "Installing tables of superfluid critical temperatures"
+echo "-----------------------------------------------------"
+
+echo "establishing data directory..."
+mkdir -p data
+check_okay
+cd data
+
+need_to_fetch=1
+for i in `seq 20`; do
+    indx=$((i-1))
+    df="Tc_data/${sf_datafiles[$indx]}"
+    if [ -f $df ]; then
+        printf "   $df exists...verifying: "
+        verify_datafile $df ${chksums[$indx]}
+        if [ $? -ne 0 ]; then
+            echo "failed"
+            need_to_fetch=1
+        else
+            echo "passed"
+            need_to_fetch=0
+        fi
+    fi
+done
+
+if [ $need_to_fetch -eq 1 ]; then
+    echo "fetching Tc_data from $URL..."
+    curl -fS $URL > Tc_data.tar.bz2
+    check_okay
+    tar -xf Tc_data.tar.bz2
+    check_okay
+    cd Tc_data
+    check_okay
+    echo "verifying datafiles..."
+    for i in `seq 20`; do
+        indx=$((i-1))
+        printf "   ${sf_datafiles[$indx]}: "
+        verify_datafile ${sf_datafiles[$indx]} ${chksums[$indx]}
+        check_okay
+        echo "passed"
+    done
+fi
+
+echo "done"
+echo
+cd ..

@@ -12,11 +12,16 @@ function check_okay {
 }
 
 this_module=${PWD##*/}
+./fetch_data
+check_okay
+mkdir -p ../data/eos/cache
+cp data/helm_table.dat ../data/eos/
 ./build_and_test
 check_okay
 cd make
 make install
 check_okay
 cd ..
+
 echo "module" $this_module "passed tests and was exported"
 echo "****************************************************"

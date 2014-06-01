@@ -12,6 +12,10 @@ function check_okay {
 }
 
 this_module=${PWD##*/}
+./fetch_data
+check_okay
+mkdir -p ../data/nucchem/cache
+cp data/nuclib_db ../data/nucchem
 ./build_and_test
 check_okay
 cd make

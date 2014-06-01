@@ -1,0 +1,83 @@
+#!/bin/bash
+
+function check_okay {
+    if [ $? -ne 0 ]; then
+        echo
+        pwd
+        echo "FAILED"
+        echo
+        exit 1
+    fi
+}
+
+function fetch_and_verify {
+    # if file exists and is verified, then no need to fetch from repository
+    need_to_fetch=1
+    lib=$1
+    chks=$2
+    url=$3
+    if [ -f $lib ]; then
+        echo "$lib exists...verifying"
+        verify_datafile $lib $chks
+        if [ $? -ne 0 ]; then
+            echo "verification failed"
+            need_to_fetch=1
+        else
+            echo "verification okay"
+            need_to_fetch=0
+        fi
+    fi
+
+    if [ $need_to_fetch -eq 1 ]; then        
+        echo "fetching $lib from $url..."
+        get_datafile $lib $url
+        echo "verifying $lib..."
+        verify_datafile $lib $chks
+        check_okay
+    fi
+}
+
+function get_datafile {
+    zip='.bz2'
+    db=$1
+    tmpfile="tmp_$db"
+    url=$2
+    unzip=`which bunzip2`
+    curl -fS $url | $unzip > $tmpfile
+    check_okay
+    mv -i $tmpfile $db
+    check_okay
+}
+
+function verify_datafile {
+    db=$1
+    key_cksm=$2
+    chk=`which md5`
+    this_cksm=`$chk -q $db`
+    echo "checksum is  $this_cksm"
+    echo "compare with $key_cksm"
+    if [ $this_cksm !=  $key_cksm ]; then
+        echo "FAILED"
+        return 1
+    fi
+    return 0
+}
+
+LIB=helm_table.dat
+MD5=29f10f751dfd9a184235cfecf6114bc7
+URL=https://dl.dropboxusercontent.com/u/52649885/dStar/helm_table.dat.bz2
+
+echo
+echo "Installing Helm EOS table"
+echo "-------------------------------------------------"
+
+echo "establishing data directory..."
+mkdir -p data
+check_okay
+cd data
+fetch_and_verify $LIB $MD5 $URL
+check_okay
+
+echo "done"
+echo
+cd ..
