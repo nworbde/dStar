@@ -1,6 +1,47 @@
 module dStar_eos_def
     use constants_def, only: dp
     
+
+	! The results for the overall mixture
+	integer, parameter :: i_lnP = 1
+		! pressure
+	integer, parameter :: i_lnE = 2
+		! internal energy per unit mass
+	integer, parameter :: i_lnS	= 3
+		! entropy per unit mass
+	integer, parameter :: i_grad_ad = 4
+		! (d lnT/d ln P)_S
+	integer, parameter :: i_chiRho = 5
+		! (d lnP/d lnRho)_T
+	integer, parameter :: i_chiT = 6
+		! (d lnP/d lnT)_Rho
+	integer, parameter :: i_Cp = 7
+		! (dH/dT)_P, H = E + P/Rho
+	integer, parameter :: i_Cv = 8
+		! (dE/dT)_Rho
+	integer, parameter :: i_Chi = 9
+		! volume fraction occupied by nuclei
+	integer, parameter :: i_Gamma = 10
+		! plasma coupling parameter
+	integer, parameter :: i_Theta = 11
+		! temperature/ion plasma temperature
+	integer, parameter :: i_mu_e = 12
+		! chemical pot. electrons
+	integer, parameter :: i_mu_n = 13
+		! chemical pot. neutrons
+	integer, parameter :: i_Gamma1 = 14
+		! (d lnP/d lnRho)_S
+	integer, parameter :: i_Gamma3 = 15
+		! = Gamma3 - 1 = (d lnT/d lnRho)_S
+	integer, parameter :: num_dStar_eos_results = 15
+		
+	! The components
+	integer, parameter :: &
+		& icrust_eos_ep = 1, &
+		&	icrust_eos_ion = 2, &
+		&	icrust_eos_neutron = 3
+	integer, parameter :: num_crust_eos_components = 3
+    
     ! it can be interesting to look at the individual components; supply a vector of this to get the individual pieces
     type crust_eos_component
         real(dp) :: P
@@ -16,6 +57,8 @@ module dStar_eos_def
     real(dp), parameter :: default_Gamma_melt = 175.0
     real(dp), parameter :: default_rsi_melt = 140.0
     real(dp), parameter :: default_Y_threshold = 1.0e-9
+    real(dp), parameter :: default_pasta_transition = 0.01      ! fm**-3
+    real(dp), parameter :: default_cluster_transition = 0.08    ! fm**-3
     ! warning codes
     real(dp), parameter :: Q2_threshold = 18.0
     integer, parameter :: strong_quantum_effects = 1

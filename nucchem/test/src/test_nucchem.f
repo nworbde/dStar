@@ -9,7 +9,7 @@ program test_nucchem
 	real(dp) :: Xsum
 	type(composition_info_type) :: comp
 	
-	call nucchem_init('../../data/nucchem',ierr)
+	call nucchem_init('../../data',ierr)
 	if (failure('unable to initialize nucchem')) stop
 	
 	! check the composition average

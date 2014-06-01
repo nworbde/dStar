@@ -21,9 +21,10 @@ subroutine ion_mixture(rq,rs,Gamma_e,ionic,ncharged,charged_ids,Yion,Gamma,ionQ,
     use, intrinsic :: iso_fortran_env, only: error_unit
 	use constants_def, only: dp, amu, Melectron
 	use dStar_eos_def
+    use dStar_eos_private_def
 	use nucchem_def
 	
-	type(crust_eos_general_info), pointer :: rq
+	type(dStar_eos_general_info), pointer :: rq
 	real(dp), intent(in) :: rs,Gamma_e
 	type(composition_info_type), intent(in) :: ionic
 	integer, intent(in) :: ncharged

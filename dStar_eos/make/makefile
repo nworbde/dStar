@@ -1,10 +1,12 @@
 include $(MESA_DIR)/utils/makefile_header
 
-LIB = libcrust_eos.a
-LIB_OBJS = dStar_eos_def.o funct_fermi1.o neutron.o helm_alloc.o helm_core.o electron.o ion.o crust_eos_lib.o
+LIB = libdstar_eos.a
+LIB_OBJS = 	dStar_eos_def.o dStar_eos_private_def.o funct_fermi1.o \
+			neutron.o helm_alloc.o helm_core.o electron.o ion.o dStar_eos_lib.o
 
 VPATH = $(MOD_PUBLIC_DIR):$(MOD_PRIVATE_DIR)
 DSTAR_INC=../../include
+DSTAR_LIB=../../lib
 COMPILE = $(COMPILE_TO_TEST) $(FCfree) -I$(DSTAR_INC)
 COMPILE_FIXED = $(COMPILE_TO_TEST) $(FCfixed) -I$(DSTAR_INC)
 
@@ -24,8 +26,8 @@ generate_acprs_table: acprs.o
 	$(FC) -o $@ acprs.o -L. -lcrust_eos -L../../lib -L../../mesa_numerics/lib -lchem -lalert -lsuperfluid -linterp_1d
 
 install: $(LIB)
-	cp $(LIB) $(BASE_DIR)/lib ; cp *.mod $(BASE_DIR)/include
-	cd $(BASE_DIR)/lib ; ranlib $(LIB)
+	cp $(LIB) $(DSTAR_LIB) ; cp *.mod $(DSTAR_INC)
+	cd $(DSTAR_LIB) ; ranlib $(LIB)
 
 clean:
 	-@rm -f *.o *.mod $(LIB)

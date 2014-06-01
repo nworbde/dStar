@@ -17,8 +17,8 @@ contains
         character(len=160) :: nuclib_cache
         integer :: indx
 
-        nuclib_filename = trim(datadir)//'/'//nuclib_db
-        nuclib_cache = trim(datadir)//'/cache/'//nuclib_db//'.bin'
+        nuclib_filename = trim(datadir)//'/nucchem/'//nuclib_db
+        nuclib_cache = trim(datadir)//'/nucchem/cache/'//nuclib_db//'.bin'
         
         ierr = 0
         write(error_unit,'(a)')  &

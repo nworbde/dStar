@@ -1,128 +1,113 @@
-module crust_eos_lib
-	use crust_eos_def
+module dStar_eos_lib
+	use dStar_eos_def
 	
 	contains
-	subroutine crust_eos_startup(data_dir)
+	subroutine dStar_eos_startup(datadir)
+        use dStar_eos_private_def
 		use helm_alloc
-		character(len=*), intent(in) :: data_dir
+		character(len=*), intent(in) :: datadir
 		integer, parameter :: imax = 261, jmax = 101  ! dimensions of our version of helm table
 		integer :: ierr
-		call crust_eos_def_init
+        character(len=128) :: eos_datadir
+        
+		call dStar_eos_def_init
 		call alloc_helm_table(eos_ht, imax, jmax, ierr)
 		if (ierr /= 0) then
 			write (*,*) 'unable to alloc helm table'
 			return
 		end if
-		call read_helm_table(eos_ht,data_dir,ierr)
+        
+        eos_datadir = trim(datadir)//'/eos'
+		call read_helm_table(eos_ht,eos_datadir,ierr)
 		if (ierr /=0) then
 			write (*,*) 'unable to read helm table'
 			return
 		end if
-	end subroutine crust_eos_startup
+	end subroutine dStar_eos_startup
 
-	function alloc_crust_eos_handle(ierr)
+	function alloc_dStar_eos_handle(ierr)
+        use, intrinsic :: iso_fortran_env, only: error_unit
+        use dStar_eos_private_def
 		integer, intent(out) :: ierr
-		integer :: alloc_crust_eos_handle
-		alloc_crust_eos_handle = do_alloc_crust_eos(ierr)
-	end function alloc_crust_eos_handle
+		integer :: alloc_dStar_eos_handle
+		alloc_dStar_eos_handle = do_alloc_dStar_eos(ierr)
+        if (ierr /= 0) write(error_unit,*) trim(dstar_eos_private_def_errors(ierr))
+	end function alloc_dStar_eos_handle
 
-	subroutine free_crust_eos_handle(handle)
+	subroutine free_dStar_eos_handle(handle)
+        use dStar_eos_private_def
 		integer, intent(in) :: handle
-		call do_free_crust_eos(handle)
-	end subroutine free_crust_eos_handle
+		call do_free_dStar_eos(handle)
+	end subroutine free_dStar_eos_handle
 
-	subroutine crust_eos_ptr(handle, rq, ierr)
+	subroutine dStar_eos_ptr(handle, rq, ierr)
+        use, intrinsic :: iso_fortran_env, only: error_unit
+        use dStar_eos_private_def
 		integer, intent(in) :: handle
-		type(crust_eos_general_info), pointer :: rq
+		type(dStar_eos_general_info), pointer :: rq
 		integer, intent(out) :: ierr
-		call get_crust_eos_ptr(handle,rq,ierr)
-	end subroutine crust_eos_ptr
+		call get_dStar_eos_ptr(handle,rq,ierr)
+        if (ierr /= 0) write(error_unit,*) trim(dstar_eos_private_def_errors(ierr))
+	end subroutine dStar_eos_ptr
 	
-	subroutine crust_eos_set_gamma_melt(handle,melt_pt,ierr)
-		use alert_lib
-		integer, intent(in) :: handle
-		real, intent(in) :: melt_pt
-		integer, intent(out) :: ierr
-		type(crust_eos_general_info), pointer :: rq
-		
-		call crust_eos_ptr(handle,rq,ierr)
-		if (ierr /= 0) return
-		if (.not.rq% in_use) then
-			ierr = -3
-			call alert(ierr, 'bad handle: did you forget to initialize?')
-			return
-		end if
-		rq% Gamma_melt = melt_pt
-	end subroutine crust_eos_set_gamma_melt
-
-	subroutine crust_eos_set_rsi_melt(handle,melt_pt,ierr)
-		use alert_lib
-		integer, intent(in) :: handle
-		real, intent(in) :: melt_pt
-		integer, intent(out) :: ierr
-		type(crust_eos_general_info), pointer :: rq
-	
-		call crust_eos_ptr(handle,rq,ierr)
-		if (ierr /= 0) return
-		if (.not.rq% in_use) then
-			ierr = -3
-			call alert(ierr, 'bad handle: did you forget to initialize?')
-			return
-		end if
-		rq% rsi_melt = melt_pt
-	end subroutine crust_eos_set_rsi_melt
-
-	subroutine crust_eos_set_abun_threshold(handle,Ythresh,ierr)
-		use alert_lib
-		integer, intent(in) :: handle
-		real, intent(in) :: Ythresh
-		integer, intent(out) :: ierr
-		type(crust_eos_general_info), pointer :: rq
-
-		call crust_eos_ptr(handle,rq,ierr)
-		if (ierr /= 0) return
-		if (.not.rq% in_use) then
-			ierr = -3
-			call alert(ierr, 'bad handle: did you forget to initialize?')
-			return
-		end if
-		rq% Ythresh = Ythresh
-	end subroutine crust_eos_set_abun_threshold
+    subroutine dStar_eos_set_controls(handle,gamma_melt_pt,rsi_melt_pt,nuclide_abundance_threshold, &
+        &       pasta_transition_in_fm3,cluster_transition_in_fm3)
+        use, intrinsic :: iso_fortran_env, only: error_unit
+        use dStar_eos_private_def, only : dStar_eos_general_info
+        integer, intent(in) :: handle
+        real(dp), intent(in), optional :: gamma_melt_pt, rsi_melt_pt, nuclide_abundance_threshold
+        real(dp), intent(in), optional :: pasta_transition_in_fm3, cluster_transition_in_fm3
+        type(dStar_eos_general_info), pointer :: rq
+        integer :: ierr
+        
+        call dStar_eos_ptr(handle,rq,ierr)
+        if (ierr /= 0) return
+        if (.not. rq% in_use) then
+            write(error_unit,*) 'unallocated handle passed to dStar_eos_set_controls'
+            return
+        end if
+        if (present(gamma_melt_pt)) rq% Gamma_melt = gamma_melt_pt
+        if (present(rsi_melt_pt)) rq% rsi_melt = rsi_melt_pt
+        if (present(nuclide_abundance_threshold)) rq% Ythresh = nuclide_abundance_threshold
+        if (present(pasta_transition_in_fm3)) rq% pasta_transition = pasta_transition_in_fm3
+        if (present(cluster_transition_in_fm3)) rq% cluster_transition = cluster_transition_in_fm3
+    end subroutine dStar_eos_set_controls
 	
 	subroutine eval_crust_eos( &
-			& crust_eos_handle,rho,T,ionic,ncharged,charged_ids,Yion, &
-			& res,phase,chi,components)
-		use alert_lib
+		&   dStar_eos_handle,rho,T,ionic,ncharged,charged_ids,Yion, &
+		&   res,phase,chi,components)
 		use nucchem_def, only: composition_info_type
+        use dStar_eos_private_def
 		use electron_eos
 		use ion_eos
 		use neutron_eos
-		use phys_constants
+		use constants_def
 		
-		integer, intent(in) :: crust_eos_handle
-		real, intent(in) :: rho,T
+		integer, intent(in) :: dStar_eos_handle
+		real(dp), intent(in) :: rho,T
 		type(composition_info_type), intent(in) :: ionic
 		integer, intent(in) :: ncharged
 		integer, dimension(ncharged), intent(in) :: charged_ids
 			! ids of the charged species
-		real, dimension(ncharged), intent(in) :: Yion
+		real(dp), dimension(ncharged), intent(in) :: Yion
 			! renormalized abunances of charged species Yion = Y/(1-Yn)
-		real, dimension(num_crust_eos_results) :: res
+		real(dp), dimension(num_dStar_eos_results) :: res
 		integer, intent(out) :: phase
-		real, intent(inout) :: chi
+		real(dp), intent(inout) :: chi
+		    ! volume fraction of nucleus; if input with value use_default_nuclear_size, 
+            ! chi is computed and the new value is returned in res.  Otherwise, the value that 
+            ! is input is used by the code and unaltered.
 		type(crust_eos_component), intent(out), dimension(num_crust_eos_components), optional :: components
-			! volume fraction of nucleus; if input with value use_default_nuclear_size, chi is computed
-			! and the new value is returned in res.  Otherwise, the value that is input is used by the code and 
-			! unaltered.
-		type(crust_eos_general_info), pointer :: rq		
-		real :: ne,rs,Gamma_e,nek, nekT,f_e, u_e, p_e, s_e, cv_e, dpr_e, dpt_e, eta_e,mu_e
-		real :: f_ex, u_ex, p_ex, s_ex, cv_ex, dpr_ex, dpt_ex, uexfac, pexfac, sexfac
-		real :: n_i,nik,nikT,f_i,u_i,p_i,s_i,cv_i,dpr_i,dpt_i,uifac,pifac,sifac
-		real :: nn,f_n,u_n,p_n,s_n,cv_n,dpr_n,dpt_n,mu_n,unfac,pnfac,snfac
-		real :: Gamma,ionQ,p,u,s,cv,dpr,dpt,gamma3m1,gamma1,grad_ad,cp
+
+		type(dStar_eos_general_info), pointer :: rq		
+		real(dp) :: ne,rs,Gamma_e,nek, nekT,f_e, u_e, p_e, s_e, cv_e, dpr_e, dpt_e, eta_e,mu_e
+		real(dp) :: f_ex, u_ex, p_ex, s_ex, cv_ex, dpr_ex, dpt_ex, uexfac, pexfac, sexfac
+		real(dp) :: n_i,nik,nikT,f_i,u_i,p_i,s_i,cv_i,dpr_i,dpt_i,uifac,pifac,sifac
+		real(dp) :: nn,f_n,u_n,p_n,s_n,cv_n,dpr_n,dpt_n,mu_n,unfac,pnfac,snfac
+		real(dp) :: Gamma,ionQ,p,u,s,cv,dpr,dpt,gamma3m1,gamma1,grad_ad,cp
 		integer :: ierr
 		
-		call crust_eos_ptr(crust_eos_handle, rq, ierr)
+		call dStar_eos_ptr(dStar_eos_handle, rq, ierr)
 		if (ierr /= 0) return
 		
 		! electrons... some ion quantities are defined in terms of these as well.
@@ -157,20 +142,18 @@ module crust_eos_lib
 		! ions
 		call ion_mixture(rq,rs,Gamma_e,ionic,ncharged,charged_ids,Yion, &
 			& Gamma,ionQ,phase,f_i,u_i,p_i,s_i,cv_i,dpr_i,dpt_i,ierr)
-		if (ierr /= 0 .and. ierr /= strong_quantum_effects) write(*,'(a)') alert_message
-		n_i = ne/ionic%Z
-		nik = n_i*boltzmann
-		nikT = nik*T
-		uifac = nikT/rho
-		pifac = nikT
-		sifac = nik/rho
-		! u = u + u_i*nikT/rho
-		! p = p + p_i*nikT
-		! s = s + s_i*nik/rho
-		! cv = cv + cv_i*nik/rho
-		! dpr = dpr + dpr_i*nikT
-		! dpt = dpt_i*nikT
-!		p_i = 0.0; s_i = 0.0; u_i = 0.0; cv_i = 0.0; dpr_i = 0.0; dpt_i = 0.0
+        
+        ! ignore warning on strong quantum effects
+		if (ierr == 0 .or. ierr == strong_quantum_effects) then
+    		n_i = ne/ionic%Z
+    		nik = n_i*boltzmann
+    		nikT = nik*T
+    		uifac = nikT/rho
+    		pifac = nikT
+    		sifac = nik/rho
+        else
+            uifac = 0.0; pifac = 0.0; sifac = 0.0
+        end if
 		
 		! neutrons
 		nn = rho*ionic%Yn/amu/(1.0-chi)
@@ -181,15 +164,7 @@ module crust_eos_lib
 		unfac = avogadro*ionic% Yn
 		pnfac = 1.0
 		snfac = unfac
-		
-!		p_n = 0.0; s_n = 0.0; u_n = 0.0; cv_n = 0.0; dpr_n = 0.0; dpt_n = 0.0
-		! u = u + u_n*ionic% Yn*avogadro	! here we are getting the mean energy per unit mass for the mixture.
-		! p = p + p_n
-		! s = s + s_n*ionic% Yn*avogadro
-		! cv = cv + cv_n*ionic% Yn*avogadro
-		! dpr = dpr + dpr_n
-		! mu_n = u_n - T*s_n + p_n
-		
+				
 		! stuff results into output structure
 		p = p_e + p_ex*pexfac + p_i*pifac + p_n*pnfac
 		u = u_e + u_ex*uexfac + u_i*uifac + u_n*unfac
@@ -255,4 +230,4 @@ module crust_eos_lib
 		end if
 	end subroutine eval_crust_eos
 
-end module crust_eos_lib
+end module dStar_eos_lib

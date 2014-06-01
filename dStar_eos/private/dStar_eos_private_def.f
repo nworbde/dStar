@@ -1,4 +1,12 @@
 module dStar_eos_private_def
+    use dStar_eos_def
+    
+    ! error codes
+    character(len=80), dimension(-3:-1), parameter :: dstar_eos_private_def_errors =  &
+    &   [character(len=80):: &
+    &   'invalid dStar_eos_handle', &
+    &   'broken handle for dStar_eos_id', &
+    &   'no available crust eos handle']
 
     type dStar_eos_general_info
         real(dp) :: Gamma_melt
@@ -42,29 +50,26 @@ contains
 		
 		if (dStar_eos_id == -1) then
 			ierr = -1
-			call alert(ierr, 'no available crust eos handle')
 			return
 		end if
 		if (dStar_eos_handles(i)% handle /= dStar_eos_id) then
 			ierr = -2
-			call alert(ierr, 'broken handle for dStar_eos_id')
 			return
 		end if
 	end function do_alloc_dStar_eos
 	
 	subroutine do_free_dStar_eos(handle)
 		integer, intent(in) :: handle
-		if (handle >= 1 .and. handle <= max_dStar_eos_handles) dStar_eos_handles(handle)% in_use = .FALSE.
+		if (handle >= 1 .and. handle <= max_dStar_eos_handles)  &
+		&   dStar_eos_handles(handle)% in_use = .FALSE.
 	end subroutine do_free_dStar_eos
 	
 	subroutine get_dStar_eos_ptr(handle,rq,ierr)
-		use alert_lib, only : alert
 		integer, intent(in) :: handle
 		type(dStar_eos_general_info), pointer, intent(out) :: rq
 		integer, intent(out) :: ierr
 		if (handle < 1 .or. handle > max_dStar_eos_handles) then
 			ierr = -1
-			call alert(ierr,'invalid dStar_eos_handle')
             rq => null()
 			return
 		end if
