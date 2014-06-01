@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+function check_okay {
+    if [ $? -ne 0 ]; then
+        echo
+        echo "installation failed..."
+        exit 1
+    fi
+}
+
+function do_one {
+	cd $1
+	check_okay
+	echo
+    echo 
+	echo "installing $1"
+    echo
+    echo
+	./install
+	check_okay
+	cd ..
+}
+
+echo
+
+do_one constants
+do_one superfluid
+do_one nucchem
+do_one neutrino
+do_one dStar_eos
+do_one conductivity
+
+echo

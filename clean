@@ -1,0 +1,57 @@
+#!/bin/bash
+
+function check_okay {
+	if [ $? -ne 0 ]
+	then
+		exit 1
+	fi
+}
+
+function do_one {
+	cd $1
+	check_okay
+	echo "   $1"
+	./clean
+	check_okay
+	cd ..
+}
+
+function clean_directory {
+	cd $1
+	check_okay
+	echo "   $1"
+	rm -f *
+	check_okay
+	cd ..
+}
+
+function clean_data_caches {
+    dir="data/$1"
+    echo "   $dir"
+    cd $dir
+    check_okay
+    rm -f cache/*
+    check_okay
+    cd ../..
+}
+
+echo
+echo "cleaning dStar packages..."
+
+do_one constants
+do_one superfluid
+do_one neutrino
+do_one nucchem
+do_one dStar_eos
+do_one conductivity
+
+echo "cleaning include, lib, data directories..."
+clean_directory include
+clean_directory lib
+
+echo "cleaning out data directories"
+clean_data_caches Tc_data
+clean_data_caches nucchem
+clean_data_caches dStar_eos
+
+echo

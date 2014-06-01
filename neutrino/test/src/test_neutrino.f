@@ -53,7 +53,7 @@ program test_neutrino
 	call do_one_core
 	
     print '(/,/,a)', 'crust neutrino emissivity'
-    call nucchem_init('../../data/nucchem', ierr)
+    call nucchem_init('../../data', ierr)
     
 	do i = 6,14
 		N = [1,aa(i)-zz(i)]
