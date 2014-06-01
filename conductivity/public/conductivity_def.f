@@ -14,6 +14,9 @@ module conductivity_def
 	! flag to control which ee scattering fmla. is used. default is Shternin & Yakovlev '06
 	integer, parameter :: icond_sy06 = 1, icond_pcy = 2
 
+	! flag to control which eQ scattering fmla. is used. default is Potekhin
+	integer, parameter :: icond_eQ_potekhin = 1, icond_eQ_page = 2
+
 	type conductivity_components
 		real(dp) :: total
 		real(dp) :: ee
