@@ -1,23 +1,23 @@
 module dStar_eos_def
-
+    use constants_def, only: dp
+    
     ! it can be interesting to look at the individual components; supply a vector of this to get the individual pieces
     type crust_eos_component
-        real :: P
-        real :: E
-        real :: S
-        real :: F
-        real :: Cv
+        real(dp) :: P
+        real(dp) :: E
+        real(dp) :: S
+        real(dp) :: F
+        real(dp) :: Cv
         ! divide the following by P, if P /= 0, to get chiRho and chiT.
-        real :: dPdlnRho
-        real :: dPdlnT
+        real(dp) :: dPdlnRho
+        real(dp) :: dPdlnT
     end type crust_eos_component
 
-
-    real, parameter :: default_Gamma_melt = 175.0
-    real, parameter :: default_rsi_melt = 140.0
-    real, parameter :: default_Y_threshold = 1.0e-9
+    real(dp), parameter :: default_Gamma_melt = 175.0
+    real(dp), parameter :: default_rsi_melt = 140.0
+    real(dp), parameter :: default_Y_threshold = 1.0e-9
     ! warning codes
-    real, parameter :: Q2_threshold = 18.0
+    real(dp), parameter :: Q2_threshold = 18.0
     integer, parameter :: strong_quantum_effects = 1
     
     ! for specifying the phase, liquid or solid
@@ -27,16 +27,8 @@ module dStar_eos_def
     ! nuclear information: if chi, the fraction of the W-S cell occupied by a nucleus, 
     ! is set to use_default_nuclear_size, then it will be computed as 
     ! chi = (4*pi/3)A(1.13 fm)**3 * n_nuclei
-    real, parameter :: default_nuclear_radius = 1.13 ! fm
-    real, parameter :: use_default_nuclear_size = -1.0
-
-    type crust_eos_general_info
-        real :: Gamma_melt
-        real :: rsi_melt
-        real :: Ythresh
-        integer :: handle
-        logical :: in_use
-    end type crust_eos_general_info
+    real(dp), parameter :: default_nuclear_radius = 1.13 ! fm
+    real(dp), parameter :: use_default_nuclear_size = -1.0
 
     ! for storing the helmholtz (electron-positron) EOS.. this is adapted from MESA
     
@@ -112,7 +104,4 @@ module dStar_eos_def
     type (Helm_Table), pointer :: crust_eos_ht
     type (Helm_Table), pointer :: eos_ht
     
-    integer, parameter :: max_crust_eos_handles = 10
-    type(crust_eos_general_info), dimension(max_crust_eos_handles), target ::  crust_eos_handles    
-
 end module dStar_eos_def
