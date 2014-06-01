@@ -1,0 +1,106 @@
+       pgas    = pion + pele + ppos + pcoul
+
+       dpgasdd  = dpiondd  + dpepdd  + dpcouldd 
+       dpgasdt  = dpiondt  + dpepdt  + dpcouldt
+       dpgasda  = dpionda  + dpepda  + dpcoulda
+       dpgasdz  = dpiondz  + dpepdz  + dpcouldz
+       dpgasddd = dpionddd + dpepddd + dpcoulddd 
+       dpgasddt = dpionddt + dpepddt + dpcoulddt 
+       dpgasdda = dpiondda + dpepdda + dpcouldda 
+       dpgasddz = dpionddz + dpepddz + dpcoulddz 
+       dpgasdtt = dpiondtt + dpepdtt + dpcouldtt 
+       dpgasdta = dpiondta + dpepdta + dpcouldta 
+       dpgasdtz = dpiondtz + dpepdtz + dpcouldtz 
+       dpgasdaa = dpiondaa + dpepdaa + dpcouldaa 
+       dpgasdaz = dpiondaz + dpepdaz + dpcouldaz 
+       dpgasdzz = dpiondzz + dpepdzz + dpcouldzz 
+
+       egas    = eion + eele + epos + ecoul
+
+       degasdd  = deiondd  + deepdd  + decouldd
+       degasdt  = deiondt  + deepdt  + decouldt
+       degasda  = deionda  + deepda  + decoulda
+       degasdz  = deiondz  + deepdz  + decouldz
+       degasddd = deionddd + deepddd + decoulddd 
+       degasddt = deionddt + deepddt + decoulddt 
+       degasdda = deiondda + deepdda + decouldda 
+       degasddz = deionddz + deepddz + decoulddz 
+       degasdtt = deiondtt + deepdtt + decouldtt 
+       degasdta = deiondta + deepdta + decouldta 
+       degasdtz = deiondtz + deepdtz + decouldtz 
+       degasdaa = deiondaa + deepdaa + decouldaa 
+       degasdaz = deiondaz + deepdaz + decouldaz 
+       degasdzz = deiondzz + deepdzz + decouldzz 
+
+       sgas    = sion + sele + spos + scoul
+
+       dsgasdd  = dsiondd  + dsepdd  + dscouldd
+       dsgasdt  = dsiondt  + dsepdt  + dscouldt
+       dsgasda  = dsionda  + dsepda  + dscoulda
+       dsgasdz  = dsiondz  + dsepdz  + dscouldz
+       dsgasddd = dsionddd + dsepddd + dscoulddd 
+       dsgasddt = dsionddt + dsepddt + dscoulddt 
+       dsgasdda = dsiondda + dsepdda + dscouldda 
+       dsgasddz = dsionddz + dsepddz + dscoulddz 
+       dsgasdtt = dsiondtt + dsepdtt + dscouldtt 
+       dsgasdta = dsiondta + dsepdta + dscouldta 
+       dsgasdtz = dsiondtz + dsepdtz + dscouldtz 
+       dsgasdaa = dsiondaa + dsepdaa + dscouldaa 
+       dsgasdaz = dsiondaz + dsepdaz + dscouldaz 
+       dsgasdzz = dsiondzz + dsepdzz + dscouldzz 
+
+
+
+
+!..add in radiation to get the total
+       pres    = prad + pgas
+
+       dpresdd  = dpraddd  + dpgasdd
+       dpresdt  = dpraddt  + dpgasdt
+       dpresda  = dpradda  + dpgasda
+       dpresdz  = dpraddz  + dpgasdz
+       dpresddd = dpradddd + dpgasddd
+       dpresddt = dpradddt + dpgasddt
+       dpresdda = dpraddda + dpgasdda
+       dpresddz = dpradddz + dpgasddz
+       dpresdtt = dpraddtt + dpgasdtt
+       dpresdta = dpraddta + dpgasdta
+       dpresdtz = dpraddtz + dpgasdtz
+       dpresdaa = dpraddaa + dpgasdaa
+       dpresdaz = dpraddaz + dpgasdaz
+       dpresdzz = dpraddzz + dpgasdzz
+
+       ener    = erad + egas
+
+       denerdd  = deraddd  + degasdd
+       denerdt  = deraddt  + degasdt
+       denerda  = deradda  + degasda
+       denerdz  = deraddz  + degasdz
+       denerddd = deradddd + degasddd
+       denerddt = deradddt + degasddt
+       denerdda = deraddda + degasdda
+       denerddz = deradddz + degasddz
+       denerdtt = deraddtt + degasdtt
+       denerdta = deraddta + degasdta
+       denerdtz = deraddtz + degasdtz
+       denerdaa = deraddaa + degasdaa
+       denerdaz = deraddaz + degasdaz
+       denerdzz = deraddzz + degasdzz
+
+       entr    = srad + sgas
+
+       dentrdd  = dsraddd  + dsgasdd
+       dentrdt  = dsraddt  + dsgasdt
+       dentrda  = dsradda  + dsgasda
+       dentrdz  = dsraddz  + dsgasdz
+       dentrddd = dsradddd + dsgasddd
+       dentrddt = dsradddt + dsgasddt
+       dentrdda = dsraddda + dsgasdda
+       dentrddz = dsradddz + dsgasddz
+       dentrdtt = dsraddtt + dsgasdtt
+       dentrdta = dsraddta + dsgasdta
+       dentrdtz = dsraddtz + dsgasdtz
+       dentrdaa = dsraddaa + dsgasdaa
+       dentrdaz = dsraddaz + dsgasdaz
+       dentrdzz = dsraddzz + dsgasdzz
+

@@ -1,0 +1,320 @@
+!..declare everything else
+
+!..totals
+      double precision pres,
+     1                 dpresdd,dpresdt,dpresda,dpresdz,
+     2                 dpresddd,dpresddt,dpresdda,dpresddz,
+     3                 dpresdtt,dpresdta,dpresdtz,
+     4                 dpresdaa,dpresdaz,dpresdzz,
+     5                 ener,
+     6                 denerdd,denerdt,denerda,denerdz,
+     7                 denerddd,denerddt,denerdda,denerddz,
+     8                 denerdtt,denerdta,denerdtz,
+     9                 denerdaa,denerdaz,denerdzz,
+     &                 entr,
+     1                 dentrdd,dentrdt,dentrda,dentrdz,
+     2                 dentrddd,dentrddt,dentrdda,dentrddz,
+     3                 dentrdtt,dentrdta,dentrdtz,
+     4                 dentrdaa,dentrdaz,dentrdzz
+
+
+!..for the gas
+      double precision pgas,
+     1                 dpgasdd,dpgasdt,dpgasda,dpgasdz,
+     2                 dpgasddd,dpgasddt,dpgasdda,dpgasddz,
+     3                 dpgasdtt,dpgasdta,dpgasdtz,
+     4                 dpgasdaa,dpgasdaz,dpgasdzz,
+     5                 egas,
+     6                 degasdd,degasdt,degasda,degasdz,
+     7                 degasddd,degasddt,degasdda,degasddz,
+     8                 degasdtt,degasdta,degasdtz,
+     9                 degasdaa,degasdaz,degasdzz,
+     &                 sgas,
+     1                 dsgasdd,dsgasdt,dsgasda,dsgasdz,
+     2                 dsgasddd,dsgasddt,dsgasdda,dsgasddz,
+     3                 dsgasdtt,dsgasdta,dsgasdtz,
+     4                 dsgasdaa,dsgasdaz,dsgasdzz
+
+
+!..radiation
+      integer          radmult
+      double precision prad,
+     1                 dpraddd,dpraddt,dpradda,dpraddz,
+     2                 dpradddd,dpradddt,dpraddda,dpradddz,
+     3                 dpraddtt,dpraddta,dpraddtz,
+     4                 dpraddaa,dpraddaz,dpraddzz,
+     5                 erad,
+     6                 deraddd,deraddt,deradda,deraddz,
+     7                 deradddd,deradddt,deraddda,deradddz,
+     8                 deraddtt,deraddta,deraddtz,
+     9                 deraddaa,deraddaz,deraddzz,
+     &                 srad,
+     1                 dsraddd,dsraddt,dsradda,dsraddz,
+     2                 dsradddd,dsradddt,dsraddda,dsradddz,
+     3                 dsraddtt,dsraddta,dsraddtz,
+     4                 dsraddaa,dsraddaz,dsraddzz
+
+
+!..ions
+      integer          ionmult
+      double precision eta_ion_try
+      double precision, parameter :: sion0 = 1d3
+      double precision :: sionfactor, dsionfactord, dsionfactort, 
+     &                 dsionfactora, dsionfactorz
+      double precision :: sion_new, 
+     &                 dsiondd_new,dsiondt_new,dsionda_new,dsiondz_new,
+     &                 dsionddd_new,dsionddt_new,dsiondda_new,dsionddz_new,
+     &                 dsiondtt_new,dsiondta_new,dsiondtz_new,
+     &                 dsiondaa_new,dsiondaz_new,dsiondzz_new
+
+!..ions
+
+!..pressure, energy, entropy
+      double precision pion,eion,sion,
+     1                 dpiondd,dpiondt,dpionda,dpiondz,
+     2                 deiondd,deiondt,deionda,deiondz,
+     3                 dsiondd,dsiondt,dsionda,dsiondz,
+     4                 dpionddd,dpionddt,dpiondda,dpionddz,
+     5                 dpiondtt,dpiondta,dpiondtz,
+     6                 dpiondaa,dpiondaz,dpiondzz,
+     7                 deionddd,deionddt,deiondda,deionddz,
+     8                 deiondtt,deiondta,deiondtz,
+     9                 deiondaa,deiondaz,deiondzz,
+     &                 dsionddd,dsionddt,dsiondda,dsionddz,
+     1                 dsiondtt,dsiondta,dsiondtz,
+     2                 dsiondaa,dsiondaz,dsiondzz
+
+!..number densities
+      double precision xni,
+     1                 dxnidd,dxnidt,dxnida,dxnidz,
+     2                 dxniddd,dxniddt,dxnidda,dxniddz,
+     3                 dxnidtt,dxnidta,dxnidtz,
+     4                 dxnidaa,dxnidaz,dxnidzz
+
+
+      double precision 
+     1                 xnifer,dxniferdd,dxniferdt,dxniferda,dxniferdz,
+     2                 dxniferddd,dxniferddt,dxniferdda,dxniferddz,
+     3                 dxniferdtt,dxniferdta,dxniferdtz,dxniferdaa,
+     4                 dxniferdaz,dxniferdzz
+
+
+!..chemical potential
+      double precision etaion,
+     1                 detaidd,detaidt,detaida,detaidz,
+     2                 detaiddd,detaiddt,detaidda,detaiddz,
+     3                 detaidtt,detaidta,detaidtz,
+     4                 detaidaa,detaidaz,detaidzz
+
+
+
+
+!..electron-positrons
+      integer          elemult
+
+      double precision etaele,detadd,detadt,detada,detadz,
+     1                 detaddd,detaddt,detadda,detaddz,detadtt,
+     2                 detadta,detadtz,detadaa,detadaz,detadzz
+
+
+      double precision
+     1                 pep,dpepdd,dpepdt,dpepda,dpepdz,
+     2                 dpepddd,dpepddt,dpepdda,dpepddz,
+     3                 dpepdtt,dpepdta,dpepdtz,dpepdaa,
+     4                 dpepdaz,dpepdzz,
+     5                 eep,deepdd,deepdt,deepda,deepdz,
+     6                 deepddd,deepddt,deepdda,deepddz,
+     7                 deepdtt,deepdta,deepdtz,deepdaa,
+     8                 deepdaz,deepdzz,
+     9                 sep,dsepdd,dsepdt,dsepda,dsepdz,
+     &                 dsepddd,dsepddt,dsepdda,dsepddz,
+     1                 dsepdtt,dsepdta,dsepdtz,dsepdaa,
+     2                 dsepdaz,dsepdzz
+
+      double precision 
+     1                 etapos,zeff
+
+      double precision 
+     1                 pele,dpeledd,dpeledt,dpeleda,dpeledz,
+     2                 dpeleddd,dpeleddt,dpeledda,dpeleddz,
+     3                 dpeledtt,dpeledta,dpeledtz,dpeledaa,
+     4                 dpeledaz,dpeledzz,
+     5                 eele,deeledd,deeledt,deeleda,deeledz,
+     6                 deeleddd,deeleddt,deeledda,deeleddz,
+     7                 deeledtt,deeledta,deeledtz,deeledaa,
+     8                 deeledaz,deeledzz,
+     9                 sele,dseledd,dseledt,dseleda,dseledz,
+     &                 dseleddd,dseleddt,dseledda,dseleddz,
+     1                 dseledtt,dseledta,dseledtz,dseledaa,
+     2                 dseledaz,dseledzz
+
+      double precision 
+     1                 ppos,dpposdd,dpposdt,dpposda,dpposdz,
+     2                 dpposddd,dpposddt,dpposdda,dpposddz,
+     3                 dpposdtt,dpposdta,dpposdtz,dpposdaa,
+     4                 dpposdaz,dpposdzz,
+     5                 epos,deposdd,deposdt,deposda,deposdz,
+     6                 deposddd,deposddt,deposdda,deposddz,
+     7                 deposdtt,deposdta,deposdtz,deposdaa,
+     8                 deposdaz,deposdzz,
+     9                 spos,dsposdd,dsposdt,dsposda,dsposdz,
+     &                 dsposddd,dsposddt,dsposdda,dsposddz,
+     1                 dsposdtt,dsposdta,dsposdtz,dsposdaa,
+     2                 dsposdaz,dsposdzz
+
+      double precision xne,
+     1                 dxnedd,dxnedt,dxneda,dxnedz,
+     2                 dxneddd,dxneddt,dxnedda,dxneddz,
+     3                 dxnedtt,dxnedta,dxnedtz,dxnedaa,
+     4                 dxnedaz,dxnedzz
+
+      double precision 
+     1                 xnefer,dxneferdd,dxneferdt,dxneferda,dxneferdz,
+     2                 dxneferddd,dxneferddt,dxneferdda,dxneferddz,
+     3                 dxneferdtt,dxneferdta,dxneferdtz,dxneferdaa,
+     4                 dxneferdaz,dxneferdzz,
+     5                 xnpfer,dxnpferdd,dxnpferdt,dxnpferda,dxnpferdz,
+     6                 dxnpferddd,dxnpferddt,dxnpferdda,dxnpferddz,
+     7                 dxnpferdtt,dxnpferdta,dxnpferdtz,dxnpferdaa,
+     8                 dxnpferdaz,dxnpferdzz
+
+
+
+
+
+!..ionization contributions
+      double precision eip,deipdd,deipdt,deipda,deipdz,
+     1                 sip,dsipdd,dsipdt,dsipda,dsipdz,
+     2                 pip,dpipdd,dpipdt,dpipda,dpipdz
+
+!..ionization contributions; now in the file xneroot_common.dek
+      integer          ionized,potmult
+
+
+!..coulomb corrections
+      integer          coulmult
+      double precision 
+     >      pcoulfrac, ecoulfrac, scoulfrac, coulfrac, coulfactor, scoulfactor
+      double precision coul0, coul_a0, coul_a1, coul_a2, coul_a3
+      parameter        (coul0 = 0.85d0)
+      parameter        (coul_a0 = (-16 + 32*coul0 - 16*coul0**2 + coul0**3 + coul0**4)/coul0**3)
+      parameter        (coul_a1 = (48 - 84*coul0 + 32*coul0**2 - coul0**3)/coul0**3)
+      parameter        (coul_a2 = (-8*(6 - 9*coul0 + 2*coul0**2))/coul0**3)
+      parameter        (coul_a3 = (16 - 20*coul0)/coul0**3)
+
+!..pressure, energy, entropy
+
+      double precision plasg
+
+      double precision pcoul,
+     1                 dpcouldd,dpcouldt,dpcoulda,dpcouldz,
+     2                 dpcoulddd,dpcoulddt,dpcouldda,dpcoulddz,
+     3                 dpcouldtt,dpcouldta,dpcouldtz,dpcouldaa,
+     4                 dpcouldaz,dpcouldzz
+
+      double precision ecoul,
+     1                 decouldd,decouldt,decoulda,decouldz,
+     2                 decoulddd,decoulddt,decouldda,decoulddz,
+     3                 decouldtt,decouldta,decouldtz,decouldaa,
+     4                 decouldaz,decouldzz
+
+      double precision scoul,
+     1                 dscouldd,dscouldt,dscoulda,dscouldz,
+     2                 dscoulddd,dscoulddt,dscouldda,dscoulddz,
+     3                 dscouldtt,dscouldta,dscouldtz,dscouldaa,
+     4                 dscouldaz,dscouldzz
+
+
+
+
+      double precision s,sinv,dsdd,dsdt,dsda,dsdz,
+     1                 dsddd,dsddt,dsdda,dsddz,dsdtt,dsdta,dsdtz,
+     2                 dsdaa,dsdaz,dsdzz
+      
+      double precision aele,aeleinv,daeledd,daeledt,daeleda,daeledz,
+     1                 daeleddd,daeleddt,daeledda,daeleddz,daeledtt,
+     2                 daeledta,daeledtz,daeledaa,daeledaz,daeledzz
+
+      double precision eplasg,
+     1                 deplasgdd,deplasgdt,deplasgda,deplasgdz,
+     2                 deplasgddd,deplasgddt,deplasgdda,deplasgddz,
+     3                 deplasgdtt,deplasgdta,deplasgdtz,deplasgdaa,
+     4                 deplasgdaz,deplasgdzz
+
+      double precision 
+     1                 dplasgdd,dplasgdt,dplasgda,dplasgdz,
+     2                 dplasgddd,dplasgddt,dplasgdda,dplasgddz,
+     3                 dplasgdtt,dplasgdta,dplasgdtz,dplasgdaa,
+     4                 dplasgdaz,dplasgdzz
+
+      double precision u0,du0,ddu0,p1,p2,p3,p4,p5,p6,ion_radius
+      double precision a1,b1,c1,d1,e1,a2,b2,c2
+      parameter        (a1 = -0.898004d0, 
+     1                  b1 =  0.96786d0, 
+     2                  c1 =  0.220703d0, 
+     3                  d1 = -0.86097d0,
+     4                  e1 =  2.5269d0, 
+     5                  a2 =  0.29561d0, 
+     6                  b2 =  1.9885d0,    
+     7                  c2 =  0.288675d0)
+
+
+
+!..various physical quantities based on derivatives 
+      double precision 
+     1                 chit,
+     2                 dchitdd,dchitdt,dchitda,dchitdz,
+     3                 chid,
+     4                 dchiddd,dchiddt,dchidda,dchiddz,
+     5                 cv,
+     6                 dcvdd,dcvdt,dcvda,dcvdz,
+     7                 cp,
+     8                 dcpdd,dcpdt,dcpda,dcpdz,
+     9                 gam1,
+     &                 dgam1dd,dgam1dt,dgam1da,dgam1dz,
+     1                 gam2,
+     2                 dgam2dd,dgam2dt,dgam2da,dgam2dz,
+     3                 gam3,
+     4                 dgam3dd,dgam3dt,dgam3da,dgam3dz,
+     5                 nabad,
+     6                 dnabdd,dnabdt,dnabda,dnabdz,
+     7                 sound,
+     8                 dcsdd,dcsdt,dcsda,dcsdz
+
+      double precision 
+     1                 chit_gas,
+     2                 dchit_gasdd,dchit_gasdt,dchit_gasda,dchit_gasdz,
+     3                 chid_gas,
+     4                 dchid_gasdd,dchid_gasdt,dchid_gasda,dchid_gasdz,
+     5                 cv_gas,
+     6                 dcv_gasdd,dcv_gasdt,dcv_gasda,dcv_gasdz,
+     7                 cp_gas,
+     8                 dcp_gasdd,dcp_gasdt,dcp_gasda,dcp_gasdz,
+     9                 gam1_gas,
+     &                 dgam1_gasdd,dgam1_gasdt,dgam1_gasda,dgam1_gasdz,
+     1                 gam2_gas,
+     2                 dgam2_gasdd,dgam2_gasdt,dgam2_gasda,dgam2_gasdz,
+     3                 gam3_gas,
+     4                 dgam3_gasdd,dgam3_gasdt,dgam3_gasda,dgam3_gasdz,
+     5                 nabad_gas,
+     6                 dnab_gasdd,dnab_gasdt,dnab_gasda,dnab_gasdz,
+     7                 sound_gas,
+     8                 dcs_gasdd,dcs_gasdt,dcs_gasda,dcs_gasdz
+
+
+!..for the maxwell relations
+      double precision dse,dpe,dsp
+
+
+!..miscelaneous local variables 
+      character (len=256) message ! for alerts
+      integer          i,j,k,kend,niter,mode
+      double precision kt,ktinv,x,y,z,ww,xx,yy,zz,zzi,ytot1,ye,
+     1                 ratio,fk,dfk,
+     2                 deninv,tempinv,presinv,plasginv,zbarxx
+
+
+!..various derived constants
+      double precision third,sioncon,sifac,kergavo,asoli3,
+     1                 clight2,eostol,fpmin
+      double precision forth,fiveth,teninth,esqu,forthpi
