@@ -1,12 +1,12 @@
 include $(MESA_DIR)/utils/makefile_header
 
 DSTAR_LIB_DIR = ../../../lib
-LOAD_LOCAL = -L$(LOCAL_LIB_DIR) -L$(DSTAR_LIB_DIR) -lsuperfluid -lcoreneutrino -lconstants
-LOAD_OTHER = -L$(MESA_LIB_DIR) -linterp_1d -lconst -lutils
+LOAD_LOCAL = -L$(LOCAL_LIB_DIR) -lconductivity
+LOAD_OTHER = -L$(DSTAR_LIB_DIR) -lsuperfluid -lneutrino -lconstants -ldstar_eos -lnucchem -L$(MESA_LIB_DIR) -linterp_1d -lconst -lutils
 DSTAR_INC = ../../../include
 
 TEST = tester
-TEST_OBJS = test_neutrino.o
+TEST_OBJS = test_cond.o
 
 default: install
 
