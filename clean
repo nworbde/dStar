@@ -44,14 +44,16 @@ do_one neutrino
 do_one nucchem
 do_one dStar_eos
 do_one conductivity
+do_one dStar_atm
 
 echo "cleaning include, lib, data directories..."
 clean_directory include
 clean_directory lib
 
-echo "cleaning out data directories"
+echo "cleaning out data caches"
 clean_data_caches Tc_data
 clean_data_caches nucchem
 clean_data_caches dStar_eos
+clean_data_caches dStar_atm
 
 echo
