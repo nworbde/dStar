@@ -63,7 +63,6 @@ contains
         Tb = [ (10.0**(lgTbmin + real(i-1,dp)*(delta_lgTb)/real(N-1,dp)),  &
         &   i = 1, N)]
         call do_get_Teff(grav, Plight, Tb, Teff, flux)
-        print *,maxval(flux), minval(flux)
         call do_allocate_atm_table(tab, N, ierr)
         Teff_val(1:4,1:N) => tab% lgTeff(1:4*N)
         flux_val(1:4,1:N) => tab% lgflux(1:4*N)
