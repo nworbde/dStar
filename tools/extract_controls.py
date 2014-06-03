@@ -31,19 +31,19 @@ with open(controls_file,'r') as f:
             varlist.append(m.group(1))
 
 if args.default_assignment:
-    for var in varlist:
-        print '    {0} = default_{0}'.format(var)
+    for v in varlist:
+        print '    {0} = default_{0}'.format(v)
 
 if args.add_store:
-    for var in varlist:
-        print '    s% {0} = {0}'.format(var)
+    for v in varlist:
+        print '    s% {0} = {0}'.format(v)
 
 if nml:
     print 'namelist /{0}/ &'.format(nml[0])
-    for var in varlist[0:-1]:
-        print '    {0}, & '.format(var)
+    for v in varlist[0:-1]:
+        print '    {0}, & '.format(v)
     print '    {0}'.format(varlist[-1])
 
 if args.add_ampersand:
-    for var in varlist:
-        print '    {0}{1}{2}'.format(var,eq,amp)
+    for v in varlist:
+        print '    {0}{1}{2}'.format(v,eq,amp)
