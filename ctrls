@@ -1,0 +1,4 @@
+real :: Mdot
+real :: Qimp
+real :: outburst_duration
+real :: xtra_heat

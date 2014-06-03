@@ -30,6 +30,10 @@ with open(controls_file,'r') as f:
         if m:
             varlist.append(m.group(1))
 
+if args.default_assignment:
+    for var in varlist:
+        print '    {0} = default_{0}'.format(var)
+
 if args.add_store:
     for var in varlist:
         print '    s% {0} = {0}'.format(var)
