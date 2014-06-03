@@ -13,3 +13,13 @@
     real(dp) :: maximum_timestep
     real(dp) :: maximum_end_time
     
+    real(dp), dimension(num_extra_real_controls) :: extra_real_controls
+    integer, dimension(num_extra_integer_controls) :: extra_integer_controls
+    logical, dimension(num_extra_logical_controls) :: extra_logical_controls
+    
+    logical :: fix_core_temperature
+    real(dp) :: core_temperature
+    
+    logical :: fix_atmosphere_temperature_when_accreting
+    real(dp) :: atmosphere_temperature_when_accreting
+    
