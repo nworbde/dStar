@@ -11,14 +11,14 @@ module NScool_def
         
         ! global information (NB. core here means interior to model)
         real(dp) :: Lsurf     ! emergent luminosity
-        real(dp) :: dlnLsdlnT
+        real(dp) :: dlnLsdlnT ! change surface luminosity with temperature out outer zone
         real(dp) :: Teff      ! surface effective temperature
         real(dp) :: Lcore     ! core luminosity
         real(dp) :: Psurf     ! surface pressure
-        real(dp) :: Pcore     ! core pressure
+        real(dp) :: Pcore     ! pressure at core boundary
         real(dp) :: tsec      ! current value of time in seconds
-        real(dp) :: dt        ! value of timestep just taken
-        integer :: model  ! counter that is incremented after each successful step
+        real(dp) :: dt        ! value of timestep just taken, in seconds
+        integer :: model      ! counter that is incremented after each successful step
       
         ! information about the composition
         integer :: nisos  ! number of isotopes
