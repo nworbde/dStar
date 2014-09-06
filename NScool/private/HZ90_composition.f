@@ -29,14 +29,19 @@ module composition_models
     
 contains
     
-    subroutine HZ90(lgP, X)
+    subroutine HZ90(lgP, Yion, Xneut, charged_ids, ncharged, ion_info)
         use const_def
         use nucchem_def
         use nucchem_lib
         real(dp), intent(in), dimension(:) :: lgP
-        real(dp), intent(out), dimension(:,:), allocatable :: X
+        real(dp), intent(out), dimension(:,:) :: Yion
+        real(dp), intent(out), dimension(:) :: Xneut
+        integer, intent(out), dimension(HZ90_number) :: charged_ids
+        integer, intent(out) :: ncharged
+        type(composition_info_type), dimension(:) :: ion_info
         integer, dimension(max_nnuclib) :: network_indcs
-         
+        
+        real(dp), allocatable, dimension(:,:) :: X
         integer :: Ntab, i, indx, n_indx, indx1, indx2
         integer, dimension(HZ90_number) :: indcs
         integer, parameter :: number_layers = 17
@@ -54,7 +59,7 @@ contains
         &   0.0, 0.0, 0.0, 0.0, 0.0,  &
         &   0.07, 0.18, 0.29, 0.39, 0.45, 0.50, 0.55, 0.61, 0.70, 0.73, 0.76, 0.80, 0.80]
         
-        real(dp) :: lgP1, lgP2, width
+        real(dp) :: lgP1, lgP2, width, Xsum
         
         Ntab = size(lgP)
         allocate(X(HZ90_number,Ntab))
@@ -106,7 +111,146 @@ contains
             end where
         end do
         
+        ! loop over and compute composition moments
+        do i = 1, Ntab
+            call compute_composition_moments(HZ90_number,indcs,X(:,i), &
+            &   ion_info(i),Xsum,ncharged,charged_ids,Yion(:,i),exclude_neutrons=.TRUE., &
+            &   abunds_are_mass_fractions=.TRUE.)
+        end do
+        Xneut = X(n_indx,:)
+        
+        deallocate(X)
     end subroutine HZ90
+    
+    subroutine find_densities(eos_handle,lgP,lgRho,Yion,ncharged,charged_ids,ionic)
+        use constants_def
+        use nucchem_def
+        use num_lib
+
+        real(dp) :: Pfac
+        integer, intent(in) :: eos_handle
+        real(dp), dimension(:), intent(in) :: lgP
+        real(dp), dimension(:), intent(out) :: lgRho
+        real(dp), dimension(:,:), intent(in) :: Yion
+        integer, intent(in) :: ncharged
+        integer, dimension(:), intent(in) :: charged_ids
+        type(composition_info_type), dimension(:), intent(in) :: ionic
+        real(dp), dimension(:), pointer :: rpar=>null()
+        integer, dimension(:), pointer :: ipar=>null()
+        integer :: lipar, lrpar
+        integer :: i,Ntab
+        real(dp) :: x1, x3, y1, y3, epsx, epsy, lgRho_guess
+        integer :: imax, ierr
+        
+        Pfac = 0.25*threepisquare*hbar*clight*avo**(2.0*onethird)
+        Ntab = size(lgP)
+        imax = 20
+        epsx = 1.0d-8
+        epsy = 1.0d-8
+        
+        ! decide the size of the parameter arrays
+        lipar = 2 + ncharged
+        allocate(ipar(lipar))
+        ipar(1) = eos_handle
+        ipar(2) = ncharged
+        ipar(3:ncharged+3) = charged_ids
+        
+        lrpar = ncharged + 11 + 2
+        allocate(rpar(lrpar))
+        
+        ! last value of rpar is a guess for the density; if 0, will be calculated for relativistic electron gas
+        rpar(lrpar) = 0.0
+        do i = 1, Ntab
+            ! stuff the composition information into the parameter array
+            rpar(1:ncharged) = Yion(1:ncharged,i)
+            rpar(ncharged+1) = ionic(i)% A
+            rpar(ncharged+2) = ionic(i)% Z
+            rpar(ncharged+3) = ionic(i)% Z53
+            rpar(ncharged+4) = ionic(i)% Z2
+            rpar(ncharged+5) = ionic(i)% Z73
+            rpar(ncharged+6) = ionic(i)% Z52
+            rpar(ncharged+7) = ionic(i)% ZZ1_32
+            rpar(ncharged+8) = ionic(i)% Z2XoA2
+            rpar(ncharged+9) = ionic(i)% Ye
+            rpar(ncharged+10) = ionic(i)% Yn
+            rpar(ncharged+11) = ionic(i)% Q
+            rpar(ncharged+12) = lgP(i)
+            
+            if (i > 1 .and. rpar(lrpar) /= 0.0) then
+                lgRho_guess = lgRho(i-1) + (lgP(i)-lgP(i-1))/rpar(lrpar)
+            else
+                lgRho_guess = (10.0**lgP(i)/Pfac)**0.75 /ionic(i)% Ye
+            end if
+            
+            call look_for_brackets(lgRho_guess,0.05*lgRho_guess,x1,x3,match_density, &
+            &   y1,y3,imax,lrpar,rpar,lipar,ipar,ierr)
+            if (ierr /= 0) then
+                write (*,*) 'unable to bracket root',lgP(i), x1, x3, y1, y3
+                cycle
+            end if
+            
+            lgRho(i) = safe_root_with_initial_guess(match_density,lgRho_guess,x1,x3,y1,y3, &
+            &   imax,epsx,epsy,lrpar,rpar,lipar,ipar,ierr)
+            if (ierr /= 0) then
+                write(*,*) 'unable to converge', lgP(i), x1, x3, y1, y3
+                cycle
+            end if
+        end do
+    end subroutine find_densities
+    
+    real(dp) function match_density(lgRho, dfdlgRho, lrpar, rpar, lipar, ipar, ierr)
+       ! returns with ierr = 0 if was able to evaluate f and df/dx at x
+       ! if df/dx not available, it is okay to set it to 0
+       use const_def
+       use nucchem_def
+       use dStar_eos_def
+       use dStar_eos_lib
+       
+       integer, intent(in) :: lrpar, lipar
+       real(dp), intent(in) :: lgRho
+       real(dp), intent(out) :: dfdlgRho
+       integer, intent(inout), pointer :: ipar(:) ! (lipar)
+       real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
+       integer, intent(out) :: ierr
+       integer :: eos_handle, ncharged
+       type(composition_info_type) :: ionic
+       integer, dimension(:), allocatable :: charged_ids
+       real(dp), dimension(:), allocatable :: Yion
+       real(dp), dimension(num_dStar_eos_results) :: res
+       integer :: phase
+       real(dp) :: chi, lgPwant, lgP
+       real(dp) :: rho, T
+       
+       eos_handle = ipar(1)
+       ncharged = ipar(2)
+       allocate(charged_ids(ncharged),Yion(ncharged))
+       charged_ids = ipar(3:ncharged+3)
+       
+       Yion = rpar(1:ncharged)
+       ionic% A = rpar(ncharged+1)
+       ionic% Z = rpar(ncharged+2)
+       ionic% Z53 = rpar(ncharged+3)
+       ionic% Z2 = rpar(ncharged+4)
+       ionic% Z73 = rpar(ncharged+5)
+       ionic% Z52 = rpar(ncharged+6)
+       ionic% ZZ1_32 = rpar(ncharged+7)
+       ionic% Z2XoA2 = rpar(ncharged+8)
+       ionic% Ye = rpar(ncharged+9)
+       ionic% Yn = rpar(ncharged+10)
+       ionic% Q = rpar(ncharged+11)
+       
+       chi = use_default_nuclear_size
+       rho = 10.0**lgRho
+       T = 1.0d8
+       call eval_crust_eos(eos_handle,rho,T,ionic,ncharged,charged_ids,Yion,res,phase,chi)
+
+       lgPwant = rpar(ncharged+12)
+       lgP = res(i_lnP)/ln10
+       rpar(lrpar) = res(i_chiRho)
+       ierr = 0
+       match_density = lgP - lgPwant
+       deallocate(charged_ids,Yion)
+    end function match_density
     
 
 end module composition_models
