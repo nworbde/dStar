@@ -7,7 +7,7 @@ program test_nscool
     
     integer, parameter :: Ntab = 500
     integer :: i, ierr
-    real(dp), dimension(Ntab) :: lgrho
+    real(dp), dimension(Ntab) :: lgP
     real(dp), dimension(:,:), allocatable :: X
     
     call constants_init('',ierr)
@@ -15,14 +15,14 @@ program test_nscool
     
     if (ierr /= 0) stop
     
-    lgrho = [(8.5+5.0*real(i-1,dp)/real(Ntab-1,dp),i=1,Ntab)]
-    call HZ90(lgrho,X)
+    lgP = [(26.5+5.0*real(i-1,dp)/real(Ntab-1,dp),i=1,Ntab)]
+    call HZ90(lgP,X)
     
-    write(*,'(20a9,/)') 'lg rho',HZ90_network(:)
+    write(*,'(21a9,/)') 'lg P',HZ90_network(:),'sum'
     do i = 1,Ntab
-        write(*,'(20f9.6)') lgrho(i),X(:,i)
+        write(*,'(21f9.6)') lgP(i),X(:,i),sum(X(:,i))
         if (mod(i,20) == 0) then
-            write(*,'(20a9,/)') 'lg rho',HZ90_network(:)
+            write(*,'(21a9,/)') 'lg P',HZ90_network(:),'sum'
         end if            
     end do
     
