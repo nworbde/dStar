@@ -153,7 +153,7 @@ contains
         allocate(ipar(lipar))
         ipar(1) = eos_handle
         ipar(2) = ncharged
-        ipar(3:ncharged+3) = charged_ids
+        ipar(3:ncharged+2) = charged_ids(1:ncharged)
         
         lrpar = ncharged + 11 + 2
         allocate(rpar(lrpar))
@@ -179,7 +179,7 @@ contains
             if (i > 1 .and. rpar(lrpar) /= 0.0) then
                 lgRho_guess = lgRho(i-1) + (lgP(i)-lgP(i-1))/rpar(lrpar)
             else
-                lgRho_guess = (10.0**lgP(i)/Pfac)**0.75 /ionic(i)% Ye
+                lgRho_guess = log10((10.0**lgP(i)/Pfac)**0.75 /ionic(i)% Ye)
             end if
             
             call look_for_brackets(lgRho_guess,0.05*lgRho_guess,x1,x3,match_density, &
@@ -224,7 +224,7 @@ contains
        eos_handle = ipar(1)
        ncharged = ipar(2)
        allocate(charged_ids(ncharged),Yion(ncharged))
-       charged_ids = ipar(3:ncharged+3)
+       charged_ids(:) = ipar(3:ncharged+2)
        
        Yion = rpar(1:ncharged)
        ionic% A = rpar(ncharged+1)
