@@ -11,11 +11,11 @@ program test_crust
     integer, parameter :: Ntrial = 20
     integer :: i, ierr
     real(dp), dimension(Ntrial) :: lgP, lgRho, Xneut, lgNb, dlgRho, dlgNb
-!     real(dp), dimension(HZ90_number,Ntrial) :: Yion
-!     integer, dimension(HZ90_number) :: charged_ids
-!     integer :: ncharged
+    real(dp), dimension(:,:), allocatable :: Yion
+    integer, dimension(:), allocatable :: charged_ids
+    integer :: ncharged
     type(composition_info_type), dimension(Ntrial) :: ion_info
-    integer :: eos_handle
+    integer :: eos_handle, Niso
     real(dp) :: Tref
     
     call constants_init('',ierr)
@@ -40,15 +40,26 @@ program test_crust
     call check_okay('dStar_atm_startup',ierr)
     
     Tref = 1.0d8
-    call dStar_crust_load_table('hz90s',eos_handle, Tref,ierr)
+    call dStar_crust_load_table('hz90',eos_handle, Tref,ierr)
     call check_okay('dStar_crust_load_table',ierr)
-    
+        
     lgP = [(26.5+5.0*real(i-1,dp)/real(Ntrial-1,dp),i=1,Ntrial)]
     
     do i = 1,Ntrial
         call dStar_crust_get_results(lgP(i),lgRho(i),dlgRho(i),lgNb(i),dlgNb(i),ierr)
         call check_okay('dStar_crust_get_results',ierr)
         write(*,'(5(f9.5,tr2))') lgP(i),lgRho(i),dlgRho(i),lgNb(i),dlgNb(i)
+    end do
+    
+    Niso = dStar_crust_get_composition_size()
+    allocate(Yion(Niso,Ntrial),charged_ids(Niso))
+    
+    call dStar_crust_get_composition(lgP,ncharged,charged_ids,Yion,Xneut,ion_info,ierr)
+    call check_okay('dStar_crust_get_composition',ierr)
+
+    do i = 1,Ntrial
+        write(*,'(f9.5,tr2,2(f7.4,tr2),2(f6.2,tr2),2(f7.4,tr2),f7.2)') lgP(i),Xneut(i),maxval(Yion(1:ncharged,i)), &
+        &   ion_info(i)% Z, ion_info(i)% A, ion_info(i)% Ye, ion_info(i)% Yn, ion_info(i)%Q
     end do
     
     call dStar_crust_shutdown

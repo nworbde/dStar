@@ -75,6 +75,12 @@ contains
 		end if
 	end subroutine dStar_crust_get_results
     
+    function dStar_crust_get_composition_size()
+        use hz90
+        integer :: dStar_crust_get_composition_size
+        dStar_crust_get_composition_size = HZ90_number
+    end function dStar_crust_get_composition_size
+    
     subroutine dStar_crust_get_composition(lgP,ncharged,charged_ids,Yion,Xneut,ion_info,ierr)
         use nucchem_def
         use hz90
