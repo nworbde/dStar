@@ -1,0 +1,15 @@
+#!/bin/bash
+
+function check_okay {
+        if [ $? -ne 0 ]
+        then
+                echo
+                echo "FAILED"
+                echo
+                exit 1
+        fi
+}
+
+./tester >& test_output.data
+check_okay
+ndiff --quiet --relerr 1.0e-4 test_output.data sample_output.data

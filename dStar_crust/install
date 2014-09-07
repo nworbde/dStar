@@ -1,0 +1,24 @@
+#!/bin/bash
+
+function check_okay {
+	if [ $? -ne 0 ]
+	then
+		echo
+		pwd
+		echo "FAILED"
+		echo
+		exit 1
+	fi
+}
+
+this_module=${PWD##*/}
+mkdir -p ../data/crust_data/cache
+check_okay
+./build_and_test
+check_okay
+cd make
+make install
+check_okay
+cd ..
+echo "module" $this_module "passed tests and was exported"
+echo "****************************************************"
