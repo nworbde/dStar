@@ -49,7 +49,7 @@ contains
 		use iso_fortran_env, only : error_unit
 		use interp_1d_lib, only : interp_value_and_slope
 		real(dp), intent(in) :: lgP
-		real(dp), intent(out) :: lgRho,lgNb,dlgRho,dlgNg
+		real(dp), intent(out) :: lgRho,lgNb,dlgRho,dlgNb
 		integer, intent(out) :: ierr
 		real(dp) :: lgP_c
 		type(crust_table_type), pointer :: tab
