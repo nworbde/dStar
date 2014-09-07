@@ -49,11 +49,11 @@ contains
         use nucchem_def
         use nucchem_lib
         real(dp), intent(in), dimension(:) :: lgP
-        real(dp), intent(out), dimension(:,:) :: Yion
-        real(dp), intent(out), dimension(:) :: Xneut
+        real(dp), intent(out), dimension(:,:) :: Yion   ! (HZ90_number, size(lgP))
+        real(dp), intent(out), dimension(:) :: Xneut    ! (size(lgP))
         integer, intent(out), dimension(HZ90_number) :: charged_ids
         integer, intent(out) :: ncharged
-        type(composition_info_type), dimension(:) :: ion_info
+        type(composition_info_type), dimension(:), intent(out) :: ion_info   ! (size(lgP))
         integer, dimension(max_nnuclib) :: network_indcs
         
         real(dp), allocatable, dimension(:,:) :: X

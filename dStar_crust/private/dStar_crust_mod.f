@@ -3,9 +3,10 @@ module dStar_crust_mod
     integer, parameter :: crust_filename_length=128
 contains
     
-    subroutine do_load_crust_table(prefix,Tref,ierr)
+    subroutine do_load_crust_table(prefix,eos_handle,Tref,ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit
         character(len=*), intent(in) :: prefix
+        integer, intent(in) :: eos_handle
         real(dp), intent(in) :: Tref
         integer, intent(out) :: ierr
 		type(crust_table_type), pointer :: tab
@@ -31,9 +32,9 @@ contains
         ! if we don't have the table, or could not load it, then generatue a 
         ! new one and write to cache
         tab% nv = crust_default_number_table_points
-        tab% lgTb_min = crust_default_lgPmin
-        tab% lgTb_max = crust_default_lgPmax
-        call do_generate_crust_table(prefix,Tref,tab)
+        tab% lgP_min = crust_default_lgPmin
+        tab% lgP_max = crust_default_lgPmax
+        call do_generate_crust_table(prefix,eos_handle,Tref,tab)
         tab% is_loaded = .TRUE.
         
         if (.not.have_cache) then
@@ -44,6 +45,7 @@ contains
     
     subroutine do_generate_crust_table(prefix,eos_handle,Tref,tab)
         use constants_def, only: avogadro
+        use nucchem_def, only: composition_info_type
         use hz90
         use interp_1d_def
         use interp_1d_lib
@@ -66,7 +68,7 @@ contains
         N = tab% nv
         allocate(lgP(N), Xneut(N), lgRho(N), Yion(HZ90_number,N), ion_info(N))
         
-        lgP = [ (lgPmin + real(i-1,dp)*(delta_lgP)/real(N-1,dp)), i = 1, N)]
+        lgP = [ (lgPmin + real(i-1,dp)*(delta_lgP)/real(N-1,dp), i = 1, N)]
         
         call do_make_crust(lgP,Yion,Xneut,charged_ids,ncharged,ion_info)        
         call find_densities(eos_handle,lgP,lgRho,Yion,ncharged,charged_ids,ion_info)
@@ -152,7 +154,7 @@ contains
 		real(dp), intent(in) :: Tref
 		character(len=crust_filename_length), intent(out) :: filename
 		
-		write (filename,'(a,"_",i0.3)') trim(prefix), int(100.0*log10(Treff))
+		write (filename,'(a,"_",i0.3)') trim(prefix), int(100.0*log10(Tref))
 	end subroutine generate_crust_filename
 
 	subroutine do_free_crust_table(tab)

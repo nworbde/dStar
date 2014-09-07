@@ -32,14 +32,15 @@ contains
 		call do_free_crust_table(tab)
 	end subroutine dStar_crust_free_table
     
-	subroutine dStar_crust_load_table(prefix,Tref,ierr)
+	subroutine dStar_crust_load_table(prefix,eos_handle, Tref,ierr)
 		use iso_fortran_env, only : error_unit
 		use dStar_crust_mod, only : do_load_crust_table
 		character(len=*), intent(in) :: prefix
+        integer, intent(in) :: eos_handle
 		real(dp), intent(in) :: Tref
 		integer, intent(out) :: ierr
 		
-		call do_load_crust_table(prefix, Tref, ierr)
+		call do_load_crust_table(prefix, eos_handle, Tref, ierr)
 		if (ierr /= 0) then
 			write(error_unit,'(a,i3)') 'dStar_crust_load_one: ierr = ',ierr
 		end if
@@ -63,7 +64,7 @@ contains
 
 		! clip lgP to table
 		lgP_c = max(lgP,tab% lgP_min)
-		lgT_c = min(lgP,tab% lgP_max)
+		lgP_c = min(lgP,tab% lgP_max)
 		call interp_value_and_slope(tab% lgP, tab% nv, tab% lgRho, lgP_c, lgRho, dlgRho, ierr)
 		if (ierr /= 0) then
 			write (error_unit,'(a,i3)') routine_name//': ierr = ',ierr
@@ -73,5 +74,21 @@ contains
 			write (error_unit,'(a,i3)') routine_name//': ierr = ',ierr
 		end if
 	end subroutine dStar_crust_get_results
+    
+    subroutine dStar_crust_get_composition(lgP,ncharged,charged_ids,Yion,Xneut,ion_info,ierr)
+        use nucchem_def
+        use hz90
+        
+        real(dp), dimension(:), intent(in) :: lgP
+        integer, intent(out) :: ncharged
+        integer, dimension(:), intent(out) :: charged_ids
+        real(dp), dimension(:,:), intent(out) :: Yion
+        real(dp), dimension(:), intent(out) :: Xneut
+        type(composition_info_type), dimension(:), intent(out) :: ion_info
+        integer, intent(out) :: ierr
+
+        call do_make_crust(lgP, Yion, Xneut, charged_ids, ncharged, ion_info)
+        ierr = 0
+    end subroutine dStar_crust_get_composition
 
 end module dStar_crust_lib
