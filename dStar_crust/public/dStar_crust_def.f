@@ -3,7 +3,7 @@ module dStar_crust_def
 
     integer, parameter :: crust_default_number_table_points = 2048
     real(dp), parameter :: crust_default_lgPmin = 26.5
-    real(dp), parameter :: crust_default_lgPmax = 32.5
+    real(dp), parameter :: crust_default_lgPmax = 33.5
     
     type crust_table_type
         logical :: is_loaded

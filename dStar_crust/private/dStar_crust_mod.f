@@ -9,7 +9,9 @@ contains
         integer, intent(in) :: eos_handle
         real(dp), intent(in) :: Tref
         integer, intent(out) :: ierr
+        logical, parameter :: dbg = .FALSE.
 		type(crust_table_type), pointer :: tab
+        real(dp), pointer, dimension(:,:) :: lgNb_val    
         character(len=crust_filename_length) :: table_name, cache_filename
         logical :: have_cache
         integer :: unitno
@@ -36,6 +38,16 @@ contains
         tab% lgP_max = crust_default_lgPmax
         call do_generate_crust_table(prefix,eos_handle,Tref,tab)
         tab% is_loaded = .TRUE.
+        
+        lgNb_val(1:4,1:tab% nv) => tab% lgNb(1:4*tab% nv)
+        
+        ! write informative message about range of table
+        if (dbg) then
+            write(error_unit,'(a,2f8.3)') 'do_load_crust_table: lgNb min, max = ', &
+            &   10.0**(minval(lgNb_val(1,:))-39.0), 10.0**(maxval(lgNb_val(1,:))-39.0)
+            write(error_unit,'(t21,a,2f8.3)') 'lgP min, max = ', &
+            &   tab% lgP_min, tab% lgP_max
+        end if
         
         if (.not.have_cache) then
             call do_write_crust_cache(cache_filename,tab,ierr)
