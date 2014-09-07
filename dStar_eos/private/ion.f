@@ -60,7 +60,8 @@ subroutine ion_mixture(rq,rs,Gamma_e,ionic,ncharged,charged_ids,Yion,Gamma,ionQ,
 	ionQ = sqrt(ionQ2)
 	if (phase == liquid_phase .and. ionQ2 > Q2_threshold) then
 		err = strong_quantum_effects
-		write(error_unit,*) 'ion_mixture: strong quantum effects in liquid encountered'
+        if (.not. rq% suppress_warnings) &
+        &   write(error_unit,*) 'ion_mixture: strong quantum effects in liquid encountered'
 	end if
 
 	! sum contributions

@@ -36,6 +36,9 @@ program test_crust
     eos_handle = alloc_dStar_eos_handle(ierr)
     call check_okay('alloc_dStar_eos_handle',ierr)
     
+    ! switch off the warnings about quantum effects
+    call dStar_eos_set_controls(eos_handle,suppress_warnings=.TRUE.)
+    
     call dStar_crust_startup('../../data',ierr)
     call check_okay('dStar_atm_startup',ierr)
     
