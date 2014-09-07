@@ -1,11 +1,11 @@
-program test_nscool
+program test_crust
     use constants_def, only: dp
     use constants_lib
     use nucchem_def
     use nucchem_lib
     use superfluid_lib
     use dStar_eos_lib
-    use composition_models
+    use hz90
     
     integer, parameter :: Ntab = 500
     integer :: i, ierr
@@ -28,7 +28,7 @@ program test_nscool
     if (ierr /= 0) stop
     
     lgP = [(26.5+5.0*real(i-1,dp)/real(Ntab-1,dp),i=1,Ntab)]
-    call HZ90(lgP,Yion,Xneut,charged_ids,ncharged,ion_info)
+    call do_make_crust(lgP,Yion,Xneut,charged_ids,ncharged,ion_info)
     
     call find_densities(eos_handle,lgP,lgRho,Yion,ncharged,charged_ids,ion_info)
     write(*,'(21a9,/)') 'lg P','lg rho',HZ90_network(:)
@@ -41,4 +41,4 @@ program test_nscool
     call sf_shutdown
     call nucchem_shutdown
 
-end program test_nscool
+end program test_crust

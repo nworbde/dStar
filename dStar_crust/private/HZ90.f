@@ -1,4 +1,4 @@
-module composition_models
+module hz90
 
     use const_def, only: dp
     use nucchem_def, only: iso_name_length
@@ -27,9 +27,24 @@ module composition_models
     &   'cr56', &
     &   'fe56' ]
     
+    integer, parameter :: number_layers = 17
+    
+    character(len=iso_name_length), parameter, dimension(number_layers+1) :: ion_composition = [ &
+    &   character(len=iso_name_length) :: &
+    &   'fe56','cr56','ti56','ca56','ar56','s52','si46','mg40','ca68','ar62','s56','si50', &
+    &   'mg44','ar66','s60','si54','mg48','ti88' ]
+    
+    real(dp),parameter, dimension(number_layers) :: transition_pressures = [ &
+    &   7.235d26,9.569d27,1.152d29,4.747d29,1.361d30,1.980d30,2.253d30,2.637d30,2.771d30,3.216d30, &
+    &   3.825d30,4.699d30,6.043d30,7.233d30,9.238d30,1.228d31,1.602d31 ]
+
+    real(dp), parameter, dimension(number_layers+1) :: Xn = [ &
+    &   0.0, 0.0, 0.0, 0.0, 0.0,  &
+    &   0.07, 0.18, 0.29, 0.39, 0.45, 0.50, 0.55, 0.61, 0.70, 0.73, 0.76, 0.80, 0.80]
+    
 contains
     
-    subroutine HZ90(lgP, Yion, Xneut, charged_ids, ncharged, ion_info)
+    subroutine do_make_crust(lgP, Yion, Xneut, charged_ids, ncharged, ion_info)
         use const_def
         use nucchem_def
         use nucchem_lib
@@ -44,21 +59,8 @@ contains
         real(dp), allocatable, dimension(:,:) :: X
         integer :: Ntab, i, indx, n_indx, indx1, indx2
         integer, dimension(HZ90_number) :: indcs
-        integer, parameter :: number_layers = 17
-        character(len=iso_name_length), parameter, dimension(number_layers+1) :: ion_composition = [ &
-        &   character(len=iso_name_length) :: &
-        &   'fe56','cr56','ti56','ca56','ar56','s52','si46','mg40','ca68','ar62','s56','si50', &
-        &   'mg44','ar66','s60','si54','mg48','ti88' ]
         
-        real(dp),parameter, dimension(number_layers) :: transition_pressures = [ &
-        &   7.235d26,9.569d27,1.152d29,4.747d29,1.361d30,1.980d30,2.253d30,2.637d30,2.771d30,3.216d30, &
-        &   3.825d30,4.699d30,6.043d30,7.233d30,9.238d30,1.228d31,1.602d31 ]
-
-        real(dp), dimension(number_layers) :: lg_Pt
-        real(dp), parameter, dimension(number_layers+1) :: Xn = [ &
-        &   0.0, 0.0, 0.0, 0.0, 0.0,  &
-        &   0.07, 0.18, 0.29, 0.39, 0.45, 0.50, 0.55, 0.61, 0.70, 0.73, 0.76, 0.80, 0.80]
-        
+        real(dp), dimension(number_layers) :: lg_Pt        
         real(dp) :: lgP1, lgP2, width, Xsum
         
         Ntab = size(lgP)
@@ -120,7 +122,7 @@ contains
         Xneut = X(n_indx,:)
         
         deallocate(X)
-    end subroutine HZ90
+    end subroutine do_make_crust
     
     subroutine find_densities(eos_handle,lgP,lgRho,Yion,ncharged,charged_ids,ionic)
         use constants_def
@@ -253,4 +255,4 @@ contains
     end function match_density
     
 
-end module composition_models
+end module hz90
