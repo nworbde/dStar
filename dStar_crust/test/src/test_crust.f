@@ -48,6 +48,7 @@ program test_crust
         
     lgP = [(26.5+5.0*real(i-1,dp)/real(Ntrial-1,dp),i=1,Ntrial)]
     
+    write (*,'(/,5(a9,tr2),/)') 'lg(P)','lg(rho)','D lg(rho)','lg(Nb)','D ln(Nb)'
     do i = 1,Ntrial
         call dStar_crust_get_results(lgP(i),lgRho(i),dlgRho(i),lgNb(i),dlgNb(i),ierr)
         call check_okay('dStar_crust_get_results',ierr)
@@ -60,6 +61,7 @@ program test_crust
     call dStar_crust_get_composition(lgP,ncharged,charged_ids,Yion,Xneut,ion_info,ierr)
     call check_okay('dStar_crust_get_composition',ierr)
 
+    write (*,'(/,a9,tr2,2(a7,tr2),2(a6,tr2),2(a7,tr2),a7,/)') 'lg(P)','Xn','max(Y)','<Z>','<A>','Ye','Yn','Q'
     do i = 1,Ntrial
         write(*,'(f9.5,tr2,2(f7.4,tr2),2(f6.2,tr2),2(f7.4,tr2),f7.2)') lgP(i),Xneut(i),maxval(Yion(1:ncharged,i)), &
         &   ion_info(i)% Z, ion_info(i)% A, ion_info(i)% Ye, ion_info(i)% Yn, ion_info(i)%Q
