@@ -62,6 +62,7 @@ module dStar_eos_def
     ! warning codes
     real(dp), parameter :: Q2_threshold = 18.0
     integer, parameter :: strong_quantum_effects = 1
+    logical, parameter :: default_suppress_eos_warnings = .FALSE.
     
     ! for specifying the phase, liquid or solid
     integer, parameter :: liquid_phase = 1

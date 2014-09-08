@@ -51,12 +51,13 @@ module dStar_eos_lib
 	end subroutine dStar_eos_ptr
 	
     subroutine dStar_eos_set_controls(handle,gamma_melt_pt,rsi_melt_pt,nuclide_abundance_threshold, &
-        &       pasta_transition_in_fm3,cluster_transition_in_fm3)
+        &       pasta_transition_in_fm3,cluster_transition_in_fm3,suppress_warnings)
         use, intrinsic :: iso_fortran_env, only: error_unit
         use dStar_eos_private_def, only : dStar_eos_general_info
         integer, intent(in) :: handle
         real(dp), intent(in), optional :: gamma_melt_pt, rsi_melt_pt, nuclide_abundance_threshold
         real(dp), intent(in), optional :: pasta_transition_in_fm3, cluster_transition_in_fm3
+        logical, intent(in), optional :: suppress_warnings
         type(dStar_eos_general_info), pointer :: rq
         integer :: ierr
         
@@ -71,6 +72,7 @@ module dStar_eos_lib
         if (present(nuclide_abundance_threshold)) rq% Ythresh = nuclide_abundance_threshold
         if (present(pasta_transition_in_fm3)) rq% pasta_transition = pasta_transition_in_fm3
         if (present(cluster_transition_in_fm3)) rq% cluster_transition = cluster_transition_in_fm3
+        if (present(suppress_warnings)) rq% suppress_warnings = suppress_warnings
     end subroutine dStar_eos_set_controls
 	
 	subroutine eval_crust_eos( &

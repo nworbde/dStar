@@ -14,6 +14,7 @@ module dStar_eos_private_def
         real(dp) :: Ythresh
         real(dp) :: pasta_transition
         real(dp) :: cluster_transition
+        logical :: suppress_warnings
         integer :: handle
         logical :: in_use
     end type dStar_eos_general_info
@@ -30,6 +31,7 @@ contains
 			dStar_eos_handles(i)% Ythresh = default_Y_threshold
             dStar_eos_handles(i)% pasta_transition = default_pasta_transition
             dStar_eos_handles(i)% cluster_transition = default_cluster_transition
+            dStar_eos_handles(i)% suppress_warnings = default_suppress_eos_warnings
 			dStar_eos_handles(i)% handle = i
 			dStar_eos_handles(i)% in_use = .FALSE.
 		end do
