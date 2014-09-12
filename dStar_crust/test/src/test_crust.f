@@ -10,7 +10,7 @@ program test_crust
     
     integer, parameter :: Ntrial = 20
     integer :: i, ierr
-    real(dp), dimension(Ntrial) :: lgP, lgRho, Xneut, lgNb, dlgRho, dlgNb
+    real(dp), dimension(Ntrial) :: lgP, lgRho, Xneut, lgEps, dlgRho, dlgEps
     real(dp), dimension(:,:), allocatable :: Yion
     integer, dimension(:), allocatable :: charged_ids
     integer :: ncharged
@@ -48,11 +48,11 @@ program test_crust
         
     lgP = [(26.5+5.0*real(i-1,dp)/real(Ntrial-1,dp),i=1,Ntrial)]
     
-    write (*,'(/,5(a9,tr2),/)') 'lg(P)','lg(rho)','D lg(rho)','lg(Nb)','D ln(Nb)'
+    write (*,'(/,5(a9,tr2),/)') 'lg(P)','lg(rho)','D lg(rho)','lg(Eps)','D ln(Eps)'
     do i = 1,Ntrial
-        call dStar_crust_get_results(lgP(i),lgRho(i),dlgRho(i),lgNb(i),dlgNb(i),ierr)
+        call dStar_crust_get_results(lgP(i),lgRho(i),dlgRho(i),lgEps(i),dlgEps(i),ierr)
         call check_okay('dStar_crust_get_results',ierr)
-        write(*,'(5(f9.5,tr2))') lgP(i),lgRho(i),dlgRho(i),lgNb(i),dlgNb(i)
+        write(*,'(5(f9.5,tr2))') lgP(i),lgRho(i),dlgRho(i),lgEps(i),dlgEps(i)
     end do
     
     Niso = dStar_crust_get_composition_size()
