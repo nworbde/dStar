@@ -8,9 +8,67 @@ module NScool_crust_tov
 	integer, parameter :: tov_baryon = 2
 	integer, parameter :: tov_mass = 3
 	integer, parameter :: tov_potential = 4
-	integer, parameter :: num_basic_tov_variables = 4
-
+	integer, parameter :: num_tov_variables = 4
+    
+    integer, parameter :: num_tov_ipar = 0
+	
+    integer, parameter :: tov_output_step_crust = 1
+    integer, parameter :: tov_last_recorded_step = 2
+    integer, parameter :: num_tov_rpar = 2
+    
+	integer, parameter :: tov_default_max_steps = 1000
+	real(dp), parameter :: tov_default_max_step_size = 0.0
+    real(dp), parameter :: tov_default_starting_step = 1.0e-5
+    
 contains
+    
+    subroutine tov_integrate(lgPstart, lgPend, Mcore, Rcore, y, ierr)
+        use, intrinsic :: iso_fortran_env, only: error_unit
+        real(dp), intent(in) :: lgPstart    ! cgs
+        real(dp), intent(in) :: lgPend      ! cgs
+        real(dp), intent(in) :: Mcore       ! Msun
+        real(dp), intent(in) :: Rcore       ! km
+        real(dp), dimension(num_tov_variables), intent(out) :: y
+        integer, intent(out) :: ierr
+        integer ,dimension(:), allocatable :: iwork
+        real(dp), dimension(:), allocatable :: work
+        real(dp), dimension(1) :: rtol, atol
+        integer, dimension(num_tov_ipar) :: ipar
+        integer, dimension(num_tov_rpar) :: rpar
+        real(dp) :: lnP, lnPend, h
+        integer :: liwork, lwork, itol, lipar, lrpar
+        integer :: n, idid, lout, iout
+        
+		call dop853_work_sizes(num_tov_variables,num_tov_variables,liwork,lwork)
+        allocate(iwork(liwork), work(lwork))
+        iwork = 0
+        iwork(5) = num_tov_variables
+        work = 0.0
+        
+        itol = 0
+        iout = 2    ! want dense output
+        lout = error_unit
+        lipar = num_tov_ipar
+        lrpar = num_tov_rpar
+        
+        rpar(tov_output_step_crust) = 0.1
+        rpar(tov_last_recorded_step) = -0.1
+        
+		y(tov_radius)      = Rcore*1.0e5/length_g
+		y(tov_baryon)      = Mcore
+		y(tov_mass)        = Mcore
+		y(tov_potential)   = 0.0
+
+        n = num_tov_variables
+        lnP = lgPstart * ln10
+        lnPend = lgPend * ln10
+        h = -tov_default_starting_step
+
+		call dop853(n,tov_derivs_crust,lnP,y,lnPend,h,tov_default_max_step_size,tov_default_max_steps, &
+			& rtol,atol,itol, tov_solout_crust, iout, work, lwork, iwork, liwork,  &
+			&	num_tov_rpar, rpar, num_tov_ipar, ipar, lout, idid)
+		deallocate(work, iwork)
+    end subroutine tov_integrate
     
     subroutine tov_derivs_crust(n,lnP,y,dy,lrpar,rpar,lipar,ipar,ierr)
     	use dStar_crust_lib
@@ -24,6 +82,7 @@ contains
     	integer, intent(out) :: ierr
     	real(dp) ::  r,r2, r3, a, m, Phi, P, Lnu, Lambda, Hfac, Gfac, lgP, Cv, fourpir2, g
     	real(dp) :: rho, eps, eps_g, rho_g, lgT, nn, np, enu, enu_g, T
+        real(dp) :: lgRho, dlgRho, lgNb, dlgNb
         
         ierr = 0
         
@@ -80,7 +139,7 @@ contains
     	end interface ! 
     	integer :: ierr, i
     	real(dp) ::  lnP, lgP, xwant, lgx, r, a, m, phi, p
-    	real(dp) :: rho, eps
+    	real(dp) :: rho, eps, lgRho, dlgRho, lgNb, dlgNb
 	
         ierr = 0
         irtrn = 0
@@ -100,7 +159,7 @@ contains
 !             eps = 10.0**(lgRho)*clight**2      ! erg cm**-3
 !             rho = 10.0**(lgRho)               ! g cm**-3
             
-			write (*,'(4(es15.8,tr1))') a, m, r*length_g, phi, p, 10.0**lgRho
+			write (*,'(5(f12.8,tr2),2(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi, p, 10.0**lgRho
 
 			rpar(tov_last_recorded_step) = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
 			xwant = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)

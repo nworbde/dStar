@@ -1,7 +1,7 @@
 include $(MESA_DIR)/utils/makefile_header
 
 LIB = libnscool.a
-LIB_OBJS = 	HZ90_composition.o
+LIB_OBJS = 	NScool_crust_tov.o
 
 VPATH = $(MOD_PUBLIC_DIR):$(MOD_PRIVATE_DIR)
 DSTAR_INC=../../include
