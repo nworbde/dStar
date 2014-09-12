@@ -90,7 +90,7 @@ contains
     	integer, intent(out) :: ierr
     	real(dp) ::  r,r2, r3, a, m, Phi, P, Lnu, Lambda, Hfac, Gfac, lgP, Cv, fourpir2, g
     	real(dp) :: rho, eps, eps_g, rho_g, lgT, nn, np, enu, enu_g, T
-        real(dp) :: lgRho, dlgRho, lgNb, dlgNb
+        real(dp) :: lgRho, dlgRho, lgEps, dlgEps
         
         ierr = 0
         
@@ -102,9 +102,9 @@ contains
     	Phi = y(tov_potential)
 
     	lgP = lnP/ln10 + log10(pressure_g)			! convert P to cgs
-    	call dStar_crust_get_results(lgP,lgRho,dlgRho,lgNb,dlgNb,ierr)
-        ! our crust model doensn't distinguish between amu and m; small error, will fix soon.
-    	eps = 10.0**(lgRho)*clight**2	  ! erg cm**-3
+    	call dStar_crust_get_results(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
+
+    	eps = 10.0**(lgEps)	  ! mass-energy density, in g cm**-3
         rho = 10.0**(lgRho)               ! g cm**-3
     	r2 = r*r
     	r3 = r2*r
@@ -112,7 +112,7 @@ contains
 
     	! scale to gravitational units
     	rho_g = rho / density_g
-    	eps_g = eps / pressure_g
+    	eps_g = eps / density_g
 
         ! correction factors, see Thorne (1977)
 		Lambda = 1.0/sqrt(1.0-2.0*m/r)
@@ -149,7 +149,7 @@ contains
     	end interface ! 
     	integer :: ierr, i
     	real(dp) ::  lnP, lgP, xwant, lgx, r, a, m, phi, p
-    	real(dp) :: rho, eps, lgRho, dlgRho, lgNb, dlgNb
+    	real(dp) :: rho, eps, lgRho, dlgRho, lgEps, dlgEps
 	
         ierr = 0
         irtrn = 0
@@ -164,12 +164,10 @@ contains
 
 			lgP = lnP/ln10 + log10(pressure_g)			! convert P to cgs
             p = exp(lnP)
-        	call dStar_crust_get_results(lgP,lgRho,dlgRho,lgNb,dlgNb,ierr)
-!             ! our crust model doensn't distinguish between amu and m; small error, will fix soon.
-!             eps = 10.0**(lgRho)*clight**2      ! erg cm**-3
-!             rho = 10.0**(lgRho)               ! g cm**-3
+        	call dStar_crust_get_results(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
             
-			write (*,'(5(f14.10,tr2),2(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi, 10.0**lgP, 10.0**lgRho
+			write (*,'(5(f14.10,tr2),3(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi,  &
+			&   10.0**lgP, 10.0**lgRho, 10.0**lgEps
 
 			rpar(tov_last_recorded_step) = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
 			xwant = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
