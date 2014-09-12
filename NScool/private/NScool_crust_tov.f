@@ -24,61 +24,65 @@ contains
     
     subroutine tov_integrate(lgPstart, lgPend, Mcore, Rcore, y, ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit
+        use num_lib
+        
         real(dp), intent(in) :: lgPstart    ! cgs
         real(dp), intent(in) :: lgPend      ! cgs
         real(dp), intent(in) :: Mcore       ! Msun
         real(dp), intent(in) :: Rcore       ! km
-        real(dp), dimension(num_tov_variables), intent(out) :: y
+        real(dp), dimension(:), pointer :: y
         integer, intent(out) :: ierr
-        integer ,dimension(:), allocatable :: iwork
-        real(dp), dimension(:), allocatable :: work
+        integer ,dimension(:), pointer :: iwork => null()
+        real(dp), dimension(:), pointer :: work => null()
         real(dp), dimension(1) :: rtol, atol
-        integer, dimension(num_tov_ipar) :: ipar
-        integer, dimension(num_tov_rpar) :: rpar
+        integer, dimension(:), pointer :: ipar => null()
+        real(dp), dimension(:), pointer :: rpar => null()
         real(dp) :: lnP, lnPend, h
         integer :: liwork, lwork, itol, lipar, lrpar
         integer :: n, idid, lout, iout
         
 		call dop853_work_sizes(num_tov_variables,num_tov_variables,liwork,lwork)
-        allocate(iwork(liwork), work(lwork))
+        allocate(iwork(liwork), work(lwork),ipar(num_tov_ipar), rpar(num_tov_rpar))
         iwork = 0
         iwork(5) = num_tov_variables
         work = 0.0
         
         itol = 0
+        rtol = 1.0e-4
+        atol = 1.0e-5
         iout = 2    ! want dense output
         lout = error_unit
         lipar = num_tov_ipar
         lrpar = num_tov_rpar
-        
-        rpar(tov_output_step_crust) = 0.1
-        rpar(tov_last_recorded_step) = -0.1
-        
+                
 		y(tov_radius)      = Rcore*1.0e5/length_g
 		y(tov_baryon)      = Mcore
 		y(tov_mass)        = Mcore
-		y(tov_potential)   = 0.0
+		y(tov_potential)   = sqrt(1.0-2.0*y(tov_mass)/y(tov_radius))
 
         n = num_tov_variables
-        lnP = lgPstart * ln10
-        lnPend = lgPend * ln10
-        h = -tov_default_starting_step
+        lnP = lgPstart * ln10 - log(pressure_g)
+        lnPend = lgPend * ln10 - log(pressure_g)
+        h = -0.1
+        rpar(tov_output_step_crust) = 0.1
+        rpar(tov_last_recorded_step) = lnP + rpar(tov_output_step_crust)
 
 		call dop853(n,tov_derivs_crust,lnP,y,lnPend,h,tov_default_max_step_size,tov_default_max_steps, &
 			& rtol,atol,itol, tov_solout_crust, iout, work, lwork, iwork, liwork,  &
 			&	num_tov_rpar, rpar, num_tov_ipar, ipar, lout, idid)
+
 		deallocate(work, iwork)
     end subroutine tov_integrate
     
-    subroutine tov_derivs_crust(n,lnP,y,dy,lrpar,rpar,lipar,ipar,ierr)
+    subroutine tov_derivs_crust(n,lnP,h,y,dy,lrpar,rpar,lipar,ipar,ierr)
     	use dStar_crust_lib
 
     	integer, intent(in) :: n, lrpar, lipar
-    	real(dp), intent(in) :: lnP
+    	real(dp), intent(in) :: lnP, h
     	real(dp), intent(inout) :: y(n)
     	real(dp), intent(out) :: dy(n)
-    	real(dp), intent(inout), target :: rpar(lrpar)
-    	integer, intent(inout), target :: ipar(lipar)
+    	real(dp), intent(inout), pointer :: rpar(:)
+    	integer, intent(inout), pointer :: ipar(:)
     	integer, intent(out) :: ierr
     	real(dp) ::  r,r2, r3, a, m, Phi, P, Lnu, Lambda, Hfac, Gfac, lgP, Cv, fourpir2, g
     	real(dp) :: rho, eps, eps_g, rho_g, lgT, nn, np, enu, enu_g, T
@@ -116,7 +120,7 @@ contains
 		dy(tov_baryon)      = -P*fourpir2/g/Hfac * rho_g/eps_g
 		dy(tov_mass)        = -P*fourpir2/g/Hfac/Lambda
 		dy(tov_potential)   = -P/eps_g/Hfac
-
+        
     end subroutine tov_derivs_crust
 
     subroutine tov_solout_crust(nr, xold, x, n, y, rwork_y, iwork_y, interp_y, lrpar, rpar, lipar, ipar, irtrn)
@@ -125,8 +129,10 @@ contains
     	integer, intent(in) :: nr, n, lrpar, lipar
     	real(dp), intent(in) :: xold, x
     	real(dp), intent(inout) :: y(n)
-    	real(dp), intent(inout), target :: rpar(lrpar), rwork_y(*)
-    	integer, intent(inout), target :: ipar(lipar), iwork_y(*)
+        real(dp), intent(inout), target :: rwork_y(*)
+        integer, intent(inout), target :: iwork_y(*)
+        integer, intent(inout), pointer :: ipar(:) ! (lipar)
+        real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
     	integer, intent(out) :: irtrn
     	interface
     		double precision function interp_y(i, s, rwork_y, iwork_y, ierr)
@@ -159,7 +165,7 @@ contains
 !             eps = 10.0**(lgRho)*clight**2      ! erg cm**-3
 !             rho = 10.0**(lgRho)               ! g cm**-3
             
-			write (*,'(5(f12.8,tr2),2(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi, p, 10.0**lgRho
+			write (*,'(5(f14.10,tr2),2(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi, 10.0**lgP, 10.0**lgRho
 
 			rpar(tov_last_recorded_step) = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
 			xwant = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
