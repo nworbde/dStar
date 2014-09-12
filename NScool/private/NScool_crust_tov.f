@@ -8,8 +8,7 @@ module NScool_crust_tov
 	integer, parameter :: tov_baryon = 2
 	integer, parameter :: tov_mass = 3
 	integer, parameter :: tov_potential = 4
-	integer, parameter :: tov_pressure = 5
-	integer, parameter :: num_basic_tov_variables = 5
+	integer, parameter :: num_basic_tov_variables = 4
 
 contains
     
@@ -23,7 +22,7 @@ contains
     	real(dp), intent(inout), target :: rpar(lrpar)
     	integer, intent(inout), target :: ipar(lipar)
     	integer, intent(out) :: ierr
-    	real(dp) ::  r,r2, r3, a, m, Phi, P, Lnu, Lambda, Hfac, Gfac, lgP, Cv, fourpir2
+    	real(dp) ::  r,r2, r3, a, m, Phi, P, Lnu, Lambda, Hfac, Gfac, lgP, Cv, fourpir2, g
     	real(dp) :: rho, eps, eps_g, rho_g, lgT, nn, np, enu, enu_g, T
         
         ierr = 0
@@ -34,7 +33,6 @@ contains
     	a = y(tov_baryon)
     	m = y(tov_mass)
     	Phi = y(tov_potential)
-    	P = y(tov_pressure)
 
     	lgP = lnP/ln10 + log10(pressure_g)			! convert P to cgs
     	call dStar_crust_get_results(lgP,lgRho,dlgRho,lgNb,dlgNb,ierr)
@@ -48,16 +46,17 @@ contains
     	! scale to gravitational units
     	rho_g = rho / density_g
     	eps_g = eps / pressure_g
-    	dy = 0.0
+
+        ! correction factors, see Thorne (1977)
 		Lambda = 1.0/sqrt(1.0-2.0*m/r)
 		Hfac = 1.0+P/eps_g
 		Gfac = (1.0 + fourpi*r3*P/m)
+        g = m/r2 * Gfac*Lambda
 
-		dy(tov_radius) = -P*r2/m/eps_g/Hfac/Lambda**2/Gfac
-		dy(tov_baryon) = -P*fourpir2*r2/m/Hfac/Lambda/Gfac * rho_g/eps_g
-		dy(tov_mass) = -fourpir2*r2*P/m/Hfac/Lambda**2/Gfac
-		dy(tov_potential) = -P/eps_g/Hfac
-		dy(tov_pressure) = P
+		dy(tov_radius)      = -P/g/eps_g/Hfac/Lambda
+		dy(tov_baryon)      = -P*fourpir2/g/Hfac * rho_g/eps_g
+		dy(tov_mass)        = -P*fourpir2/g/Hfac/Lambda
+		dy(tov_potential)   = -P/eps_g/Hfac
 
     end subroutine tov_derivs_crust
 
@@ -80,7 +79,7 @@ contains
          end function interp_y
     	end interface ! 
     	integer :: ierr, i
-    	real(dp) ::  lgP, xwant, lgx, r, a, m, phi, p
+    	real(dp) ::  lnP, lgP, xwant, lgx, r, a, m, phi, p
     	real(dp) :: rho, eps
 	
         ierr = 0
@@ -88,25 +87,25 @@ contains
 		xwant = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
 		do while (xwant > x)
 			
+            lnP = xwant
 			r = interp_y(tov_radius, xwant, rwork_y, iwork_y, ierr)
 			a = interp_y(tov_baryon, xwant, rwork_y, iwork_y, ierr)
 			m = interp_y(tov_mass, xwant, rwork_y, iwork_y, ierr)
 			phi = interp_y(tov_potential, xwant, rwork_y, iwork_y, ierr)
-			p = interp_y(tov_pressure, xwant, rwork_y, iwork_y, ierr)
 
-			lgP = log10(y(tov_pressure))+log10(pressure_g)			! convert P to cgs
+			lgP = lnP/ln10 + log10(pressure_g)			! convert P to cgs
+            p = exp(lnP)
         	call dStar_crust_get_results(lgP,lgRho,dlgRho,lgNb,dlgNb,ierr)
 !             ! our crust model doensn't distinguish between amu and m; small error, will fix soon.
 !             eps = 10.0**(lgRho)*clight**2      ! erg cm**-3
 !             rho = 10.0**(lgRho)               ! g cm**-3
             
-			write (*,'(4(es15.8,tr1))') a, m, r*length_g, phi, p*pressure_g, 10.0**lgRho
+			write (*,'(4(es15.8,tr1))') a, m, r*length_g, phi, p, 10.0**lgRho
 
 			rpar(tov_last_recorded_step) = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
 			xwant = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
     	end do
 
     end subroutine tov_solout_crust
-
 
 end module NScool_crust_tov
