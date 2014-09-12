@@ -223,7 +223,7 @@ contains
        real(dp), dimension(num_dStar_eos_results) :: res
        integer :: phase
        real(dp) :: chi, lgPwant, lgP
-       real(dp) :: rho, T
+       real(dp) :: rho, T, Eint
        
        eos_handle = ipar(1)
        ncharged = ipar(2)
@@ -247,11 +247,12 @@ contains
        rho = 10.0**lgRho
        T = 1.0d8
        call eval_crust_eos(eos_handle,rho,T,ionic,ncharged,charged_ids,Yion,res,phase,chi)
-
+       Eint = res(i_lnE)
+       
        lgPwant = rpar(ncharged+12)
        lgP = res(i_lnP)/ln10
 
-       rpar(ncharged+13) = log10(rho*(1.0+dot_product(Yion(:),nuclib%mass_excess(charged_ids))/amu_n))
+       rpar(ncharged+13) = log10(rho*(1.0+dot_product(Yion(:),nuclib%mass_excess(charged_ids))/amu_n + Eint/clight2))
        rpar(lrpar) = res(i_chiRho)
        ierr = 0
        match_density = lgP - lgPwant
