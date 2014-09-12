@@ -54,9 +54,9 @@ contains
 		Gfac = (1.0 + fourpi*r3*P/m)
 
 		dy(tov_radius) = -P*r2/m/eps_g/Hfac/Lambda**2/Gfac
-		dy(tov_baryon) = -P*fourpir2*r2/m/Hfac/Lambda**2/Gfac * rho_g/eps_g
+		dy(tov_baryon) = -P*fourpir2*r2/m/Hfac/Lambda/Gfac * rho_g/eps_g
 		dy(tov_mass) = -fourpir2*r2*P/m/Hfac/Lambda**2/Gfac
-		dy(tov_potential) = -P/eps_g/Gfac
+		dy(tov_potential) = -P/eps_g/Hfac
 		dy(tov_pressure) = P
 
     end subroutine tov_derivs_crust
@@ -96,14 +96,11 @@ contains
 
 			lgP = log10(y(tov_pressure))+log10(pressure_g)			! convert P to cgs
         	call dStar_crust_get_results(lgP,lgRho,dlgRho,lgNb,dlgNb,ierr)
-            ! our crust model doensn't distinguish between amu and m; small error, will fix soon.
-        	eps = 10.0**(lgRho)*clight**2	  ! erg cm**-3
-            rho = 10.0**(lgRho)               ! g cm**-3
+!             ! our crust model doensn't distinguish between amu and m; small error, will fix soon.
+!             eps = 10.0**(lgRho)*clight**2      ! erg cm**-3
+!             rho = 10.0**(lgRho)               ! g cm**-3
             
-    			write (*,'(10(es15.8,tr1))') a, m, r*length_g, &
-    				& phi,p/MeVfm3_to_g, T*exp(-phi)*mev_to_ergs/boltzmann,&
-    				& rho, eps, L*length_g**3/cgseps_to_g,  &
-    				& C*length_g**3*boltzmann*cm_to_fm**3
+			write (*,'(4(es15.8,tr1))') a, m, r*length_g, phi, p*pressure_g, 10.0**lgRho
 
 			rpar(tov_last_recorded_step) = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
 			xwant = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
