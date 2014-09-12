@@ -1,5 +1,7 @@
 module NScool_def
-
+    use nucchem_def, only: composition_info_type
+    
+    ! storage for extra controls
     integer, parameter :: num_extra_real_controls = 32
     integer, parameter :: num_extra_integer_controls = 32
     integer, parameter :: num_extra_logical_controls = 32
@@ -16,6 +18,8 @@ module NScool_def
         real(dp) :: Lcore     ! core luminosity
         real(dp) :: Psurf     ! surface pressure
         real(dp) :: Pcore     ! pressure at core boundary
+        real(dp) :: Mcore     ! mass of core
+        real(dp) :: Rcore     ! radius of core
         real(dp) :: tsec      ! current value of time in seconds
         real(dp) :: dt        ! value of timestep just taken, in seconds
         integer :: model      ! counter that is incremented after each successful step
@@ -33,6 +37,7 @@ module NScool_def
         character(len=256) :: history_filename
       
         ! zonal information
+        real(dp) :: target_resolution_lnP               ! target (d lnP) of a zone
         integer :: nz     ! number of zones
         real(dp), allocatable, dimension(:) :: dm      ! mass differences
         real(dp), allocatable, dimension(:,:) :: X     ! mass fracs (isotope, zone)
