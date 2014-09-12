@@ -4,7 +4,7 @@ module NScool_ctrls_io
 
     namelist /controls/ &
         load_model_file, & 
-        model, & 
+        model_file, & 
         write_interval_for_terminal, & 
         write_interval_for_terminal_header, & 
         write_interval_for_history, & 
@@ -29,7 +29,7 @@ contains
         integer, intent(out) :: ierr
         type(NScool_info), pointer :: s
         
-        call get_NScool_ptr(id,s,ierr)
+        call get_NScool_info_ptr(id,s,ierr)
         if (ierr /= 0) return
         call set_default_controls
         call read_controls(id,inlist,ierr)
@@ -43,7 +43,7 @@ contains
        integer :: iounit
       
        ierr = 0
-       call get_NScool_ptr(id,s,ierr)
+       call get_NScool_info_ptr(id,s,ierr)
        if (ierr /= 0) return
       
        if (len_trim(filename) > 0) then
@@ -63,7 +63,7 @@ contains
     end subroutine read_controls
    
     subroutine set_default_controls()
-       include 'NScool_controls.defaults'
+       include 'controls.defaults'
     end subroutine set_default_controls
 
     subroutine store_controls(s,ierr)
@@ -74,13 +74,13 @@ contains
        ierr = 0
 
        s% load_model_file = load_model_file
-       s% model = model
+       s% model_file = model_file
        s% write_interval_for_terminal = write_interval_for_terminal
        s% write_interval_for_terminal_header = write_interval_for_terminal_header
        s% write_interval_for_history = write_interval_for_history
        s% write_interval_for_profile = write_interval_for_profile
        s% output_directory = output_directory
-       s% which_solver = solver_option(trim(which_solver),ierr)
+       s% which_solver = trim(which_solver) !solver_option(trim(which_solver),ierr)
        if (ierr /= 0) then
            write (*,*) 'unable to parse solver option'
            return

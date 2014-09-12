@@ -1,4 +1,5 @@
 module NScool_def
+    use constants_def, only: dp
     use nucchem_def, only: composition_info_type
     
     ! storage for extra controls
@@ -9,7 +10,7 @@ module NScool_def
     type NScool_info
         integer :: id     ! id for this star
             
-        include 'controls.inc'
+        include 'NScool_controls.inc'
         
         ! global information (NB. core here means interior to model)
         real(dp) :: Lsurf     ! emergent luminosity

@@ -1,5 +1,5 @@
     logical :: load_model_file
-    character(len=64) :: model file
+    character(len=64) :: model_file
     
     integer :: write_interval_for_terminal
     integer :: write_interval_for_terminal_header

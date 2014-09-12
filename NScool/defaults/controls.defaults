@@ -1,6 +1,6 @@
     !   used for loading an existing structure model
     load_model_file = .TRUE.
-    model = ''
+    model_file = ''
     
     ! controls for output
     write_interval_for_terminal = 1
