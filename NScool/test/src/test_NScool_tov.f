@@ -50,7 +50,7 @@ program test_NScool_tov
     print *, 'integrating'
     call tov_integrate(lgPstart, lgPend, Mcore, Rcore, y, ierr)
     print *,'done'
-    print *, y
+    print *,y
     deallocate(y)
 contains
 	subroutine check_okay(msg,ierr)

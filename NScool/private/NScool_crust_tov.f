@@ -14,7 +14,9 @@ module NScool_crust_tov
 	
     integer, parameter :: tov_output_step_crust = 1
     integer, parameter :: tov_last_recorded_step = 2
-    integer, parameter :: num_tov_rpar = 2
+    integer, parameter :: tov_core_mass = 3
+    integer, parameter :: tov_core_radius = 4
+    integer, parameter :: num_tov_rpar = 4
     
 	integer, parameter :: tov_default_max_steps = 1000
 	real(dp), parameter :: tov_default_max_step_size = 0.0
@@ -55,10 +57,10 @@ contains
         lipar = num_tov_ipar
         lrpar = num_tov_rpar
                 
-		y(tov_radius)      = Rcore*1.0e5/length_g
-		y(tov_baryon)      = Mcore
-		y(tov_mass)        = Mcore
-		y(tov_potential)   = sqrt(1.0-2.0*y(tov_mass)/y(tov_radius))
+		y(tov_radius)      = 0.0
+		y(tov_baryon)      = 0.0
+		y(tov_mass)        = 0.0
+		y(tov_potential)   = sqrt(1.0-2.0*Mcore/(Rcore*1.0e5/length_g))
 
         n = num_tov_variables
         lnP = lgPstart * ln10 - log(pressure_g)
@@ -66,7 +68,9 @@ contains
         h = -0.1
         rpar(tov_output_step_crust) = 0.1
         rpar(tov_last_recorded_step) = lnP + rpar(tov_output_step_crust)
-
+        rpar(tov_core_mass) = Mcore
+        rpar(tov_core_radius) = Rcore*1.0e5/length_g
+        
 		call dop853(n,tov_derivs_crust,lnP,y,lnPend,h,tov_default_max_step_size,tov_default_max_steps, &
 			& rtol,atol,itol, tov_solout_crust, iout, work, lwork, iwork, liwork,  &
 			&	num_tov_rpar, rpar, num_tov_ipar, ipar, lout, idid)
@@ -92,9 +96,9 @@ contains
         
         ! everything is in gravitational units
     	P = exp(lnP)
-    	r = y(tov_radius)
-    	a = y(tov_baryon)
-    	m = y(tov_mass)
+    	r = y(tov_radius) + rpar(tov_core_radius)
+    	a = y(tov_baryon) + rpar(tov_core_mass)
+    	m = y(tov_mass) + rpar(tov_core_mass)
     	Phi = y(tov_potential)
 
     	lgP = lnP/ln10 + log10(pressure_g)			! convert P to cgs
@@ -153,9 +157,9 @@ contains
 		do while (xwant > x)
 			
             lnP = xwant
-			r = interp_y(tov_radius, xwant, rwork_y, iwork_y, ierr)
-			a = interp_y(tov_baryon, xwant, rwork_y, iwork_y, ierr)
-			m = interp_y(tov_mass, xwant, rwork_y, iwork_y, ierr)
+			r = interp_y(tov_radius, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_radius)
+			a = interp_y(tov_baryon, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_mass)
+			m = interp_y(tov_mass, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_mass)
 			phi = interp_y(tov_potential, xwant, rwork_y, iwork_y, ierr)
 
 			lgP = lnP/ln10 + log10(pressure_g)			! convert P to cgs
