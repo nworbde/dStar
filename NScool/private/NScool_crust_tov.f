@@ -8,9 +8,11 @@ module NScool_crust_tov
 	integer, parameter :: tov_baryon = 2
 	integer, parameter :: tov_mass = 3
 	integer, parameter :: tov_potential = 4
-	integer, parameter :: num_tov_variables = 4
+    integer, parameter :: tov_volume = 5
+	integer, parameter :: num_tov_variables = 5
     
-    integer, parameter :: num_tov_ipar = 0
+    integer, parameter :: tov_model_handle = 1
+    integer, parameter :: num_tov_ipar = 1
 	
     integer, parameter :: tov_output_step_crust = 1
     integer, parameter :: tov_last_recorded_step = 2
@@ -61,6 +63,7 @@ contains
 		y(tov_baryon)      = 0.0
 		y(tov_mass)        = 0.0
 		y(tov_potential)   = sqrt(1.0-2.0*Mcore/(Rcore*1.0e5/length_g))
+        y(tov_volume)      = 0.0
 
         n = num_tov_variables
         lnP = lgPstart * ln10 - log(pressure_g)
@@ -124,6 +127,7 @@ contains
 		dy(tov_baryon)      = -P*fourpir2/g/Hfac * rho_g/eps_g
 		dy(tov_mass)        = -P*fourpir2/g/Hfac/Lambda
 		dy(tov_potential)   = -P/eps_g/Hfac
+        dy(tov_volume)      = fourpir2*Lambda*dy(tov_radius)
         
     end subroutine tov_derivs_crust
 
@@ -148,7 +152,7 @@ contains
          end function interp_y
     	end interface ! 
     	integer :: ierr, i
-    	real(dp) ::  lnP, lgP, xwant, lgx, r, a, m, phi, p
+    	real(dp) ::  lnP, lgP, xwant, lgx, r, a, m, phi, p, vol
     	real(dp) :: rho, eps, lgRho, dlgRho, lgEps, dlgEps
 	
         ierr = 0
@@ -161,13 +165,14 @@ contains
 			a = interp_y(tov_baryon, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_mass)
 			m = interp_y(tov_mass, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_mass)
 			phi = interp_y(tov_potential, xwant, rwork_y, iwork_y, ierr)
+            vol = interp_y(tov_volume, xwant, rwork_y, iwork_y, ierr)
 
 			lgP = lnP/ln10 + log10(pressure_g)			! convert P to cgs
             p = exp(lnP)
         	call dStar_crust_get_results(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
             
-			write (*,'(5(f14.10,tr2),3(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi,  &
-			&   10.0**lgP, 10.0**lgRho, 10.0**lgEps
+			write (*,'(5(f14.10,tr2),4(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi,  &
+			&   10.0**lgP, 10.0**lgRho, 10.0**lgEps, vol*length_g**3
 
 			rpar(tov_last_recorded_step) = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
 			xwant = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
