@@ -11,7 +11,7 @@ module NScool_crust_tov
     integer, parameter :: tov_volume = 5
 	integer, parameter :: num_tov_variables = 5
     
-    integer, parameter :: tov_model_handle = 1
+    integer, parameter :: tov_model_npts = 1
     integer, parameter :: num_tov_ipar = 1
 	
     integer, parameter :: tov_output_step_crust = 1
@@ -24,7 +24,82 @@ module NScool_crust_tov
 	real(dp), parameter :: tov_default_max_step_size = 0.0
     real(dp), parameter :: tov_default_starting_step = 1.0e-5
     
+    integer, parameter :: tov_model_expansion_count = 100
+    
+    type tov_model_type
+        integer :: npts
+        real(dp) :: core_mass
+        real(dp) :: core_radius
+        real(dp), allocatable, dimension(:) :: radius
+        real(dp), allocatable, dimension(:) :: baryon
+        real(dp), allocatable, dimension(:) :: mass
+        real(dp), allocatable, dimension(:) :: potential
+        real(dp), allocatable, dimension(:) :: volume
+    end type tov_model_type
+    
+    type(tov_model_type), target, save :: tov_model
+    
 contains
+    
+    subroutine alloc_tov_model(npts, s, ierr)
+        integer, intent(in) :: npts
+        type (tov_model_type), pointer :: s
+        integer, intent(out) :: ierr
+        
+        allocate(s% radius(npts), s% baryon(npts), s% mass(npts), s% potential(npts), s% volume(npts), stat=ierr)
+    end subroutine alloc_tov_model
+    
+    subroutine free_tov_model(s, ierr)
+        type (tov_model_type), pointer :: s
+        integer, intent(out) :: ierr
+        
+        s => tov_model
+        deallocate(s% radius, s% baryon, s% mass, s% potential, s% volume, stat=ierr)
+    end subroutine free_tov_model
+    
+    subroutine copy_tov_model(s, snew, ierr)
+        type (tov_model_type), pointer :: s, snew
+        integer, intent(out) :: ierr
+        integer :: n, nnew
+        
+        ierr = 0
+        n = s% npts
+        nnew = snew% npts
+        if (nnew < n) then
+            ierr = -1
+            return
+        end if
+        snew% radius(1:n) = s% radius(1:n)
+        snew% baryon(1:n) = s% baryon(1:n)
+        snew% mass(1:n) = s% mass(1:n)
+        snew% potential(1:n) = s% potential(1:n)
+        snew% volume(1:n) = s% volume(1:n)
+    end subroutine copy_tov_model
+    
+    subroutine expand_tov_model(ierr)
+        integer, intent(out) :: ierr
+        type (tov_model_type), pointer :: s, stmp
+        integer :: nz, new_nz
+        type(tov_model_type), target :: tmp_model
+        
+        s => tov_model
+        stmp => tmp_model
+        
+        ierr = 0
+        nz = s% npts
+        new_nz = nz + tov_model_expansion_count
+        call alloc_tov_model(new_nz, stmp, ierr)
+        if (ierr /= 0) return
+        call copy_tov_model(s, stmp, ierr)
+        if (ierr /= 0) return
+        call free_tov_model(s, ierr)
+        if (ierr /=0) return
+        call alloc_tov_model(new_nz, s, ierr)
+        if (ierr /= 0) return
+        call copy_tov_model(stmp,s,ierr)
+        if (ierr /=0) return
+        call free_tov_model(stmp, ierr)
+    end subroutine expand_tov_model
     
     subroutine tov_integrate(lgPstart, lgPend, Mcore, Rcore, y, ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit
@@ -42,8 +117,11 @@ contains
         integer, dimension(:), pointer :: ipar => null()
         real(dp), dimension(:), pointer :: rpar => null()
         real(dp) :: lnP, lnPend, h
+        type(tov_model_type), pointer :: s
         integer :: liwork, lwork, itol, lipar, lrpar
-        integer :: n, idid, lout, iout
+        integer :: n, idid, lout, iout, npts
+        
+        s => tov_model
         
 		call dop853_work_sizes(num_tov_variables,num_tov_variables,liwork,lwork)
         allocate(iwork(liwork), work(lwork),ipar(num_tov_ipar), rpar(num_tov_rpar))
@@ -73,6 +151,11 @@ contains
         rpar(tov_last_recorded_step) = lnP + rpar(tov_output_step_crust)
         rpar(tov_core_mass) = Mcore
         rpar(tov_core_radius) = Rcore*1.0e5/length_g
+        ipar(tov_model_npts) = 1
+        npts = ceiling(lnPend - lnP)/rpar(tov_output_step_crust) + 1
+        
+        call alloc_tov_model(npts, s, ierr)
+        if (ierr /= 0) return
         
 		call dop853(n,tov_derivs_crust,lnP,y,lnPend,h,tov_default_max_step_size,tov_default_max_steps, &
 			& rtol,atol,itol, tov_solout_crust, iout, work, lwork, iwork, liwork,  &
@@ -154,12 +237,20 @@ contains
     	integer :: ierr, i
     	real(dp) ::  lnP, lgP, xwant, lgx, r, a, m, phi, p, vol
     	real(dp) :: rho, eps, lgRho, dlgRho, lgEps, dlgEps
-	
+        integer :: zone_id
+	    type(tov_model_type), pointer :: s
+        
         ierr = 0
         irtrn = 0
 		xwant = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
-		do while (xwant > x)
+		s => tov_model
+        zone_id = ipar(tov_model_npts)
+        
+        do while (xwant > x)
 			
+            if (zone_id >= s% npts) call expand_tov_model(ierr)
+            if (ierr /= 0) exit
+            
             lnP = xwant
 			r = interp_y(tov_radius, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_radius)
 			a = interp_y(tov_baryon, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_mass)
@@ -171,13 +262,20 @@ contains
             p = exp(lnP)
         	call dStar_crust_get_results(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
             
+            s% radius(zone_id) = interp_y(tov_radius, xwant, rwork_y, iwork_y, ierr)
+            s% baryon(zone_id) = interp_y(tov_baryon, xwant, rwork_y, iwork_y, ierr)
+            s% mass(zone_id)   = interp_y(tov_mass, xwant, rwork_y, iwork_y, ierr)
+            s% potential(zone_id) = interp_y(tov_potential, xwant, rwork_y, iwork_y, ierr)
+            s% volume(zone_id) = interp_y(tov_volume, xwant, rwork_y, iwork_y, ierr)
+            
 			write (*,'(5(f14.10,tr2),4(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi,  &
 			&   10.0**lgP, 10.0**lgRho, 10.0**lgEps, vol*length_g**3
 
 			rpar(tov_last_recorded_step) = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
 			xwant = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
+            
     	end do
-
+        if (ierr /= 0) irtrn = -1
     end subroutine tov_solout_crust
 
 end module NScool_crust_tov
