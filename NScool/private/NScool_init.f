@@ -1,5 +1,5 @@
 module init
-    use NScool_def, only: get_NScool_ptr
+    use NScool_def, only: get_NScool_info_ptr
     use NScool_private_def
     
 contains
@@ -37,7 +37,7 @@ contains
         s% tsec = 0.0      ! current value of time in seconds
         s% dt = 0.0        ! value of timestep just taken, in seconds
         s% Mdot = 0.0      ! accretion rate measured at infinity [g/s]
-        s% model = 0s      ! counter that is incremented after each successful step
+        s% model = 0       ! counter that is incremented after each successful step
       
         ! information about the composition
         s% nisos = 0  ! number of isotopes
@@ -93,10 +93,10 @@ contains
 
         ! storage for interpolation of tabulated ln(enu), ln(Cp), ln(Kcond)
         s% n_tab = 0                       ! number of table points
-        s% nullify(tab_lnT) ! (n_tab) junction points for interpolation; same for all grid points
-        s% nullify(lnenu_tab)  ! (4*n_tab, nz) coefficients for ln(enu)
-        s% nullify(lnCp_tab)  ! (4*n_tab, nz) coefficients for ln(Cp)
-        s% nullify(lnK_tab)   ! (4*n_tab, nz) coefficients for ln(Kcond)
+        nullify(s% tab_lnT) ! (n_tab) junction points for interpolation; same for all grid points
+        nullify(s% lnenu_tab)  ! (4*n_tab, nz) coefficients for ln(enu)
+        nullify(s% lnCp_tab)  ! (4*n_tab, nz) coefficients for ln(Cp)
+        nullify(s% lnK_tab)   ! (4*n_tab, nz) coefficients for ln(Kcond)
     end function alloc_NScool_data
     
     subroutine dealloc_NScool_data(id, ierr)

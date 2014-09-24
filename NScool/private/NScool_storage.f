@@ -42,11 +42,11 @@ contains
         call NScool_info_arrays(s, do_allocate, ierr)
     end subroutine allocate_NScool_info_arrays
 
-    subroutine free_NScool_iso_arrays(s, ierr)
+    subroutine free_NScool_info_arrays(s, ierr)
         type(NScool_info), pointer :: s
         integer, intent(out) :: ierr
-        call NScool_iso_arrays(s, do_deallocate, ierr)
-    end subroutine free_NScool_iso_arrays
+        call NScool_info_arrays(s, do_deallocate, ierr)
+    end subroutine free_NScool_info_arrays
 
     subroutine allocate_NScool_work_arrays(s, ierr)
         type(NScool_info), pointer :: s
@@ -64,6 +64,7 @@ contains
         type(NScool_info), pointer :: s
         integer, intent(in) :: action
         integer, intent(out) :: ierr
+        integer :: nisos
         
         ierr = 0
         nisos = s% nisos
@@ -203,7 +204,7 @@ contains
         
         ierr = 0
         nz = s% nz
-        ntab = s% ntab
+        ntab = s% n_tab
         do
             call do1(s% tab_lnT)
             if (failed('tab_lnT')) exit
@@ -247,7 +248,7 @@ contains
                 nullify(ptr)
             end if
             case (do_allocate)
-            allocate(ptr(sz1,stat=ierr))
+            allocate(ptr(sz1),stat=ierr)
         end select
     end subroutine do1D
     
@@ -263,9 +264,9 @@ contains
                 nullify(ptr)
             end if
             case (do_allocate)
-            allocate(ptr(sz1,stat=ierr))
+            allocate(ptr(sz1),stat=ierr)
         end select
-    end subroutine do1D
+    end subroutine do1Dint
 
     subroutine do1Dcomp(ptr,sz1,action,ierr)
         type(composition_info_type), dimension(:), pointer :: ptr
@@ -279,7 +280,7 @@ contains
                 nullify(ptr)
             end if
             case (do_allocate)
-            allocate(ptr(sz1,stat=ierr))
+            allocate(ptr(sz1),stat=ierr)
         end select
     end subroutine do1Dcomp
     
@@ -295,7 +296,7 @@ contains
                 nullify(ptr)
             end if
             case (do_allocate)
-            allocate(ptr(sz1,sz2,stat=ierr))
+            allocate(ptr(sz1,sz2),stat=ierr)
         end select
     end subroutine do2D
 
