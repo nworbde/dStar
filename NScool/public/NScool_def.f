@@ -23,13 +23,14 @@ module NScool_def
         real(dp) :: Rcore     ! radius of core
         real(dp) :: tsec      ! current value of time in seconds
         real(dp) :: dt        ! value of timestep just taken, in seconds
+        real(dp) :: Mdot      ! accretion rate measured at infinity [g/s]
         integer :: model      ! counter that is incremented after each successful step
       
         ! information about the composition
         integer :: nisos  ! number of isotopes
         integer :: ncharged
-        integer, allocatable, dimension(:) :: iso_ids ! id's for isotopes, computed by nucchem
-        integer, allocatable, dimension(:) :: charged_ids ! id's for charged isotopes, computed by nucchem
+        integer, pointer, dimension(:) :: iso_ids ! id's for isotopes, computed by nucchem
+        integer, pointer, dimension(:) :: charged_ids ! id's for charged isotopes, computed by nucchem
       
         ! administrative
         integer :: eos_handle
@@ -40,39 +41,40 @@ module NScool_def
         ! zonal information
         real(dp) :: target_resolution_lnP               ! target (d lnP) of a zone
         integer :: nz     ! number of zones
-        real(dp), allocatable, dimension(:) :: dm      ! mass differences
-        real(dp), allocatable, dimension(:,:) :: X     ! mass fracs (isotope, zone)
-        real(dp), allocatable, dimension(:,:) :: Yion  ! abundances of charged species
-        type(composition_info_type), allocatable, dimension(:) :: ionic ! composition info
-        real(dp), allocatable, dimension(:) :: P       ! pressure
-        real(dp), allocatable, dimension(:) :: lnT     ! ln(temperature)
-        real(dp), allocatable, dimension(:) :: T       ! temperature
-        real(dp), allocatable, dimension(:) :: phi     ! potential
-        real(dp), allocatable, dimension(:) :: eLambda ! redshift, 1+z
-        real(dp), allocatable, dimension(:) :: rho     ! density(P,T,X)
-        real(dp), allocatable, dimension(:) :: lnCp    ! ln(specific heat)
-        real(dp), allocatable, dimension(:) :: Cp      ! specific heat at const. pressure
-        real(dp), allocatable, dimension(:) :: dlnCp_dlnT ! derivative
-        real(dp), allocatable, dimension(:) :: enu     ! specific neutrino emissivity
-        real(dp), allocatable, dimension(:) :: lnenu   ! ln(specific neutrino emissivity)
-        real(dp), allocatable, dimension(:) :: dlnenu_dlnT   ! derivative
+        real(dp), pointer, dimension(:) :: dm      ! mass differences
+        real(dp), pointer, dimension(:,:) :: X     ! mass fracs (isotope, zone)
+        real(dp), pointer, dimension(:,:) :: Yion  ! abundances of charged species
+        type(composition_info_type), pointer, dimension(:) :: ionic ! composition info
+        real(dp), pointer, dimension(:) :: P       ! pressure
+        real(dp), pointer, dimension(:) :: lnT     ! ln(temperature)
+        real(dp), pointer, dimension(:) :: T       ! temperature
+        real(dp), pointer, dimension(:) :: phi     ! potential
+        real(dp), pointer, dimension(:) :: eLambda ! redshift, 1+z
+        real(dp), pointer, dimension(:) :: rho     ! density(P,T,X)
+        real(dp), pointer, dimension(:) :: lnCp    ! ln(specific heat)
+        real(dp), pointer, dimension(:) :: Cp      ! specific heat at const. pressure
+        real(dp), pointer, dimension(:) :: dlnCp_dlnT ! derivative
+        real(dp), pointer, dimension(:) :: enu     ! specific neutrino emissivity
+        real(dp), pointer, dimension(:) :: lnenu   ! ln(specific neutrino emissivity)
+        real(dp), pointer, dimension(:) :: dlnenu_dlnT   ! derivative
+        real(dp), pointer, dimension(:) :: enuc     ! heating rate (proportional to Mdot)
 
         ! facial information
-        real(dp), allocatable, dimension(:) :: m       ! mass
-        real(dp), allocatable, dimension(:) :: L       ! luminosity
-        real(dp), allocatable, dimension(:) :: dm_bar  ! interpolated mass difference
-        real(dp), allocatable, dimension(:,:) :: X_bar  ! interpolated mass fracs
-        real(dp), allocatable, dimension(:,:) :: Yion_bar  ! interpolated abundances
-        type(composition_info_type), allocatable, dimension(:) :: ionic_bar ! composition info
-        real(dp), allocatable, dimension(:) :: P_bar   ! interpolated pressure
-        real(dp), allocatable, dimension(:) :: lnT_bar ! ln(interpolated temperature)
-        real(dp), allocatable, dimension(:) :: T_bar   ! interpolated temperature
-        real(dp), allocatable, dimension(:) :: phi_bar ! potential
-        real(dp), allocatable, dimension(:) :: eLambda_bar ! redshift, 1+z
-        real(dp), allocatable, dimension(:) :: rho_bar ! density(Pbar,Tbar,Xbar)
-        real(dp), allocatable, dimension(:) :: Kcond   ! thermal conductivity
-        real(dp), allocatable, dimension(:) :: lnK     ! ln(thermal conductivity)
-        real(dp), allocatable, dimension(:) :: dlnK_dlnT  ! derivative
+        real(dp), pointer, dimension(:) :: m       ! mass
+        real(dp), pointer, dimension(:) :: L       ! luminosity
+        real(dp), pointer, dimension(:) :: dm_bar  ! interpolated mass difference
+        real(dp), pointer, dimension(:,:) :: X_bar  ! interpolated mass fracs
+        real(dp), pointer, dimension(:,:) :: Yion_bar  ! interpolated abundances
+        type(composition_info_type), pointer, dimension(:) :: ionic_bar ! composition info
+        real(dp), pointer, dimension(:) :: P_bar   ! interpolated pressure
+        real(dp), pointer, dimension(:) :: lnT_bar ! ln(interpolated temperature)
+        real(dp), pointer, dimension(:) :: T_bar   ! interpolated temperature
+        real(dp), pointer, dimension(:) :: phi_bar ! potential
+        real(dp), pointer, dimension(:) :: eLambda_bar ! redshift, 1+z
+        real(dp), pointer, dimension(:) :: rho_bar ! density(Pbar,Tbar,Xbar)
+        real(dp), pointer, dimension(:) :: Kcond   ! thermal conductivity
+        real(dp), pointer, dimension(:) :: lnK     ! ln(thermal conductivity)
+        real(dp), pointer, dimension(:) :: dlnK_dlnT  ! derivative
 
         ! storage for interpolation of tabulated ln(enu), ln(Cp), ln(Kcond)
         integer :: n_tab                       ! number of table points
