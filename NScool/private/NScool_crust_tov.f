@@ -123,6 +123,7 @@ contains
         integer, dimension(:), pointer :: ipar => null()
         real(dp), dimension(:), pointer :: rpar => null()
         real(dp) :: lnP, lnPend, h
+        real(dp) :: phi_correction
         type(tov_model_type), pointer :: s
         integer :: liwork, lwork, itol, lipar, lrpar
         integer :: n, idid, lout, iout, npts
@@ -146,7 +147,7 @@ contains
 		y(tov_radius)      = 0.0
 		y(tov_baryon)      = 0.0
 		y(tov_mass)        = 0.0
-		y(tov_potential)   = sqrt(1.0-2.0*Mcore/(Rcore*1.0e5/length_g))
+		y(tov_potential)   = 0.5*log(1.0-2.0*Mcore/(Rcore*1.0e5/length_g))
         y(tov_volume)      = 0.0
 
         n = num_tov_variables
@@ -174,6 +175,12 @@ contains
 			&	num_tov_rpar, rpar, num_tov_ipar, ipar, lout, idid)
 
 		deallocate(work, iwork)
+        
+        ! now apply the boundary condition to correct phi: exp(phi) = sqrt(1-2m/r)
+        phi_correction  = sqrt(1.0-2.0*(y(tov_mass)+rpar(tov_core_mass))/(y(tov_radius)+rpar(tov_core_radius))) &
+            & -y(tov_potential)
+        
+        tov_model% potential(1: tov_model% nzs) = tov_model% potential(1: tov_model% nzs) + phi_correction
     end subroutine tov_integrate
     
     subroutine tov_derivs_crust(n,lnP,h,y,dy,lrpar,rpar,lipar,ipar,ierr)

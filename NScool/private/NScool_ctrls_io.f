@@ -38,6 +38,7 @@ contains
         if (ierr /= 0) return
         call set_default_controls
         call read_controls(id,inlist,ierr)
+        call store_controls(s, ierr)
     end subroutine do_one_setup
 
     subroutine read_controls(id,filename,ierr)
@@ -64,7 +65,6 @@ contains
              write(*,'(///,a)') 'failed while reading control namelist file '//trim(filename)
           end if
        end if
-       call store_controls(s, ierr)
     end subroutine read_controls
    
     subroutine set_default_controls()

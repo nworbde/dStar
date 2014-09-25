@@ -15,6 +15,7 @@ contains
     
     subroutine do_setup_crust_zones(s, ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit, output_unit
+        use storage
         type(NScool_info), pointer :: s
         type(tov_model_type), pointer :: stov
         integer, intent(out) :: ierr
@@ -64,8 +65,9 @@ contains
         ! facial information
         s% P_bar(1:s% nz) = stov% pressure(stov% nzs:1:-1) * pressure_g
         s% phi_bar(1:s% nz) = stov% potential(stov% nzs:1:-1)
-        s% m(1:s% nz) = stov% baryon(1:stov% nzs) * mass_g
-        s% eLambda_bar(1:s% nz) = 1.0/sqrt(1.0-2.0*stov% mass(stov% nzs:1:-1)/stov% radius(stov% nzs:1:-1))
+        s% m(1:s% nz) = stov% baryon(stov% nzs:1:-1) * mass_g
+        s% eLambda_bar(1:s% nz) = 1.0/sqrt(1.0-2.0*(stov% mass(stov% nzs:1:-1)+s% Mcore)/ &
+        &   (stov% radius(stov% nzs:1:-1) + s% Rcore*1.0e5/length_g))
         
         ! body information
         s% dm(1:s% nz-1) = s% m(1:s% nz-1) - s% m(2:s% nz)
