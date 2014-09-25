@@ -263,15 +263,15 @@ contains
             if (ierr /= 0) exit
             
             lnP = xwant
-            r = interp_y(tov_radius, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_radius)
-            a = interp_y(tov_baryon, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_mass)
-            m = interp_y(tov_mass, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_mass)
-            phi = interp_y(tov_potential, xwant, rwork_y, iwork_y, ierr)
-            vol = interp_y(tov_volume, xwant, rwork_y, iwork_y, ierr)
-
-            lgP = lnP/ln10 + log10(pressure_g)            ! convert P to cgs
-            p = exp(lnP)
-            call dStar_crust_get_results(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
+!             r = interp_y(tov_radius, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_radius)
+!             a = interp_y(tov_baryon, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_mass)
+!             m = interp_y(tov_mass, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_mass)
+!             phi = interp_y(tov_potential, xwant, rwork_y, iwork_y, ierr)
+!             vol = interp_y(tov_volume, xwant, rwork_y, iwork_y, ierr)
+!
+!             lgP = lnP/ln10 + log10(pressure_g)            ! convert P to cgs
+!             p = exp(lnP)
+!             call dStar_crust_get_results(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
             
             s% pressure(iz) = exp(lnP)
             s% radius(iz) = interp_y(tov_radius, xwant, rwork_y, iwork_y, ierr)
@@ -281,8 +281,8 @@ contains
             s% volume(iz) = interp_y(tov_volume, xwant, rwork_y, iwork_y, ierr)
             s% nzs = iz
             
-            write (*,'(5(f14.10,tr2),4(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi,  &
-            &   10.0**lgP, 10.0**lgRho, 10.0**lgEps, vol*length_g**3
+!             write (*,'(5(f14.10,tr2),4(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi,  &
+!             &   10.0**lgP, 10.0**lgRho, 10.0**lgEps, vol*length_g**3
 
 			rpar(tov_last_recorded_step) = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
 			xwant = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)

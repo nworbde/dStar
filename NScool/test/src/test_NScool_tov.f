@@ -52,7 +52,7 @@ program test_NScool_tov
     print *,'done'
     print *,y
     
-!     call tov_write_crust
+    call tov_write_crust
     deallocate(y)
 contains
 	subroutine check_okay(msg,ierr)
