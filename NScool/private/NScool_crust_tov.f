@@ -106,7 +106,7 @@ contains
         call free_tov_model(stmp, ierr)
     end subroutine expand_tov_model
     
-    subroutine tov_integrate(lgPstart, lgPend, Mcore, Rcore, y, ierr)
+    subroutine tov_integrate(lgPstart, lgPend, Mcore, Rcore, lnP_rez, y, ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit
         use num_lib
         
@@ -114,6 +114,7 @@ contains
         real(dp), intent(in) :: lgPend      ! cgs
         real(dp), intent(in) :: Mcore       ! Msun
         real(dp), intent(in) :: Rcore       ! km
+        real(dp), intent(in) :: lnP_rez     ! disired step in lnP
         real(dp), dimension(:), pointer :: y
         integer, intent(out) :: ierr
         integer ,dimension(:), pointer :: iwork => null()
@@ -152,7 +153,7 @@ contains
         lnP = lgPstart * ln10 - log(pressure_g)
         lnPend = lgPend * ln10 - log(pressure_g)
         h = -0.1
-        rpar(tov_output_step_crust) = 0.1
+        rpar(tov_output_step_crust) = lnP_rez
         rpar(tov_last_recorded_step) = lnP + rpar(tov_output_step_crust)
         rpar(tov_core_mass) = Mcore
         rpar(tov_core_radius) = Rcore*1.0e5/length_g

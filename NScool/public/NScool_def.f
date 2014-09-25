@@ -17,10 +17,12 @@ module NScool_def
         real(dp) :: dlnLsdlnT ! change surface luminosity with temperature out outer zone
         real(dp) :: Teff      ! surface effective temperature
         real(dp) :: Lcore     ! core luminosity
+        real(dp) :: Tcore     ! core temperature
         real(dp) :: Psurf     ! surface pressure
         real(dp) :: Pcore     ! pressure at core boundary
         real(dp) :: Mcore     ! mass of core
         real(dp) :: Rcore     ! radius of core
+        
         real(dp) :: tsec      ! current value of time in seconds
         real(dp) :: dt        ! value of timestep just taken, in seconds
         real(dp) :: Mdot      ! accretion rate measured at infinity [g/s]
@@ -39,7 +41,6 @@ module NScool_def
         character(len=256) :: history_filename
       
         ! zonal information
-        real(dp) :: target_resolution_lnP               ! target (d lnP) of a zone
         integer :: nz     ! number of zones
         real(dp), pointer, dimension(:) :: dm      ! mass differences
         real(dp), pointer, dimension(:,:) :: X     ! mass fracs (isotope, zone)

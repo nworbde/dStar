@@ -20,7 +20,12 @@ module NScool_ctrls_io
         fix_core_temperature, & 
         core_temperature, & 
         fix_atmosphere_temperature_when_accreting, & 
-        atmosphere_temperature_when_accreting
+        atmosphere_temperature_when_accreting, &
+        core_mass, &
+        core_radius, &
+        lgPcrust_bot, &
+        lgPcrust_top, &
+        target_resolution_lnP
         
 contains
     subroutine do_one_setup(id,inlist,ierr)
@@ -96,6 +101,12 @@ contains
        s% core_temperature = core_temperature
        s% fix_atmosphere_temperature_when_accreting = fix_atmosphere_temperature_when_accreting
        s% atmosphere_temperature_when_accreting = atmosphere_temperature_when_accreting
+       s% Mcore = core_mass
+       s% Rcore = core_radius
+       s% Psurf = 10.0**lgPcrust_top
+       s% Pcore = 10.0**lgPcrust_bot
+       s% target_resolution_lnP = target_resolution_lnP
+       s% Tcore = core_temperature
 
    end subroutine store_controls
    

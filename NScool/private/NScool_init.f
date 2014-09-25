@@ -1,6 +1,8 @@
 module init
     use NScool_def, only: get_NScool_info_ptr
     use NScool_private_def
+    use constants_def
+    use constants_lib
     
 contains
     subroutine do_NScool_init(my_dStar_dir, ierr)
@@ -8,6 +10,8 @@ contains
         integer, intent(out) :: ierr
         ierr = 0    
         call NScool_private_def_init(my_dStar_dir)
+    
+        call constants_init('',ierr)
     end subroutine do_NScool_init
 
     subroutine do_NScool_shutdown()

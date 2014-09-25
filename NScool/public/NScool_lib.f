@@ -4,12 +4,11 @@ module NScool_lib
 
 contains
     subroutine NScool_init(my_dStar_dir,ierr)
-        use NScool_private_def, only: NScool_private_def_init
-!        use init, only: do_slab_init
+        use init, only: do_NScool_init
         character(len=*), intent(in) :: my_dStar_dir
         integer, intent(out) :: ierr
-        call NScool_private_def_init(my_dStar_dir)
         ierr = 0
+        call do_NScool_init(my_dStar_dir, ierr)
     end subroutine NScool_init
     
     subroutine NScool_shutdown()

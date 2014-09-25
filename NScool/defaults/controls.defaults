@@ -27,3 +27,12 @@
     extra_real_controls(:) = 0.0
     extra_integer_controls(:) = 0
     extra_logical_controls(:) = .FALSE.
+
+    ! core properties
+    core_mass = 1.6     ! Msun
+    core_radius = 11.0    ! km
+    
+    lgPcrust_bot = 32.5 ! cgs
+    lgPcrust_top = 27.0 ! cgs
+    
+    target_resolution_lnP = 0.1

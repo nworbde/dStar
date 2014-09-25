@@ -23,3 +23,10 @@
     logical :: fix_atmosphere_temperature_when_accreting
     real(dp) :: atmosphere_temperature_when_accreting
     
+    real(dp) :: core_mass
+    real(dp) :: core_radius
+    
+    real(dp) :: lgPcrust_bot
+    real(dp) :: lgPcrust_top
+    
+    real(dp) :: target_resolution_lnP
