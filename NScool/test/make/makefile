@@ -6,7 +6,7 @@ LOAD_OTHER = -L$(DSTAR_LIB_DIR) -ldstar_crust -lsuperfluid -ldstar_eos -lnucchem
 DSTAR_INC = ../../../include
 
 TEST = tester
-TEST_OBJS = test_NScool.o #test_NScool_tov.o
+TEST_OBJS = test_NScool_tov.o #test_NScool.o #
 
 default: install
 

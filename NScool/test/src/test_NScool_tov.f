@@ -51,6 +51,8 @@ program test_NScool_tov
     call tov_integrate(lgPstart, lgPend, Mcore, Rcore, y, ierr)
     print *,'done'
     print *,y
+    
+!     call tov_write_crust
     deallocate(y)
 contains
 	subroutine check_okay(msg,ierr)

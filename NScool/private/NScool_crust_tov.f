@@ -11,8 +11,7 @@ module NScool_crust_tov
     integer, parameter :: tov_volume = 5
 	integer, parameter :: num_tov_variables = 5
     
-    integer, parameter :: tov_model_npts = 1
-    integer, parameter :: num_tov_ipar = 1
+    integer, parameter :: num_tov_ipar = 0
 	
     integer, parameter :: tov_output_step_crust = 1
     integer, parameter :: tov_last_recorded_step = 2
@@ -27,9 +26,10 @@ module NScool_crust_tov
     integer, parameter :: tov_model_expansion_count = 100
     
     type tov_model_type
-        integer :: npts
+        integer :: nzs
         real(dp) :: core_mass
         real(dp) :: core_radius
+        real(dp), allocatable, dimension(:) :: pressure
         real(dp), allocatable, dimension(:) :: radius
         real(dp), allocatable, dimension(:) :: baryon
         real(dp), allocatable, dimension(:) :: mass
@@ -46,7 +46,8 @@ contains
         type (tov_model_type), pointer :: s
         integer, intent(out) :: ierr
         
-        allocate(s% radius(npts), s% baryon(npts), s% mass(npts), s% potential(npts), s% volume(npts), stat=ierr)
+        allocate(s% pressure(npts), s% radius(npts), s% baryon(npts), s% mass(npts),  &
+        &   s% potential(npts), s% volume(npts), stat=ierr)
     end subroutine alloc_tov_model
     
     subroutine free_tov_model(s, ierr)
@@ -54,47 +55,51 @@ contains
         integer, intent(out) :: ierr
         
         s => tov_model
-        deallocate(s% radius, s% baryon, s% mass, s% potential, s% volume, stat=ierr)
+        deallocate(s% pressure, s% radius, s% baryon, s% mass, s% potential, s% volume, stat=ierr)
     end subroutine free_tov_model
     
     subroutine copy_tov_model(s, snew, ierr)
         type (tov_model_type), pointer :: s, snew
         integer, intent(out) :: ierr
-        integer :: n, nnew
-        
+        integer :: n
         ierr = 0
-        n = s% npts
-        nnew = snew% npts
-        if (nnew < n) then
+
+        if (size(snew% pressure) < size(s% pressure)) then
             ierr = -1
             return
         end if
+        
+        n = s% nzs
+        snew% pressure(1:n) = s% pressure(1:n)
         snew% radius(1:n) = s% radius(1:n)
         snew% baryon(1:n) = s% baryon(1:n)
         snew% mass(1:n) = s% mass(1:n)
         snew% potential(1:n) = s% potential(1:n)
         snew% volume(1:n) = s% volume(1:n)
+        snew% nzs = s% nzs
+        snew% core_mass = s% core_mass
+        snew% core_radius = s% core_radius
     end subroutine copy_tov_model
     
     subroutine expand_tov_model(ierr)
         integer, intent(out) :: ierr
         type (tov_model_type), pointer :: s, stmp
-        integer :: nz, new_nz
+        integer :: npts, new_npts
         type(tov_model_type), target :: tmp_model
         
         s => tov_model
         stmp => tmp_model
         
         ierr = 0
-        nz = s% npts
-        new_nz = nz + tov_model_expansion_count
-        call alloc_tov_model(new_nz, stmp, ierr)
+        npts = size(s% radius)
+        new_npts = npts + tov_model_expansion_count
+        call alloc_tov_model(new_npts, stmp, ierr)
         if (ierr /= 0) return
         call copy_tov_model(s, stmp, ierr)
         if (ierr /= 0) return
         call free_tov_model(s, ierr)
         if (ierr /=0) return
-        call alloc_tov_model(new_nz, s, ierr)
+        call alloc_tov_model(new_npts, s, ierr)
         if (ierr /= 0) return
         call copy_tov_model(stmp,s,ierr)
         if (ierr /=0) return
@@ -151,12 +156,18 @@ contains
         rpar(tov_last_recorded_step) = lnP + rpar(tov_output_step_crust)
         rpar(tov_core_mass) = Mcore
         rpar(tov_core_radius) = Rcore*1.0e5/length_g
-        ipar(tov_model_npts) = 1
-        npts = ceiling(lnPend - lnP)/rpar(tov_output_step_crust) + 1
+
+        npts = ceiling(lnP - lnPend)/rpar(tov_output_step_crust) + 1
         
+        print *, 'alloc_tov_model with ',npts
         call alloc_tov_model(npts, s, ierr)
+        s% nzs = 0
+        s% core_mass = rpar(tov_core_mass)
+        s% core_radius = rpar(tov_core_radius)
+        
         if (ierr /= 0) return
         
+        print *,'call dop853'
 		call dop853(n,tov_derivs_crust,lnP,y,lnPend,h,tov_default_max_step_size,tov_default_max_steps, &
 			& rtol,atol,itol, tov_solout_crust, iout, work, lwork, iwork, liwork,  &
 			&	num_tov_rpar, rpar, num_tov_ipar, ipar, lout, idid)
@@ -237,39 +248,41 @@ contains
     	integer :: ierr, i
     	real(dp) ::  lnP, lgP, xwant, lgx, r, a, m, phi, p, vol
     	real(dp) :: rho, eps, lgRho, dlgRho, lgEps, dlgEps
-        integer :: zone_id
 	    type(tov_model_type), pointer :: s
+        integer :: iz
         
         ierr = 0
         irtrn = 0
 		xwant = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
 		s => tov_model
-        zone_id = ipar(tov_model_npts)
         
         do while (xwant > x)
 			
-            if (zone_id >= s% npts) call expand_tov_model(ierr)
+            iz = s% nzs + 1
+            if (iz > size(s% radius)) call expand_tov_model(ierr)
             if (ierr /= 0) exit
             
             lnP = xwant
-			r = interp_y(tov_radius, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_radius)
-			a = interp_y(tov_baryon, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_mass)
-			m = interp_y(tov_mass, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_mass)
-			phi = interp_y(tov_potential, xwant, rwork_y, iwork_y, ierr)
+            r = interp_y(tov_radius, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_radius)
+            a = interp_y(tov_baryon, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_mass)
+            m = interp_y(tov_mass, xwant, rwork_y, iwork_y, ierr) + rpar(tov_core_mass)
+            phi = interp_y(tov_potential, xwant, rwork_y, iwork_y, ierr)
             vol = interp_y(tov_volume, xwant, rwork_y, iwork_y, ierr)
 
-			lgP = lnP/ln10 + log10(pressure_g)			! convert P to cgs
+            lgP = lnP/ln10 + log10(pressure_g)            ! convert P to cgs
             p = exp(lnP)
-        	call dStar_crust_get_results(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
+            call dStar_crust_get_results(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
             
-            s% radius(zone_id) = interp_y(tov_radius, xwant, rwork_y, iwork_y, ierr)
-            s% baryon(zone_id) = interp_y(tov_baryon, xwant, rwork_y, iwork_y, ierr)
-            s% mass(zone_id)   = interp_y(tov_mass, xwant, rwork_y, iwork_y, ierr)
-            s% potential(zone_id) = interp_y(tov_potential, xwant, rwork_y, iwork_y, ierr)
-            s% volume(zone_id) = interp_y(tov_volume, xwant, rwork_y, iwork_y, ierr)
+            s% pressure(iz) = exp(lnP)
+            s% radius(iz) = interp_y(tov_radius, xwant, rwork_y, iwork_y, ierr)
+            s% baryon(iz) = interp_y(tov_baryon, xwant, rwork_y, iwork_y, ierr)
+            s% mass(iz)   = interp_y(tov_mass, xwant, rwork_y, iwork_y, ierr)
+            s% potential(iz) = interp_y(tov_potential, xwant, rwork_y, iwork_y, ierr)
+            s% volume(iz) = interp_y(tov_volume, xwant, rwork_y, iwork_y, ierr)
+            s% nzs = iz
             
-			write (*,'(5(f14.10,tr2),4(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi,  &
-			&   10.0**lgP, 10.0**lgRho, 10.0**lgEps, vol*length_g**3
+            write (*,'(5(f14.10,tr2),4(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi,  &
+            &   10.0**lgP, 10.0**lgRho, 10.0**lgEps, vol*length_g**3
 
 			rpar(tov_last_recorded_step) = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
 			xwant = rpar(tov_last_recorded_step) - rpar(tov_output_step_crust)
@@ -277,5 +290,29 @@ contains
     	end do
         if (ierr /= 0) irtrn = -1
     end subroutine tov_solout_crust
+    
+    subroutine tov_write_crust()
+        use dStar_crust_lib
+    	real(dp) ::  lnP, lgP, xwant, lgx, r, a, m, phi, p, vol
+    	real(dp) :: rho, eps, lgRho, dlgRho, lgEps, dlgEps
+	    type(tov_model_type), pointer :: s
+        integer :: i, ierr
+
+        s => tov_model
+        
+        do i = 1, s% nzs
+            r = s% radius(i) + s% core_radius
+            a = s% baryon(i) + s% core_mass
+            m = s% mass(i) + s% core_mass
+            phi = s% potential(i)
+            vol = s% volume(i)
+
+            lgP = log10(s% pressure(i)) + log10(pressure_g)            ! convert P to cgs
+            call dStar_crust_get_results(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
+            if (ierr /= 0) return
+            write (*,'(5(f14.10,tr2),4(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi,  &
+            &   10.0**lgP, 10.0**lgRho, 10.0**lgEps, vol*length_g**3
+        end do
+    end subroutine tov_write_crust
 
 end module NScool_crust_tov
