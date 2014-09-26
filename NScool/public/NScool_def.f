@@ -82,9 +82,9 @@ module NScool_def
         ! storage for interpolation of tabulated ln(enu), ln(Cp), ln(Kcond)
         integer :: n_tab                       ! number of table points
         real(dp), pointer, dimension(:) :: tab_lnT ! (n_tab) junction points for interpolation; same for all grid points
-        real(dp), pointer, dimension(:,:) :: lnenu_tab  ! (4*n_tab, nz) coefficients for ln(enu)
-        real(dp), pointer, dimension(:,:) :: lnCp_tab  ! (4*n_tab, nz) coefficients for ln(Cp)
-        real(dp), pointer, dimension(:,:) :: lnK_tab   ! (4*n_tab, nz) coefficients for ln(Kcond)
+        real(dp), pointer, dimension(:,:) :: tab_lnenu  ! (4*n_tab, nz) coefficients for ln(enu)
+        real(dp), pointer, dimension(:,:) :: tab_lnCp   ! (4*n_tab, nz) coefficients for ln(Cp)
+        real(dp), pointer, dimension(:,:) :: tab_lnK    ! (4*n_tab, nz) coefficients for ln(Kcond)
 
         logical :: in_use
         

@@ -100,9 +100,9 @@ contains
         ! storage for interpolation of tabulated ln(enu), ln(Cp), ln(Kcond)
         s% n_tab = 0                       ! number of table points
         nullify(s% tab_lnT) ! (n_tab) junction points for interpolation; same for all grid points
-        nullify(s% lnenu_tab)  ! (4*n_tab, nz) coefficients for ln(enu)
-        nullify(s% lnCp_tab)  ! (4*n_tab, nz) coefficients for ln(Cp)
-        nullify(s% lnK_tab)   ! (4*n_tab, nz) coefficients for ln(Kcond)
+        nullify(s% tab_lnenu)  ! (4*n_tab, nz) coefficients for ln(enu)
+        nullify(s% tab_lnCp)  ! (4*n_tab, nz) coefficients for ln(Cp)
+        nullify(s% tab_lnK)   ! (4*n_tab, nz) coefficients for ln(Kcond)
     end function alloc_NScool_data
     
     subroutine dealloc_NScool_data(id, ierr)

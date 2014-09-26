@@ -212,12 +212,12 @@ contains
         do
             call do1(s% tab_lnT)
             if (failed('tab_lnT')) exit
-            call do2(s% lnenu_tab)
-            if (failed('lnenu_tab')) exit
-            call do2(s% lnCp_tab)
-            if (failed('lnCp_tab')) exit
-            call do2(s% lnK_tab)
-            if (failed('lnK_tab')) exit
+            call do2(s% tab_lnenu)
+            if (failed('tab_lnenu')) exit
+            call do2(s% tab_lnCp)
+            if (failed('tab_lnCp')) exit
+            call do2(s% tab_lnK)
+            if (failed('tab_lnK')) exit
             return
         end do
         ierr = -1
