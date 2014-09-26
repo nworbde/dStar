@@ -26,6 +26,7 @@ module NScool_crust_tov
     integer, parameter :: tov_model_expansion_count = 100
     
     type tov_model_type
+        ! these are all in gravitational units (c = G = 1; M in units of Msun)
         integer :: nzs
         real(dp) :: core_mass
         real(dp) :: core_radius
