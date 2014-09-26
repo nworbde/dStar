@@ -117,8 +117,8 @@ contains
             if (failed('lnT')) exit
             call do1(s% T)
             if (failed('T')) exit
-            call do1(s% phi)
-            if (failed('phi')) exit
+            call do1(s% ePhi)
+            if (failed('ePhi')) exit
             call do1(s% eLambda)
             if (failed('eLambda')) exit
             call do1(s% rho)
@@ -156,8 +156,8 @@ contains
             if (failed('lnT_bar')) exit
             call do1(s% T_bar)
             if (failed('T_bar')) exit
-            call do1(s% phi_bar)
-            if (failed('phi_bar')) exit
+            call do1(s% ePhi_bar)
+            if (failed('ePhi_bar')) exit
             call do1(s% eLambda_bar)
             if (failed('eLambda_bar')) exit
             call do1(s% rho_bar)

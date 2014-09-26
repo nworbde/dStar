@@ -26,7 +26,7 @@ program test_NScool
     
     call tov_write_crust
     do i = s% nz, 1, -1
-        write (output_unit,'(es15.8,tr2,f14.10,tr1,es15.8,f14.10)') s% P_bar(i), s% phi_bar(i), s% m(i), s% eLambda_bar(i)
+        write (output_unit,'(es15.8,tr2,f14.10,tr1,es15.8,f14.10)') s% P_bar(i), s% ePhi_bar(i), s% m(i), s% eLambda_bar(i)
     end do
     
     call NScool_shutdown

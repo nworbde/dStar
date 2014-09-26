@@ -49,7 +49,7 @@ module NScool_def
         real(dp), pointer, dimension(:) :: P       ! pressure
         real(dp), pointer, dimension(:) :: lnT     ! ln(temperature)
         real(dp), pointer, dimension(:) :: T       ! temperature
-        real(dp), pointer, dimension(:) :: phi     ! potential
+        real(dp), pointer, dimension(:) :: ePhi     ! exp(potential)
         real(dp), pointer, dimension(:) :: eLambda ! redshift, 1+z
         real(dp), pointer, dimension(:) :: rho     ! density(P,T,X)
         real(dp), pointer, dimension(:) :: lnCp    ! ln(specific heat)
@@ -70,7 +70,7 @@ module NScool_def
         real(dp), pointer, dimension(:) :: P_bar   ! interpolated pressure
         real(dp), pointer, dimension(:) :: lnT_bar ! ln(interpolated temperature)
         real(dp), pointer, dimension(:) :: T_bar   ! interpolated temperature
-        real(dp), pointer, dimension(:) :: phi_bar ! potential
+        real(dp), pointer, dimension(:) :: ePhi_bar ! exp(potential)
         real(dp), pointer, dimension(:) :: eLambda_bar ! redshift, 1+z
         real(dp), pointer, dimension(:) :: rho_bar ! density(Pbar,Tbar,Xbar)
         real(dp), pointer, dimension(:) :: Kcond   ! thermal conductivity

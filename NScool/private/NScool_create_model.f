@@ -64,7 +64,7 @@ contains
         
         ! facial information
         s% P_bar(1:s% nz) = stov% pressure(stov% nzs:1:-1) * pressure_g
-        s% phi_bar(1:s% nz) = stov% potential(stov% nzs:1:-1)
+        s% ePhi_bar(1:s% nz) = exp(stov% potential(stov% nzs:1:-1))
         s% m(1:s% nz) = stov% baryon(stov% nzs:1:-1) * mass_g
         s% eLambda_bar(1:s% nz) = 1.0/sqrt(1.0-2.0*(stov% mass(stov% nzs:1:-1)+s% Mcore)/ &
         &   (stov% radius(stov% nzs:1:-1) + s% Rcore*1.0e5/length_g))

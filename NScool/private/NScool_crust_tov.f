@@ -178,7 +178,7 @@ contains
 		deallocate(work, iwork)
         
         ! now apply the boundary condition to correct phi: exp(phi) = sqrt(1-2m/r)
-        phi_correction  = sqrt(1.0-2.0*(y(tov_mass)+rpar(tov_core_mass))/(y(tov_radius)+rpar(tov_core_radius))) &
+        phi_correction  = 0.5*log(1.0-2.0*(y(tov_mass)+rpar(tov_core_mass))/(y(tov_radius)+rpar(tov_core_radius))) &
             & -y(tov_potential)
         
         tov_model% potential(1: tov_model% nzs) = tov_model% potential(1: tov_model% nzs) + phi_correction
