@@ -23,11 +23,19 @@ program test_NScool
     
     call get_NScool_info_ptr(NScool_id,s,ierr)
     call do_setup_crust_zones(s, ierr)
-    
-    call tov_write_crust
-    do i = s% nz, 1, -1
-        write (output_unit,'(es15.8,tr2,f14.10,tr1,es15.8,f14.10)') s% P_bar(i), s% ePhi_bar(i), s% m(i), s% eLambda_bar(i)
+    call do_setup_crust_composition(s, ierr)
+!    call tov_write_crust
+
+    do i = 1, s% nz - 1
+        write (output_unit,'(es15.8,tr2,19(f10.6))') s% P_bar(i), s% Yion_bar(1:s% ncharged,i),s% Xneut_bar(i)
+        write (output_unit,'(t8,es15.8,tr2,es15.8,2(f14.10),2(f5.1))') s% dm(i), s% rho(i), s% ePhi(i), s% eLambda(i), &
+        &   s% ionic(i)% Z, s% ionic(i)% A
     end do
+    write (output_unit,'(es15.8,tr2,19(f10.6))') s% P_bar(i), s% Yion_bar(1:s% ncharged,i), s% Xneut_bar(i)
+!     write (output_unit,'(es15.8,tr2,f14.10,tr1,es15.8,f14.10)') s% P_bar(s% nz), s% ePhi_bar(s% nz), s% m(s% nz),  &
+!     &   s% eLambda_bar(s% nz)
+
+    write (output_unit,*) s% charged_ids
     
     call NScool_shutdown
     

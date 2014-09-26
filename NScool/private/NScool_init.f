@@ -47,7 +47,7 @@ contains
         s% nisos = 0  ! number of isotopes
         s% ncharged = 0
         
-        nullify(s% iso_ids)
+!         nullify(s% iso_ids)
         nullify(s% charged_ids)
       
         ! administrative
@@ -61,8 +61,9 @@ contains
         s% nz = -1
       
         nullify(s% dm)
-        nullify(s% X)
+!         nullify(s% X)
         nullify(s% Yion)
+        nullify(s% Xneut)
         nullify(s% ionic)
         nullify(s% P)
         nullify(s% lnT)
@@ -82,8 +83,9 @@ contains
         nullify(s% m)
         nullify(s% L)
         nullify(s% dm_bar)
-        nullify(s% X_bar)
+!         nullify(s% X_bar)
         nullify(s% Yion_bar)
+        nullify(s% Xneut_bar)
         nullify(s% ionic_bar)
         nullify(s% P_bar)
         nullify(s% lnT_bar)

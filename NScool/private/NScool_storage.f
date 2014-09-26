@@ -69,8 +69,8 @@ contains
         ierr = 0
         nisos = s% nisos
         do
-            call do1(s% iso_ids)
-            if (failed('iso_ids')) exit
+!             call do1(s% iso_ids)
+!             if (failed('iso_ids')) exit
             call do1(s% charged_ids)
             if (failed('charged_ids')) exit
             return
@@ -105,10 +105,12 @@ contains
         do
             call do1(s% dm)
             if (failed('dm')) exit
-            call do2(s% X)
-            if (failed('X')) exit
+!             call do2(s% X)
+!             if (failed('X')) exit
             call do2(s% Yion)
             if (failed('Yion')) exit
+            call do1(s% Xneut)
+            if (failed('Xneut')) exit
             call do1c(s% ionic)
             if (failed('ionic')) exit
             call do1(s% P)
@@ -144,10 +146,12 @@ contains
             if (failed('L')) exit
             call do1(s% dm_bar)
             if (failed('dm_bar')) exit
-            call do2(s% X_bar)
-            if (failed('X_bar')) exit
+!             call do2(s% X_bar)
+!             if (failed('X_bar')) exit
             call do2(s% Yion_bar)
             if (failed('Yion_bar')) exit
+            call do1(s% Xneut_bar)
+            if (failed('Xneut_bar')) exit
             call do1c(s% ionic_bar)
             if (failed('ionic_bar')) exit
             call do1(s% P_bar)

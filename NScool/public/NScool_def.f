@@ -31,7 +31,7 @@ module NScool_def
         ! information about the composition
         integer :: nisos  ! number of isotopes
         integer :: ncharged
-        integer, pointer, dimension(:) :: iso_ids ! id's for isotopes, computed by nucchem
+!         integer, pointer, dimension(:) :: iso_ids ! id's for isotopes, computed by nucchem
         integer, pointer, dimension(:) :: charged_ids ! id's for charged isotopes, computed by nucchem
       
         ! administrative
@@ -43,8 +43,9 @@ module NScool_def
         ! zonal information
         integer :: nz     ! number of zones
         real(dp), pointer, dimension(:) :: dm      ! mass differences
-        real(dp), pointer, dimension(:,:) :: X     ! mass fracs (isotope, zone)
+!        real(dp), pointer, dimension(:,:) :: X     ! mass fracs (isotope, zone)
         real(dp), pointer, dimension(:,:) :: Yion  ! abundances of charged species
+        real(dp), pointer, dimension(:) :: Xneut    ! neutron mass fraction
         type(composition_info_type), pointer, dimension(:) :: ionic ! composition info
         real(dp), pointer, dimension(:) :: P       ! pressure
         real(dp), pointer, dimension(:) :: lnT     ! ln(temperature)
@@ -64,8 +65,9 @@ module NScool_def
         real(dp), pointer, dimension(:) :: m       ! mass
         real(dp), pointer, dimension(:) :: L       ! luminosity
         real(dp), pointer, dimension(:) :: dm_bar  ! interpolated mass difference
-        real(dp), pointer, dimension(:,:) :: X_bar  ! interpolated mass fracs
+!         real(dp), pointer, dimension(:,:) :: X_bar  ! interpolated mass fracs
         real(dp), pointer, dimension(:,:) :: Yion_bar  ! interpolated abundances
+        real(dp), pointer, dimension(:) :: Xneut_bar    ! interpolated neutron mass fraction
         type(composition_info_type), pointer, dimension(:) :: ionic_bar ! composition info
         real(dp), pointer, dimension(:) :: P_bar   ! interpolated pressure
         real(dp), pointer, dimension(:) :: lnT_bar ! ln(interpolated temperature)

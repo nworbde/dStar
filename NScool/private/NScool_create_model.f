@@ -60,6 +60,7 @@ contains
         ! allocate the info arrays
         stov => tov_model
         s% nz = stov% nzs
+        s% nisos = dStar_crust_get_composition_size()
         call allocate_NScool_info_arrays(s, ierr)
         
         ! facial information
@@ -71,7 +72,10 @@ contains
         
         ! body information
         s% dm(1:s% nz-1) = s% m(1:s% nz-1) - s% m(2:s% nz)
-        s% rho(1:s% nz-1) = s% dm(1:s% nz-1)/(stov% volume(stov% nzs-1:1:-1) - stov% volume(stov% nzs:2:-1))
+        s% rho(1:s% nz-1) = s% dm(1:s% nz-1)/(stov% volume(stov% nzs:2:-1) - stov% volume(stov% nzs-1:1:-1))/length_g**3
+        ! interpolate metric functions
+        s% eLambda(1:s% nz-1) = 0.5*(s% eLambda_bar(1:s% nz-1) + s% eLambda_bar(2:s% nz))
+        s% ePhi(1:s% nz-1) = 0.5*(s% ePhi_bar(1:s% nz-1) + s% ePhi_bar(2:s% nz))
         
     contains
         function failure(str)
@@ -84,6 +88,27 @@ contains
         end function failure
         
     end subroutine do_setup_crust_zones
+    
+    subroutine do_setup_crust_composition(s, ierr)
+        use storage
+        type(NScool_info), pointer :: s
+        integer, intent(out) :: ierr
+        real(dp), allocatable, dimension(:) :: lgP_bar
+        
+        ! this routine assumes that we have already run do_setup_crust_zones
+
+        allocate(lgP_bar(s% nz))
+        lgP_bar = log10(s% P_bar)
+        
+        call allocate_NScool_iso_arrays(s, ierr)
+        call dStar_crust_get_composition(lgP_bar, s% ncharged, s% charged_ids, s% Yion_bar, s% Xneut_bar, s% ionic_bar, ierr)
+        
+        ! for the cells, *for now*, inherit composition of the bottom face
+        s% Yion(1:s% ncharged, 1:s% nz-1) = s% Yion_bar(1:s% ncharged, 2:s% nz)
+        s% ionic(1:s% nz-1) = s% ionic_bar(2:s% nz)
+        
+        deallocate(lgP_bar)
+    end subroutine do_setup_crust_composition
     
     
 
