@@ -22,6 +22,7 @@ module NScool_def
         real(dp) :: Pcore     ! pressure at core boundary
         real(dp) :: Mcore     ! mass of core
         real(dp) :: Rcore     ! radius of core
+        real(dp) :: ePhicore   ! potential of core
         
         real(dp) :: tsec      ! current value of time in seconds
         real(dp) :: dt        ! value of timestep just taken, in seconds

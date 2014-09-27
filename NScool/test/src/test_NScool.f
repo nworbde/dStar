@@ -9,6 +9,7 @@ program test_NScool
     character(len=*), parameter :: inlist = 'test_inlist'
     type(NScool_info), pointer :: s
     integer :: ierr, NScool_id,i
+    real(dp), dimension(:,:), pointer :: lnEnu_val, lnKcond_val, lnCp_val
     
     call NScool_init(my_dStar_dir, ierr)
     call check_okay('NScool_init',ierr)
@@ -29,13 +30,19 @@ program test_NScool
     call do_setup_crust_transport(s, ierr)
     call check_okay('do_setup_crust_transport',ierr)
     
-!    call tov_write_crust
+!     call tov_write_crust
 
-    do i = 1, s% nz - 1
-        write (output_unit,'()') s% P_bar(i), s% rho_bar(i)
+    do i = 1, s% nz
+        lnCp_val(1:4,1:s% n_tab) => s% tab_lnCp(1:4*s% n_tab, i)
+        lnEnu_val(1:4,1:s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, i)
+        lnKcond_val(1:4,1:s% n_tab) => s% tab_lnK(1:4*s% n_tab, i)
+
+        write (output_unit,'(3es15.8,f12.8)') s% dm_bar(i), s% rho_bar(i), s% P_bar(i), lnKcond_val(1,42)/ln10
+        write (output_unit,'(t8,3es15.8,2(f14.10),2(f5.1),3(f14.10))') s% dm(i), s% rho(i), s% T(i), s% ePhi(i), &
+        &   s% eLambda(i), &
+        &   s% ionic(i)% Z, s% ionic(i)% A, s% tab_lnT(42)/ln10, lnCp_val(1,42)/ln10, lnEnu_val(1,42)/ln10
 !         write (output_unit,'(2es15.8,tr2,19(f10.6))') s% P_bar(i), s% T_bar(i), s% Yion_bar(1:s% ncharged,i),s% Xneut_bar(i)
-!         write (output_unit,'(t8,3es15.8,2(f14.10),2(f5.1))') s% dm(i), s% rho(i), s% T(i), s% ePhi(i), s% eLambda(i), &
-!         &   s% ionic(i)% Z, s% ionic(i)% A
+!         write (output_unit,'(2es15.8,tr2,f10.6,)') s% P_bar(i), s% T_bar(i), s% Xneut_bar(i)
     end do
 !     write (output_unit,'(2es15.8,tr2,19(f10.6))') s% P_bar(i), s% T_bar(i), s% Yion_bar(1:s% ncharged,i), s% Xneut_bar(i)
 ! !     write (output_unit,'(es15.8,tr2,f14.10,tr1,es15.8,f14.10)') s% P_bar(s% nz), s% ePhi_bar(s% nz), s% m(s% nz),  &

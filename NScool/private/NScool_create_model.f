@@ -70,28 +70,44 @@ contains
         
         ! allocate the info arrays
         stov => tov_model
-        s% nz = stov% nzs
+        s% nz = stov% nzs - 1
         s% nisos = dStar_crust_get_composition_size()
         call allocate_NScool_info_arrays(s, ierr)
         
         ! facial information
-        s% P_bar(1:s% nz) = stov% pressure(stov% nzs:1:-1) * pressure_g
-        s% ePhi_bar(1:s% nz) = exp(stov% potential(stov% nzs:1:-1))
-        s% m(1:s% nz) = stov% baryon(stov% nzs:1:-1) * mass_g
-        s% eLambda_bar(1:s% nz) = 1.0/sqrt(1.0-2.0*(stov% mass(stov% nzs:1:-1)+s% Mcore)/ &
-        &   (stov% radius(stov% nzs:1:-1) + s% Rcore*1.0e5/length_g))
+        s% P_bar(1:s% nz) = stov% pressure(stov% nzs:2:-1) * pressure_g
+        s% ePhi_bar(1:s% nz) = exp(stov% potential(stov% nzs:2:-1))
+        s% ePhicore = exp(stov% potential(1))
+        s% m(1:s% nz) = stov% baryon(stov% nzs:2:-1) * mass_g
+        s% eLambda_bar(1:s% nz) = 1.0/sqrt(1.0-2.0*(stov% mass(stov% nzs:2:-1)+s% Mcore)/ &
+        &   (stov% radius(stov% nzs:2:-1) + s% Rcore*1.0e5/length_g))
         
         ! body information
         s% dm(1:s% nz-1) = s% m(1:s% nz-1) - s% m(2:s% nz)
-        s% rho(1:s% nz-1) = s% dm(1:s% nz-1)/(stov% volume(stov% nzs:2:-1) - stov% volume(stov% nzs-1:1:-1))/length_g**3
+        s% dm(s% nz) = s% m(s% nz)
+        
+        ! mean density of a cell
+        s% rho(1:s% nz) = s% dm(1:s% nz)/(stov% volume(stov% nzs:2:-1) - stov% volume(stov% nzs-1:1:-1))/length_g**3
+        
         ! interpolate metric functions
         s% eLambda(1:s% nz-1) = 0.5*(s% eLambda_bar(1:s% nz-1) + s% eLambda_bar(2:s% nz))
+        s% eLambda(s% nz) = 0.5*(s% eLambda_bar(s% nz) +  &
+        &   1.0/sqrt(1.0-2.0*s% Mcore/(s% Rcore*1.0e5/length_g)))
         s% ePhi(1:s% nz-1) = 0.5*(s% ePhi_bar(1:s% nz-1) + s% ePhi_bar(2:s% nz))
+        s% ePhi(s% nz) = 0.5*(s% ePhi_bar(s% nz) + s% ePhicore)
         
         ! temperatures: set to be isothermal (exp(Phi)*T = const)
-        s% T(1:s% nz-1) = s% Tcore * s% ePhi_bar(s%nz) / s% ePhi(1:s% nz-1)
-        s% T_bar(1:s% nz) = s% Tcore * s% ePhi_bar(s%nz) / s% ePhi_bar(1:s%nz)
-                        
+        s% T(1:s% nz) = s% Tcore * s% ePhicore / s% ePhi(1:s% nz)
+        s% T_bar(1:s% nz) = s% Tcore * s% ePhicore / s% ePhi_bar(1:s%nz)
+
+        ! now interpolate dm and rho to the facial points
+        s% dm_bar(1) = 0.5*s% dm(1)
+        s% dm_bar(2:s% nz) = 0.5*(s% dm(1:s% nz-1) + s% dm(2:s% nz))
+
+        ! this leaves rho_bar(1) undefined... we can use Taylor expansion
+        s% rho_bar(2:s% nz) = 0.5*(s% rho(1:s% nz-1)*s% dm(2:s% nz) + s% rho(2:s% nz)*s% dm(1:s% nz-1)) / &
+        &   s% dm_bar(2:s% nz)
+        
     contains
         function failure(str)
             character(len=*), intent(in) :: str
@@ -121,9 +137,9 @@ contains
         call allocate_NScool_iso_arrays(s, ierr)
         call dStar_crust_get_composition(lgP_bar, s% ncharged, s% charged_ids, s% Yion_bar, s% Xneut_bar, s% ionic_bar, ierr)
         if (ierr /= 0) return
-        ! for the cells, *for now*, inherit composition of the bottom face
-        s% Yion(1:s% ncharged, 1:s% nz-1) = s% Yion_bar(1:s% ncharged, 2:s% nz)
-        s% ionic(1:s% nz-1) = s% ionic_bar(2:s% nz)
+        ! for the cells, *for now*, inherit composition of the top face
+        s% Yion(1:s% ncharged, 1:s% nz) = s% Yion_bar(1:s% ncharged, 1:s% nz)
+        s% ionic(1:s% nz) = s% ionic_bar(1:s% nz)
         
         deallocate(lgP_bar)
     end subroutine do_setup_crust_composition
@@ -141,6 +157,8 @@ contains
         use neutrino_lib
         use interp_1d_def
         use interp_1d_lib
+        use storage
+        use utils_lib, only: is_bad_num
         
         type(NScool_info), pointer :: s
         integer, intent(out) :: ierr
@@ -149,7 +167,7 @@ contains
         logical, dimension(num_conductivity_channels), parameter :: cond_channels  &
            & = [ .TRUE., .TRUE., .TRUE., .FALSE. ]
         type(crust_neutrino_emissivity_channels) :: eps_nu
-        integer :: iz, itemp
+        integer :: iz, itemp, ieos
         integer :: eos_phase
         real(dp), dimension(num_dStar_eos_results) :: eos_results
         type(conductivity_components) :: Kcomponents
@@ -157,19 +175,21 @@ contains
         real(dp), dimension(:), pointer :: work=>null()
         real(dp), dimension(:,:), pointer :: lnEnu_val, lnKcond_val, lnCp_val
         real(dp) :: nn, kn, Tc(max_number_sf_types)
+        type(crust_eos_component), dimension(num_crust_eos_components) :: components
+        ! for error checking
+        real(dp), dimension(:), allocatable :: delP
         
         ierr = 0
         s% n_tab = number_table_pts
         
-        call allocate_NScool_iso_arrays(s, ierr)
+        call allocate_NScool_work_arrays(s, ierr)
         if (ierr /= 0) return
         
         s% tab_lnT(1:s% n_tab) = [(lgT_tab_min*ln10 + (lgT_tab_max-lgT_tab_min)*ln10*real(itemp-1,dp)/real(s% n_tab-1,dp), &
         &   itemp = 1, s% n_tab)]
         
-        
         ! cell average quantities: Cp and enu
-        do iz = 1, s% nz-1
+        do iz = 1, s% nz
             lnCp_val(1:4,1:s% n_tab) => s% tab_lnCp(1:4*s% n_tab, iz)
             lnEnu_val(1:4,1:s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, iz)
             do itemp = 1, s% n_tab
@@ -177,9 +197,22 @@ contains
                 chi = use_default_nuclear_size
                 call eval_crust_eos( &
                 &   s% eos_handle, s% rho(iz), Ttab, s% ionic(iz), s% ncharged, s% charged_ids, s% Yion(1:s% ncharged,iz), &
-                &   eos_results, eos_phase, chi)
+                &   eos_results, eos_phase, chi, components)
                 lnCp_val(1,itemp) = log(eos_results(i_Cp))
+                if (is_bad_num(lnCp_val(1,itemp)) .and. itemp == 40) then
+                    print *,'bad CV'
+                    do ieos = 1, num_crust_eos_components
+                        print *, ieos
+                        print *,components(ieos)
+                    end do
+                    print *, s% ionic(iz), s% Yion(1:s% ncharged,iz)
+                end if
                 if (itemp == 1) s% P(iz) = exp(eos_results(i_lnP))
+                
+                ! perform interpolation of density to first cell face
+                if (iz == 1 .and. itemp == 1) then
+                    s% rho_bar(iz) = s% rho(iz)*(s% P_bar(iz)/s% P(iz))**(1.0/eos_results(i_chiRho))
+                end if
                 
                 nn = s% rho(iz)*s% ionic(iz)% Yn/amu/(1.0-chi)
                 kn = (1.5*pi**2*nn)**onethird / cm_to_fm
@@ -192,6 +225,8 @@ contains
         end do
         
         ! facial quantities: Kcond
+        ! compute dp for error checking
+        allocate(delP(s% nz))
         do iz = 1, s% nz
             lnKcond_val(1:4,1:s% n_tab) => s% tab_lnK(1:4*s% n_tab, iz)
             chi = use_default_nuclear_size
@@ -200,12 +235,16 @@ contains
                 call eval_crust_eos( &
                 &   s% eos_handle, s% rho_bar(iz), Ttab, s% ionic_bar(iz), s% ncharged, s% charged_ids,  &
                 &   s% Yion_bar(1:s% ncharged,iz), eos_results, eos_phase, chi)
+                if (itemp == 1) delP(iz) = abs(1.0 - exp(eos_results(i_lnP))/s% P_bar(iz))
+                                
                 call get_thermal_conductivity(s% rho_bar(iz), Ttab, chi, eos_results(i_Gamma),  &
                 &   eos_results(i_Theta), s% ionic_bar(iz), &
                 &   Kcomponents, which_components=cond_channels)
                 lnKcond_val(1,itemp) = log(Kcomponents% total)
             end do
         end do
+        write (*,'(a,es15.8,a,es15.8)') 'max dP = ',maxval(delP),' at ',s% P_bar(maxloc(delP))
+        deallocate(delP)
         
     end subroutine do_setup_crust_transport
 
