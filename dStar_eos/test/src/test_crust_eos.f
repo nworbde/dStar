@@ -56,6 +56,18 @@ program test_crust_eos
 	call do_one(1.0e12_dp)
 	call do_one(1.0e14_dp)
 
+    ! make trouble
+	! n/o16/fe56 composition
+!     Z = [0.0,12.0,26.0]; A = [1.0,48.0,56.0]
+!     N = A-Z
+!     chem_ids = [(get_nuclide_index_from_ZN(Z(i),N(i)),i=1,3)]
+!     Y = [0.8,0.2,0.0]/real(A,dp)
+!     call compute_composition_moments(3,chem_ids,Y,ionic,Xsum,ncharged, charged_ids, Yion,  &
+!         & exclude_neutrons=.TRUE.)
+!     call write_headers
+!     call do_one(1.0e12_dp)
+!     call do_one(1.0e14_dp)
+
 	call sf_shutdown
 	call nucchem_shutdown
 	
@@ -86,6 +98,7 @@ program test_crust_eos
 				& lgr,lgT,res(i_Gamma),res(i_Theta),res(i_Cv)/boltzmann/avogadro,res(i_lnE)/ln10,res(i_lnP)/ln10,res(i_lnS)/ln10, &
 				& res(i_chiRho),res(i_chiT),res(i_Gamma1),res(i_Gamma3),  &
 				& res(i_grad_ad), res(i_mu_e),res(i_mu_n)
+!                 print *, phase
 			! write (*,'(a,7es12.4)') 'electron: ',eos_components(icrust_eos_ep)
 			! write (*,'(a,7es12.4)') 'ion: ',eos_components(icrust_eos_ion)
 			! write (*,'(a,7es12.4)') 'neutron: ',eos_components(icrust_eos_neutron)
