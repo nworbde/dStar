@@ -4,12 +4,15 @@ program test_NScool
     use create_model
     use NScool_ctrls_io, only: write_controls
     use, intrinsic :: iso_fortran_env, only: output_unit
+    use interp_1d_lib
     
     character(len=*), parameter :: my_dStar_dir = '../../../dStar'
     character(len=*), parameter :: inlist = 'test_inlist'
     type(NScool_info), pointer :: s
     integer :: ierr, NScool_id,i
     real(dp), dimension(:,:), pointer :: lnEnu_val, lnKcond_val, lnCp_val
+    real(dp), dimension(:), pointer :: lnEnu_interp, lnKcond_interp, lnCp_interp
+    real(dp) :: lnT, lnK, lnEnu, lnC, dlnK, dlnEnu, dlnC
     
     call NScool_init(my_dStar_dir, ierr)
     call check_okay('NScool_init',ierr)
@@ -36,11 +39,29 @@ program test_NScool
         lnCp_val(1:4,1:s% n_tab) => s% tab_lnCp(1:4*s% n_tab, i)
         lnEnu_val(1:4,1:s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, i)
         lnKcond_val(1:4,1:s% n_tab) => s% tab_lnK(1:4*s% n_tab, i)
-
-        write (output_unit,'(3es15.8,f12.8)') s% dm_bar(i), s% rho_bar(i), s% P_bar(i), lnKcond_val(1,42)/ln10
-        write (output_unit,'(t8,3es15.8,2(f14.10),2(f5.1),3(f14.10))') s% dm(i), s% rho(i), s% T(i), s% ePhi(i), &
+        lnKcond_interp(1:4*s% n_tab) => s% tab_lnK(1:4*s% n_tab, i)
+        lnCp_interp(1:4*s% n_tab) => s% tab_lnCp(1:4*s% n_tab, i)
+        lnEnu_interp(1:4*s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, i)
+        
+        lnT = log(s% T_bar(i))
+		call interp_value_and_slope(s% tab_lnT, s% n_tab, lnKcond_interp, lnT, lnK, dlnK, ierr)
+        if (ierr /= 0) then
+            print *, 'bad interp in lnK'
+        end if
+        lnT = log(s% T(i))
+        call interp_value_and_slope(s% tab_lnT, s% n_tab, lnCp_interp, lnT, lnC, dlnC, ierr)
+        if (ierr /= 0) then
+            print *, 'bad interp in lnC'
+        end if
+        call interp_value_and_slope(s% tab_lnT, s% n_tab, lnEnu_interp, lnT, lnEnu, dlnEnu, ierr)
+        if (ierr /= 0) then
+            print *, 'bad interp in lnEnu'
+        end if
+        write (output_unit,'(3es15.8,3(f12.8))') s% dm_bar(i), s% rho_bar(i), s% P_bar(i), lnKcond_val(1,42)/ln10, lnK/ln10, dlnK
+        write (output_unit,'(t8,3es15.8,2(f14.10),2(f5.1),7(f14.10))') s% dm(i), s% rho(i), s% T(i), s% ePhi(i), &
         &   s% eLambda(i), &
-        &   s% ionic(i)% Z, s% ionic(i)% A, s% tab_lnT(42)/ln10, lnCp_val(1,42)/ln10, lnEnu_val(1,42)/ln10
+        &   s% ionic(i)% Z, s% ionic(i)% A, s% tab_lnT(42)/ln10, lnCp_val(1,42)/ln10, lnC/ln10, dlnC, lnEnu_val(1,42)/ln10, &
+        &   lnEnu/ln10, dlnEnu
 !         write (output_unit,'(2es15.8,tr2,19(f10.6))') s% P_bar(i), s% T_bar(i), s% Yion_bar(1:s% ncharged,i),s% Xneut_bar(i)
 !         write (output_unit,'(2es15.8,tr2,f10.6,)') s% P_bar(i), s% T_bar(i), s% Xneut_bar(i)
     end do

@@ -64,7 +64,7 @@ contains
 
 		! clip lgP to table
 		lgP_c = max(lgP,tab% lgP_min)
-		lgP_c = min(lgP,tab% lgP_max)
+		lgP_c = min(lgP_c,tab% lgP_max)
 		call interp_value_and_slope(tab% lgP, tab% nv, tab% lgRho, lgP_c, lgRho, dlgRho, ierr)
 		if (ierr /= 0) then
 			write (error_unit,'(a,i3)') routine_name//': ierr = ',ierr

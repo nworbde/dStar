@@ -174,6 +174,7 @@ contains
         real(dp) :: chi, Ttab, enu_tab
         real(dp), dimension(:), pointer :: work=>null()
         real(dp), dimension(:,:), pointer :: lnEnu_val, lnKcond_val, lnCp_val
+        real(dp), dimension(:), pointer :: lnEnu_interp, lnKcond_interp, lnCp_interp
         real(dp) :: nn, kn, Tc(max_number_sf_types)
         type(crust_eos_component), dimension(num_crust_eos_components) :: components
         ! for error checking
@@ -222,6 +223,16 @@ contains
                 &   eps_nu, nu_channels)
                 lnEnu_val(1,itemp) = log(eps_nu% total/s% rho(iz))
             end do
+
+            allocate(work(s% n_tab*pm_work_size))
+            lnEnu_interp(1:4*s% n_tab) => s% tab_lnEnu(1:4*s% n_tab,iz)
+            call interp_pm(s% tab_lnT, s% n_tab, lnEnu_interp, pm_work_size, work, &
+            &   'do_setup_crust_transport: lnEnu', ierr)
+            lnCp_interp(1:4*s% n_tab) => s% tab_lnCp(1:4*s% n_tab,iz)
+            call interp_pm(s% tab_lnT, s% n_tab, lnCp_interp, pm_work_size, work, &
+            &   'do_setup_crust_transport: lnCp', ierr)            
+            deallocate(work)
+            
         end do
         
         ! facial quantities: Kcond
@@ -242,8 +253,13 @@ contains
                 &   Kcomponents, which_components=cond_channels)
                 lnKcond_val(1,itemp) = log(Kcomponents% total)
             end do
+            allocate(work(s% n_tab*pm_work_size))
+            lnKcond_interp(1:4*s% n_tab) => s% tab_lnK(1:4*s% n_tab,iz)
+            call interp_pm(s% tab_lnT, s% n_tab, lnKcond_interp, pm_work_size, work, &
+        &   'do_setup_crust_transport: lnK', ierr)
+            deallocate(work)
         end do
-        write (*,'(a,es15.8,a,es15.8)') 'max dP = ',maxval(delP),' at ',s% P_bar(maxloc(delP))
+!         write (*,'(a,es15.8,a,es15.8)') 'max dP = ',maxval(delP),' at ',s% P_bar(maxloc(delP))
         deallocate(delP)
         
     end subroutine do_setup_crust_transport
