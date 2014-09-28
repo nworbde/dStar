@@ -5,6 +5,7 @@ program test_NScool
     use create_model
     use NScool_ctrls_io, only: write_controls
     use NScool_evolve
+    use NScool_profile
     use, intrinsic :: iso_fortran_env, only: output_unit
     use interp_1d_lib
     
@@ -38,6 +39,9 @@ program test_NScool
     s% Mdot = 1.0e18
     call get_nuclear_heating(s, ierr)
     call check_okay('get_nuclear_heating',ierr)
+    
+    call do_write_profile(NScool_id,ierr)
+    call check_okay('do_write_profile',ierr)
     
     do i = 1, s% nz
         lnCp_val(1:4,1:s% n_tab) => s% tab_lnCp(1:4*s% n_tab, i)

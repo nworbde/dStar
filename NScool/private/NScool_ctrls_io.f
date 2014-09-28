@@ -97,6 +97,9 @@ contains
            return
        end if
        
+       s% base_profile_filename = trim(s% output_directory)//'/profile'
+       s% history_filename = trim(s% output_directory)//'/history.data'
+       
        s% maximum_number_of_models = maximum_number_of_models
        s% maximum_timestep = maximum_timestep
        s% maximum_end_time = maximum_end_time
