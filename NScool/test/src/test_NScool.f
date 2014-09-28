@@ -1,8 +1,10 @@
 program test_NScool
+    use constants_def
     use NScool_def
     use NScool_lib
     use create_model
     use NScool_ctrls_io, only: write_controls
+    use NScool_evolve
     use, intrinsic :: iso_fortran_env, only: output_unit
     use interp_1d_lib
     
@@ -33,8 +35,10 @@ program test_NScool
     call do_setup_crust_transport(s, ierr)
     call check_okay('do_setup_crust_transport',ierr)
     
-!     call tov_write_crust
-
+    s% Mdot = 1.0e18
+    call get_nuclear_heating(s, ierr)
+    call check_okay('get_nuclear_heating',ierr)
+    
     do i = 1, s% nz
         lnCp_val(1:4,1:s% n_tab) => s% tab_lnCp(1:4*s% n_tab, i)
         lnEnu_val(1:4,1:s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, i)
@@ -58,10 +62,10 @@ program test_NScool
             print *, 'bad interp in lnEnu'
         end if
         write (output_unit,'(3es15.8,3(f12.8))') s% dm_bar(i), s% rho_bar(i), s% P_bar(i), lnKcond_val(1,42)/ln10, lnK/ln10, dlnK
-        write (output_unit,'(t8,3es15.8,2(f14.10),2(f5.1),7(f14.10))') s% dm(i), s% rho(i), s% T(i), s% ePhi(i), &
+        write (output_unit,'(t8,3es15.8,2(f14.10),2(f5.1),7(f14.10),es15.8)') s% dm(i), s% rho(i), s% T(i), s% ePhi(i), &
         &   s% eLambda(i), &
         &   s% ionic(i)% Z, s% ionic(i)% A, s% tab_lnT(42)/ln10, lnCp_val(1,42)/ln10, lnC/ln10, dlnC, lnEnu_val(1,42)/ln10, &
-        &   lnEnu/ln10, dlnEnu
+        &   lnEnu/ln10, dlnEnu, s% enuc(i)
 !         write (output_unit,'(2es15.8,tr2,19(f10.6))') s% P_bar(i), s% T_bar(i), s% Yion_bar(1:s% ncharged,i),s% Xneut_bar(i)
 !         write (output_unit,'(2es15.8,tr2,f10.6,)') s% P_bar(i), s% T_bar(i), s% Xneut_bar(i)
     end do
@@ -70,6 +74,10 @@ program test_NScool
 ! !     &   s% eLambda_bar(s% nz)
 !
 !     write (output_unit,*) s% charged_ids
+    
+    
+    write (output_unit, '(/,/,"L = ",es15.8,f12.8)') dot_product(s% dm, s% enuc),  &
+    &   dot_product(s% dm, s% enuc) * ergs_to_mev/ s% Mdot /avogadro
     
     call NScool_shutdown
     

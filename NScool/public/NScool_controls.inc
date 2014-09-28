@@ -30,3 +30,11 @@
     real(dp) :: lgPcrust_top
     
     real(dp) :: target_resolution_lnP
+    
+    ! controls for the crust heating
+    real(dp) :: lgP_min_heating_outer
+    real(dp) :: lgP_max_heating_outer
+    real(dp) :: Q_heating_outer ! MeV
+    real(dp) :: lgP_min_heating_inner
+    real(dp) :: lgP_max_heating_inner
+    real(dp) :: Q_heating_inner ! MeV

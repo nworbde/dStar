@@ -25,7 +25,13 @@ module NScool_ctrls_io
         core_radius, &
         lgPcrust_bot, &
         lgPcrust_top, &
-        target_resolution_lnP
+        target_resolution_lnP,  &
+        lgP_min_heating_outer, &
+        lgP_max_heating_outer, &
+        Q_heating_outer, &
+        lgP_min_heating_inner, &
+        lgP_max_heating_inner, &
+        Q_heating_inner
         
 contains
     subroutine do_one_setup(id,inlist,ierr)
@@ -107,6 +113,12 @@ contains
        s% Pcore = 10.0**lgPcrust_bot
        s% target_resolution_lnP = target_resolution_lnP
        s% Tcore = core_temperature
+       s% lgP_min_heating_outer = lgP_min_heating_outer
+       s% lgP_max_heating_outer = lgP_max_heating_outer
+       s% Q_heating_outer = Q_heating_outer
+       s% lgP_min_heating_inner = lgP_min_heating_inner
+       s% lgP_max_heating_inner = lgP_max_heating_inner
+       s% Q_heating_inner = Q_heating_inner
 
    end subroutine store_controls
    

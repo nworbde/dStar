@@ -36,3 +36,11 @@
     lgPcrust_top = 27.0 ! cgs
     
     target_resolution_lnP = 0.1
+    
+    lgP_min_heating_outer = 26.86
+    lgP_max_heating_outer = 30.13
+    Q_heating_outer = 0.3 ! MeV
+    lgP_min_heating_inner = 30.42
+    lgP_max_heating_inner = 31.20
+    Q_heating_inner = 1.5 ! MeV
+    
