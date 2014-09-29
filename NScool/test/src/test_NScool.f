@@ -19,7 +19,8 @@ program test_NScool
     real(dp), dimension(:), pointer :: rpar
     integer, dimension(:), pointer :: ipar
     real(dp) :: h
-    real(dp), dimension(:), allocatable :: y, f
+    real(dp), dimension(:), allocatable :: y, f, fn
+    real(dp), dimension(:,:), allocatable :: dfdy, dfdy_num
     
     call NScool_init(my_dStar_dir, ierr)
     call check_okay('NScool_init',ierr)
@@ -47,18 +48,22 @@ program test_NScool
     call evaluate_luminosity(s,ierr)
     call check_okay('evaluate_luminosity',ierr)
     
-    call do_write_profile(NScool_id,ierr)
-    call check_okay('do_write_profile',ierr)
+    s% T(1:s% nz) = s% T(1:s% nz)* [(1.0+0.5*sin(0.5*pi*real(i-1,dp)/real(s% nz-1,dp)), i=1, s% nz)]
     
-    h = 0.1
-    allocate(y(s% nz), f(s% nz))
+    h = 1.0d-5
+    allocate(y(s% nz), f(s% nz), fn(s% nz), dfdy(3, s% nz), dfdy_num(3,s% nz))
     y = log(s% T)
     allocate(rpar(num_deriv_rpar), ipar(num_deriv_ipar))
     ipar(i_id) = NScool_id
-    call get_derivatives(s% nz, 0.0_dp, h, y, f, num_deriv_rpar, rpar, num_deriv_ipar, ipar, ierr)
-
-    do i = 1, s% nz-1
-        write (output_unit,'(i5,es16.8)') i, 1.0_dp/f(i)
+     call get_derivatives(s% nz, 0.0_dp, h, y, f, num_deriv_rpar, rpar, num_deriv_ipar, ipar, ierr)
+     call do_write_profile(NScool_id,ierr)
+     call check_okay('do_write_profile',ierr)
+    call get_jacobian(s% nz, 0.0_dp, h, y, f, dfdy, 3, num_deriv_rpar, rpar, num_deriv_ipar, ipar, ierr)
+    call get_num_jacobian(s% nz, 0.0_dp, h, y, f, dfdy_num, 3, num_deriv_rpar, rpar, num_deriv_ipar, ipar, ierr)
+    
+    do i = 1, s% nz
+       write (output_unit,'(i5,7es16.8)') i, 1.0_dp/f(i), dfdy(1:3,i), dfdy_num(1:3,i)
+!         write (output_unit,'(i5,es16.8)') i, 1.0_dp/f(i)
 !         lnCp_val(1:4,1:s% n_tab) => s% tab_lnCp(1:4*s% n_tab, i)
 !         lnEnu_val(1:4,1:s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, i)
 !         lnKcond_val(1:4,1:s% n_tab) => s% tab_lnK(1:4*s% n_tab, i)

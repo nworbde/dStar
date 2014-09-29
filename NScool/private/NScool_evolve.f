@@ -64,7 +64,7 @@ contains
         type(NScool_info), pointer :: s
         ! work arrays
         real(dp), dimension(n) :: CTinv, CTdminv, ArKdm
-        real(dp) :: wplus(1:n-1), wminus(2:n)
+        real(dp) :: wplus(1:n-1), wminus(2:n), dLpdlnT(1:n-1), dLdlnT(2:n)
         
         ierr = 0
         call get_NScool_info_ptr(ipar(i_id), s, ierr)
@@ -84,14 +84,109 @@ contains
         
         CTinv(1:n) = s% ePhi(1:n)/(s% Cp(1:n)*s% T(1:n))
         CTdminv(1:n) = CTinv(1:n)/s% e2Phi(1:n)/ s% dm(1:n)
-        ArKdm(1:n) = s% area(1:n)**2 * s% rho_bar(1:n) * s% Kcond(1:n)/s% ePhi_bar(1:n)
+        ArKdm(1:n) = s% area(1:n)**2 * s% rho_bar(1:n) * s% Kcond(1:n)/s% ePhi_bar(1:n)/s% dm_bar(1:n)
         
+        wplus(1:n-1) = s% dm(2:n)*s% T(1:n-1)/(s% dm(2:n)*s% T(1:n-1) + s% dm(1:n-1)*s% T(2:n))
+        dLpdlnT(1:n-1) = s% L(2:n)*s% dlnK_dlnT(2:n)*wplus(1:n-1) - ArKdm(2:n)*s% ePhi(1:n-1)*s% T(1:n-1)
+        
+        wminus(2:n) = s% dm(1:n-1)*s% T(2:n)/(s% dm(2:n)*s% T(1:n-1)+ s% dm(1:n-1)*s% T(2:n))
+        dLdlnT(2:n) = s% L(2:n)*s% dlnK_dlnT(2:n)*wminus(2:n) + Arkdm(2:n)*s% ePhi(2:n)*s% T(2:n)
         
         dfdy = 0.0_dp
         
+        ! J(k-1,k) : 2 <= k <= n
+        dfdy(1,2:n) = CTdminv(1:n-1)*s% e2Phi_bar(2:n)*dLdlnT(2:n)
         
+        ! J(k,k) : 1 <= k <= n
+        ! cell-based quantities
+        dfdy(2,1:n) = -f(1:n)*(1.0_dp+s% dlnCp_dlnT(1:n)) - CTinv(1:n)*s% enu(1:n)*s% dlnenu_dlnT(1:n)
+        ! interior points
+        dfdy(2,2:n-1) = dfdy(2,2:n-1) + CTdminv(2:n-1)*(s% e2Phi_bar(3:n)*dLpdlnT(2:n-1) &
+        &   - s% e2Phi_bar(2:n-1)*dLdlnT(2:n-1))
+        ! surface point
+        dfdy(2,1) = dfdy(2,1) + CTdminv(1)*(s% e2Phi_bar(2)*dLpdlnT(1) - s% e2Phi_bar(1)*s% L(1)*s% dlnLsdlnT)
+        ! core point
+        dfdy(2,n) = 0.0
         
+        ! J(k+1,k) : 1 <= k <= n-1
+        dfdy(3,1:n-1) = -CTdminv(2:n)*s% e2Phi_bar(2:n) * dLpdlnT(1:n-1)
+        dfdy(3,n-1) = 0.0   ! for the isothermal core
     end subroutine get_jacobian
+    
+    subroutine get_num_jacobian(n, x, h, y, f, dfdy, ldfy, lrpar, rpar, lipar, ipar, ierr)
+        use const_def, only: dp
+        integer, intent(in) :: n, ldfy, lrpar, lipar
+        real(dp), intent(in) :: x, h
+        real(dp), intent(inout) :: y(n)
+        real(dp), intent(out) :: f(n) ! dy/dx
+        real(dp), intent(out) :: dfdy(ldfy, n)
+        ! dense: dfdy(i, j) = partial f(i) / partial y(j)
+        ! banded: dfdy(i-j+mujac+1, j) = partial f(i) / partial y(j)
+           ! uses rows 1 to mljac+mujac+1 of dfdy.
+           ! The j-th column of the square matrix is stored in the j-th column of the
+           ! array dfdy as follows:
+           ! dfdy(mujac+1+i-j, j) = partial f(i) / partial y(j)
+           ! for max(1, j-mujac)<=i<=min(N, j+mljac)
+        integer, intent(inout), pointer :: ipar(:) ! (lipar)
+        real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
+        integer, intent(out) :: ierr ! nonzero means terminate integration
+        type(NScool_info), pointer :: s
+        real(dp) :: invtwoh
+        ! work arrays
+        real(dp), dimension(n) :: ym(n), yp(n), y0(n), fm(n), fp(n)
+        integer :: j
+        
+        ierr = 0
+        call get_NScool_info_ptr(ipar(i_id), s, ierr)
+        ! fatal erors
+        if (ierr /= 0) then
+            write (*,*) 'unable to acces NScool_info in get_derivatives'
+            stop
+        end if
+        if (n /= s% nz) then
+            ierr = -9
+            write (*,*) 'wrong number of equations in solver'
+            stop
+        end if
+        
+        dfdy = 0.0_dp
+        invtwoh = 0.5_dp/h
+        call get_derivatives(n, x, h, y, f, lrpar, rpar, lipar, ipar, ierr)
+
+        ! first point
+        y0 = y
+        ym = y0
+        yp = y0
+        ym(1) = y0(1)-h
+        yp(1) = y0(1)+h
+        call get_derivatives(n, x, h, ym, fm, lrpar, rpar, lipar, ipar, ierr)
+        call get_derivatives(n, x, h, yp, fp, lrpar, rpar, lipar, ipar, ierr)
+        dfdy(1,1) = 0.0
+        dfdy(2,1) = (fp(1) - fm(1))*invtwoh
+        dfdy(3,1) = (fp(2) - fm(2))*invtwoh
+        ! interior points
+        do j = 2, n-1
+           ym = y0
+           yp = y0
+           ym(j) = y0(j)-h
+           yp(j) = y0(j)+h
+           call get_derivatives(n, x, h, ym, fm, lrpar, rpar, lipar, ipar, ierr)
+           call get_derivatives(n, x, h, yp, fp, lrpar, rpar, lipar, ipar, ierr)
+           dfdy(1,j) = (fp(j-1) - fm(j-1))*invtwoh
+           dfdy(2,j) = (fp(j) - fm(j))*invtwoh
+           dfdy(3,j) = (fp(j+1) - fm(j+1))*invtwoh
+        end do
+        ! last point
+        ym = y0
+        yp = y0
+        ym(n) = y0(n)-h
+        yp(n) = y0(n)+h
+        call get_derivatives(n, x, h, ym, fm, lrpar, rpar, lipar, ipar, ierr)
+        call get_derivatives(n, x, h, yp, fp, lrpar, rpar, lipar, ipar, ierr)
+        dfdy(1,n) = (fp(n-1) - fm(n-1))*invtwoh
+        dfdy(2,n) = (fp(n) - fm(n))*invtwoh
+        dfdy(3,n) = 0.0
+    end subroutine get_num_jacobian
     
     subroutine evaluate_luminosity(s,ierr)
         use dStar_atm_lib
@@ -140,7 +235,7 @@ contains
             call interp_value_and_slope(s% tab_lnT, s% n_tab, lnCp_interp, s% lnT(iz), s% lnCp(iz), s% dlnCp_dlnT(iz), ierr)
             if (failure('lnCp',iz)) return
             
-            call interp_value_and_slope(s% tab_lnT, s% n_tab, lnEnu_interp, s% lnT(iz), s% lnenu(iz), s% dlnenu_dlnt(iz), ierr)
+            call interp_value_and_slope(s% tab_lnT, s% n_tab, lnEnu_interp, s% lnT(iz), s% lnenu(iz), s% dlnenu_dlnT(iz), ierr)
             if (failure('lnEnu',iz)) return
             
             s% Kcond = exp(s% lnK)
