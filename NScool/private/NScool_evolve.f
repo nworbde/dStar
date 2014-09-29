@@ -44,6 +44,55 @@ contains
         
     end subroutine get_derivatives
     
+    subroutine get_jacobian(n, x, h, y, f, dfdy, ldfy, lrpar, rpar, lipar, ipar, ierr)
+        use const_def, only: dp
+        integer, intent(in) :: n, ldfy, lrpar, lipar
+        real(dp), intent(in) :: x, h
+        real(dp), intent(inout) :: y(n)
+        real(dp), intent(out) :: f(n) ! dy/dx
+        real(dp), intent(out) :: dfdy(ldfy, n)
+        ! dense: dfdy(i, j) = partial f(i) / partial y(j)
+        ! banded: dfdy(i-j+mujac+1, j) = partial f(i) / partial y(j)
+           ! uses rows 1 to mljac+mujac+1 of dfdy.
+           ! The j-th column of the square matrix is stored in the j-th column of the
+           ! array dfdy as follows:
+           ! dfdy(mujac+1+i-j, j) = partial f(i) / partial y(j)
+           ! for max(1, j-mujac)<=i<=min(N, j+mljac)
+        integer, intent(inout), pointer :: ipar(:) ! (lipar)
+        real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
+        integer, intent(out) :: ierr ! nonzero means terminate integration
+        type(NScool_info), pointer :: s
+        ! work arrays
+        real(dp), dimension(n) :: CTinv, CTdminv, ArKdm
+        real(dp) :: wplus(1:n-1), wminus(2:n)
+        
+        ierr = 0
+        call get_NScool_info_ptr(ipar(i_id), s, ierr)
+        ! fatal erors
+        if (ierr /= 0) then
+            write (*,*) 'unable to acces NScool_info in get_derivatives'
+            stop
+        end if
+        if (n /= s% nz) then
+            ierr = -9
+            write (*,*) 'wrong number of equations in solver'
+            stop
+        end if
+        
+        ! call to derivatives ensures that L, T, Tbar and their ln's are set, as well as the coefficients
+        call get_derivatives(n, x, h, y, f, lrpar, rpar, lipar, ipar, ierr)
+        
+        CTinv(1:n) = s% ePhi(1:n)/(s% Cp(1:n)*s% T(1:n))
+        CTdminv(1:n) = CTinv(1:n)/s% e2Phi(1:n)/ s% dm(1:n)
+        ArKdm(1:n) = s% area(1:n)**2 * s% rho_bar(1:n) * s% Kcond(1:n)/s% ePhi_bar(1:n)
+        
+        
+        dfdy = 0.0_dp
+        
+        
+        
+    end subroutine get_jacobian
+    
     subroutine evaluate_luminosity(s,ierr)
         use dStar_atm_lib
         type(NScool_info), pointer :: s
