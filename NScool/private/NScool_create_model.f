@@ -8,6 +8,8 @@ module create_model
     use dStar_eos_lib
     use dStar_crust_def
     use dStar_crust_lib
+    use dStar_atm_def
+    use dStar_atm_lib
     use NScool_crust_tov
 
     integer, parameter :: number_table_pts = 128
@@ -31,7 +33,8 @@ contains
         type(tov_model_type), pointer :: stov
         integer, intent(out) :: ierr
         real(dp), dimension(:), pointer :: y
-    
+        real(dp) :: Plight
+        
         write (error_unit,*) 'establishing crust zones...'
         
         write (error_unit,*) 'initializing microphysics...'
@@ -56,10 +59,13 @@ contains
     
         write (error_unit,*) 'loading crust model...'
         call dStar_crust_startup('../../data',ierr)
-        if (failure('dStar_atm_startup')) return
+        if (failure('dStar_crust_startup')) return
         
         call dStar_crust_load_table('hz90',s% eos_handle, s% Tcore, ierr)
         if (failure('dStar_crust_load_table')) return
+
+    	call dStar_atm_startup('../../data',ierr)
+        if (failure('dStar_atm_startup')) return
 
         write(error_unit,*) 'integrating TOV equations...'
         allocate(y(num_tov_variables))
@@ -77,8 +83,10 @@ contains
         ! facial information
         s% P_bar(1:s% nz) = stov% pressure(stov% nzs:2:-1) * pressure_g
         s% ePhi_bar(1:s% nz) = exp(stov% potential(stov% nzs:2:-1))
+        s% e2Phi_bar(1:s% nz) = s% ePhi_bar(1:s% nz)**2
         s% ePhicore = exp(stov% potential(1))
         s% m(1:s% nz) = stov% baryon(stov% nzs:2:-1) * mass_g
+        s% area(1:s% nz) = fourpi*(stov% radius(stov% nzs:2:-1)*length_g + s% Rcore*1.0e5)**2
         s% eLambda_bar(1:s% nz) = 1.0/sqrt(1.0-2.0*(stov% mass(stov% nzs:2:-1)+s% Mcore)/ &
         &   (stov% radius(stov% nzs:2:-1) + s% Rcore*1.0e5/length_g))
         
@@ -95,6 +103,7 @@ contains
         &   1.0/sqrt(1.0-2.0*s% Mcore/(s% Rcore*1.0e5/length_g)))
         s% ePhi(1:s% nz-1) = 0.5*(s% ePhi_bar(1:s% nz-1) + s% ePhi_bar(2:s% nz))
         s% ePhi(s% nz) = 0.5*(s% ePhi_bar(s% nz) + s% ePhicore)
+        s% e2Phi(1:s% nz) = s% ePhi(1:s% nz)**2
         
         ! temperatures: set to be isothermal (exp(Phi)*T = const)
         s% T(1:s% nz) = s% Tcore * s% ePhicore / s% ePhi(1:s% nz)
@@ -107,6 +116,15 @@ contains
         ! this leaves rho_bar(1) undefined... we can use Taylor expansion
         s% rho_bar(2:s% nz) = 0.5*(s% rho(1:s% nz-1)*s% dm(2:s% nz) + s% rho(2:s% nz)*s% dm(1:s% nz-1)) / &
         &   s% dm_bar(2:s% nz)
+        
+        
+        ! now set the surface gravity and load the atmosphere
+        s% grav = stov% mass(stov% nzs) + s% Mcore * mass_g * Gnewton /  &
+        &   (stov% radius(stov% nzs)*length_g + s% Rcore*1.0e5)**2 * s% eLambda_bar(1)
+
+        Plight = 1.0e22_dp
+    	call dStar_atm_load_table('pcy97',s% grav,Plight,ierr)
+        if (failure('dStar_atm_load_table')) return
         
     contains
         function failure(str)
@@ -140,6 +158,7 @@ contains
         ! for the cells, *for now*, inherit composition of the top face
         s% Yion(1:s% ncharged, 1:s% nz) = s% Yion_bar(1:s% ncharged, 1:s% nz)
         s% ionic(1:s% nz) = s% ionic_bar(1:s% nz)
+        s% Xneut(1:s% nz) = s% Xneut_bar(1:s% nz)
         
         deallocate(lgP_bar)
     end subroutine do_setup_crust_composition

@@ -23,6 +23,7 @@ module NScool_def
         real(dp) :: Mcore     ! mass of core
         real(dp) :: Rcore     ! radius of core
         real(dp) :: ePhicore   ! potential of core
+        real(dp) :: grav        ! gravity at surface
         
         real(dp) :: tsec      ! current value of time in seconds
         real(dp) :: dt        ! value of timestep just taken, in seconds
@@ -52,6 +53,7 @@ module NScool_def
         real(dp), pointer, dimension(:) :: lnT     ! ln(temperature)
         real(dp), pointer, dimension(:) :: T       ! temperature
         real(dp), pointer, dimension(:) :: ePhi     ! exp(potential)
+        real(dp), pointer, dimension(:) :: e2Phi
         real(dp), pointer, dimension(:) :: eLambda ! redshift, 1+z
         real(dp), pointer, dimension(:) :: rho     ! density(P,T,X)
         real(dp), pointer, dimension(:) :: lnCp    ! ln(specific heat)
@@ -64,6 +66,7 @@ module NScool_def
 
         ! facial information
         real(dp), pointer, dimension(:) :: m       ! mass
+        real(dp), pointer, dimension(:) :: area    ! 4*pi*r**2
         real(dp), pointer, dimension(:) :: L       ! luminosity
         real(dp), pointer, dimension(:) :: dm_bar  ! interpolated mass difference
 !         real(dp), pointer, dimension(:,:) :: X_bar  ! interpolated mass fracs
@@ -74,6 +77,7 @@ module NScool_def
         real(dp), pointer, dimension(:) :: lnT_bar ! ln(interpolated temperature)
         real(dp), pointer, dimension(:) :: T_bar   ! interpolated temperature
         real(dp), pointer, dimension(:) :: ePhi_bar ! exp(potential)
+        real(dp), pointer, dimension(:) :: e2Phi_bar
         real(dp), pointer, dimension(:) :: eLambda_bar ! redshift, 1+z
         real(dp), pointer, dimension(:) :: rho_bar ! density(Pbar,Tbar,Xbar)
         real(dp), pointer, dimension(:) :: Kcond   ! thermal conductivity

@@ -29,7 +29,7 @@ contains
         call get_NScool_info_ptr(alloc_NScool_data, s, ierr)
         if (ierr /= 0) return
         
-        !zefo information
+        !zero information
         s% Lsurf = 0.0
         s% dlnLsdlnT = 0.0 ! change surface luminosity with temperature out outer zone
         s% Teff = 0.0      ! surface effective temperature
@@ -38,6 +38,7 @@ contains
         s% Pcore = 0.0     ! pressure at core boundary
         s% Mcore = 0.0     ! mass of core
         s% Rcore = 0.0     ! radius of core
+        s% grav = 0.0
         s% tsec = 0.0      ! current value of time in seconds
         s% dt = 0.0        ! value of timestep just taken, in seconds
         s% Mdot = 0.0      ! accretion rate measured at infinity [g/s]
@@ -69,6 +70,7 @@ contains
         nullify(s% lnT)
         nullify(s% T)
         nullify(s% ePhi)
+        nullify(s% e2Phi)
         nullify(s% eLambda)
         nullify(s% rho)
         nullify(s% lnCp)
@@ -81,6 +83,7 @@ contains
 
         ! facial information
         nullify(s% m)
+        nullify(s% area)
         nullify(s% L)
         nullify(s% dm_bar)
 !         nullify(s% X_bar)
@@ -91,6 +94,7 @@ contains
         nullify(s% lnT_bar)
         nullify(s% T_bar)
         nullify(s% ePhi_bar)
+        nullify(s% e2Phi_bar)
         nullify(s% eLambda_bar)
         nullify(s% rho_bar)
         nullify(s% Kcond)

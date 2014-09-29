@@ -121,6 +121,8 @@ contains
             if (failed('T')) exit
             call do1(s% ePhi)
             if (failed('ePhi')) exit
+            call do1(s% e2Phi)
+            if (failed('e2Phi')) exit
             call do1(s% eLambda)
             if (failed('eLambda')) exit
             call do1(s% rho)
@@ -142,6 +144,8 @@ contains
             
             call do1(s% m)
             if (failed('m')) exit
+            call do1(s% area)
+            if (failed('area')) exit
             call do1(s% L)
             if (failed('L')) exit
             call do1(s% dm_bar)
@@ -162,6 +166,8 @@ contains
             if (failed('T_bar')) exit
             call do1(s% ePhi_bar)
             if (failed('ePhi_bar')) exit
+            call do1(s% e2Phi_bar)
+            if (failed('e2Phi_bar')) exit
             call do1(s% eLambda_bar)
             if (failed('eLambda_bar')) exit
             call do1(s% rho_bar)
