@@ -39,7 +39,7 @@ contains
         call evaluate_luminosity(s,ierr)
 
         f(1:n-1) = ((s% L(2:n)*s% e2Phi_bar(2:n) - s% L(1:n-1)*s% e2Phi_bar(1:n-1))/s% dm(1:n-1)/s% e2Phi(1:n-1)  &
-        &   + s% enuc(1:n-1) - s% enu(1:n-1))*s% ePhi(1:n-1)/s% Cp(1:n-1)
+        &   + s% enuc(1:n-1) - s% enu(1:n-1))*s% ePhi(1:n-1)/s% Cp(1:n-1)/s% T(1:n-1)
         f(n) = 0.0
         
     end subroutine get_derivatives
