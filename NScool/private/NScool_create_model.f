@@ -122,8 +122,8 @@ contains
         s% grav = stov% mass(stov% nzs) + s% Mcore * mass_g * Gnewton /  &
         &   (stov% radius(stov% nzs)*length_g + s% Rcore*1.0e5)**2 * s% eLambda_bar(1)
 
-        Plight = 1.0e22_dp
-    	call dStar_atm_load_table('pcy97',s% grav,Plight,ierr)
+        Plight = s% grav * 10.0_dp**s% lg_atm_light_element_column
+    	call dStar_atm_load_table('pcy97',s% grav, Plight,ierr)
         if (failure('dStar_atm_load_table')) return
         
     contains

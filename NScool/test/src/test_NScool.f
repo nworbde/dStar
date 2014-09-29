@@ -57,7 +57,7 @@ program test_NScool
     ipar(i_id) = NScool_id
     call get_derivatives(s% nz, 0.0_dp, h, y, f, num_deriv_rpar, rpar, num_deriv_ipar, ipar, ierr)
 
-    do i = 1, s% nz
+    do i = 1, s% nz-1
         write (output_unit,'(i5,es16.8)') i, 1.0_dp/f(i)
 !         lnCp_val(1:4,1:s% n_tab) => s% tab_lnCp(1:4*s% n_tab, i)
 !         lnEnu_val(1:4,1:s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, i)
@@ -98,7 +98,7 @@ program test_NScool
 !
 !     write (output_unit, '(/,/,"L = ",es15.8,f12.8)') dot_product(s% dm, s% enuc),  &
 !     &   dot_product(s% dm, s% enuc) * ergs_to_mev/ s% Mdot /avogadro
-    
+    write (output_unit,'(/,/,"dlnLs/dlnT = ",f12.8)') s% dlnLsdlnT
     deallocate(rpar, ipar, y, f)
     
     call NScool_shutdown

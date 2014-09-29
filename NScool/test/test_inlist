@@ -37,4 +37,6 @@
     lgPcrust_top = 27.0 ! cgs
     
     target_resolution_lnP = 0.1
+    
+    lg_atm_light_element_column = 8.0
 /

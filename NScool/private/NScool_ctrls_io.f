@@ -31,7 +31,8 @@ module NScool_ctrls_io
         Q_heating_outer, &
         lgP_min_heating_inner, &
         lgP_max_heating_inner, &
-        Q_heating_inner
+        Q_heating_inner, &
+        lg_atm_light_element_column
         
 contains
     subroutine do_one_setup(id,inlist,ierr)
@@ -122,6 +123,7 @@ contains
        s% lgP_min_heating_inner = lgP_min_heating_inner
        s% lgP_max_heating_inner = lgP_max_heating_inner
        s% Q_heating_inner = Q_heating_inner
+       s% lg_atm_light_element_column = lg_atm_light_element_column
 
    end subroutine store_controls
    

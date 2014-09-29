@@ -44,3 +44,4 @@
     lgP_max_heating_inner = 31.20
     Q_heating_inner = 1.5 ! MeV
     
+    lg_atm_light_element_column = 8.0
