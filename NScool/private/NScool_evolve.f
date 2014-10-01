@@ -11,6 +11,7 @@ contains
 
     subroutine do_integrate_crust(NScool_id,ierr)
         use iso_fortran_env, only : error_unit
+        use constants_def
         use num_def
         use num_lib
         use mtx_def
@@ -33,6 +34,10 @@ contains
         real(dp), pointer, dimension(:) :: rpar_decsol, work
         integer, pointer, dimension(:) :: ipar_decsol, iwork
         real(dp), pointer, dimension(:) :: z
+        real(dp) :: zmin, zmax
+        ! for the bicyclic routine, not used
+        real(dp), dimension(:), pointer :: lblk, dblk, ublk, uf_lblk, uf_dblk, uf_ublk
+        integer :: caller_id, nvar, nz
 
         ierr = 0
 
@@ -56,6 +61,9 @@ contains
         rtol = 1.0e-3
         atol = 1.0e-3 * s% Tcore
 
+        zmin = 7.0*ln10
+        zmax = 9.5*ln10
+
         ijac = 1
         nzmax = 0
         isparse = 0
@@ -65,6 +73,10 @@ contains
         imas = 0
         mlmas = 0
         mumas = 0
+
+        caller_id = 0
+        nvar = -1
+        nz = 0
 
         iout = 1
 
@@ -84,8 +96,10 @@ contains
         which_solver = solver_option(trim(s% which_solver),ierr)
         call isolve(which_solver,n,get_derivatives,t,z,tend,h,max_step_size,max_steps, &
           & rtol,atol,itol,zmin,zmax,get_jacobian,ijac,null_sjac,nzmax,isparse, mljac, mujac, &
-          & null_mas, imas, mlmas, mumas, evaluate_timestep, iout, lapack_decsol, null_decsols, lrd, rpar_decsol,  &
-          & lid, ipar_decsol, work, lwork, iwork, liwork, &
+          & null_mas, imas, mlmas, mumas, evaluate_timestep, iout, lapack_decsol, null_decsols, &
+          & null_decsolblk, lrd, rpar_decsol, lid, ipar_decsol,  &
+          & caller_id, nvar, nz, lblk, dblk, ublk, uf_lblk, uf_dblk, uf_ublk, null_fcn_blk_dble, null_jac_blk_dble, &
+          & work, lwork, iwork, liwork, &
           & num_deriv_rpar, rpar, num_deriv_ipar, ipar, error_unit, idid)
 
         ! post-mortem
