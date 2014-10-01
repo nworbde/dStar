@@ -2,12 +2,230 @@ module NScool_evolve
     use NScool_def
     
     integer, parameter :: i_id = 1
-    integer, parameter :: num_deriv_ipar = 1, num_deriv_rpar = 0
+    integer, parameter :: i_num_terminal_writes = 2
+    integer, parameter :: num_deriv_ipar = 2
+    integer, parameter :: num_deriv_rpar = 0
     
     
 contains
-    
-    subroutine get_derivatives(n, x, h, y, f, lrpar, rpar, lipar, ipar, ierr)
+
+    subroutine do_integrate_crust(NScool_id,ierr)
+        use iso_fortran_env, only : error_unit
+        use num_def
+        use num_lib
+        use mtx_def
+        use mtx_lib
+      
+        integer, intent(in) :: NScool_id
+        integer, intent(out) :: ierr
+        type(NScool_info), pointer :: s
+        real(dp) :: t, tend, h, max_step_size
+        integer :: which_solver
+        integer :: n, max_steps, ijac, itol, nzmax, isparse, mljac, mujac
+        integer :: iout, lout, idid
+        integer :: lwork, liwork, lrd, lid
+        integer :: imas,mumas,mlmas
+        real(dp), dimension(1) :: rtol, atol
+        real(dp), dimension(num_deriv_rpar), target :: rpar_vals
+        integer, dimension(num_deriv_ipar), target :: ipar_vals
+        real(dp), pointer, dimension(:) :: rpar
+        integer, pointer, dimension(:) :: ipar
+        real(dp), pointer, dimension(:) :: rpar_decsol, work
+        integer, pointer, dimension(:) :: ipar_decsol, iwork
+        real(dp), pointer, dimension(:) :: z
+
+        ierr = 0
+
+        call get_NScool_info_ptr(NScool_id,s,ierr)
+        if (ierr /= 0) return
+
+        ! set up the equation parameters
+        n = s% nz
+        t = 0.0      
+        tend = s% maximum_end_time
+        h = 0.0
+        max_step_size = s% maximum_timestep
+        max_steps = s% maximum_number_of_models
+
+        allocate(z(n))
+        z = s% lnT
+
+        itol = 0
+
+        ! use the core temperature as a reference for relative accuracy
+        rtol = 1.0e-3
+        atol = 1.0e-3 * s% Tcore
+
+        ijac = 1
+        nzmax = 0
+        isparse = 0
+        mljac = 1
+        mujac = 1
+
+        imas = 0
+        mlmas = 0
+        mumas = 0
+
+        iout = 1
+
+        call lapack_work_sizes(n, lrd, lid)
+        allocate(rpar_decsol(lrd),ipar_decsol(lid))
+
+        call isolve_work_sizes(n, nzmax, imas, mljac, mujac, mlmas, mumas, liwork, lwork)
+        allocate(work(lwork), iwork(liwork))
+        iwork = 0
+        work = 0.0
+
+        ipar => ipar_vals
+        rpar => rpar_vals
+
+        ipar(i_id) = NScool_id
+        ipar(i_num_terminal_writes) = 0
+        which_solver = solver_option(trim(s% which_solver),ierr)
+        call isolve(which_solver,n,get_derivatives,t,z,tend,h,max_step_size,max_steps, &
+          & rtol,atol,itol,zmin,zmax,get_jacobian,ijac,null_sjac,nzmax,isparse, mljac, mujac, &
+          & null_mas, imas, mlmas, mumas, evaluate_timestep, iout, lapack_decsol, null_decsols, lrd, rpar_decsol,  &
+          & lid, ipar_decsol, work, lwork, iwork, liwork, &
+          & num_deriv_rpar, rpar, num_deriv_ipar, ipar, error_unit, idid)
+
+        ! post-mortem
+        select case(idid)
+        case(1)
+          write(error_unit,*) "computation successful"
+        case(2)
+          write(error_unit,*) "computation successful (terminated by solout)"
+        case(-1)
+          write(error_unit,*) "input is not consistent, "
+        case(-2)
+          write(error_unit,*) "reached max allowed number of steps, "
+        case(-3)
+          write(error_unit,*) "step size becomes too small, "
+        case(-4)
+          write(error_unit,*) "matrix is repeatedly singular."
+        case(-5)
+          write(error_unit,*) "terminated by jac returning nonzero ierr."
+        case(-6)
+          write(error_unit,*) "terminated by fcn returning nonzero ierr."
+        case(-7)
+          write(error_unit,*) "illegal arg for isolve."
+        case(-8)
+          write(error_unit,*) "cannot satisfy given tolerances even after reducing stepsize by 1d30."
+        end select
+        if (idid < 0) ierr = idid
+
+        ! print statistics
+        write(error_unit,'(a30," = ",i0)') 'num. fcn. evals', iwork(14)
+        write(error_unit,'(a30," = ",i0)') 'num. jac. evals', iwork(15)
+        write(error_unit,'(a30," = ",i0)') 'num. computed steps', iwork(16)
+        write(error_unit,'(a30," = ",i0)') 'num. accepted steps', iwork(17)
+        write(error_unit,'(a30," = ",i0)') 'num. rejected steps', iwork(18)
+        write(error_unit,'(a30," = ",i0)') 'num. LU decomps.', iwork(19)
+        write(error_unit,'(a30," = ",i0)') 'num. forward-backward subs.', iwork(20)
+
+        deallocate(z, rpar_decsol,ipar_decsol,work,iwork)
+        nullify(ipar)
+        nullify(rpar)
+
+        end subroutine do_integrate_crust
+
+        subroutine evaluate_timestep(nr, xold, x, n, y, rwork_y, iwork_y, interp_y, lrpar, rpar, lipar, ipar, irtrn)
+           use iso_fortran_env, only : output_unit, error_unit
+           use NScool_terminal, only : do_write_terminal
+           use NScool_history, only : do_write_history
+           use NScool_profile, only : do_write_profile
+           integer, intent(in) :: nr, n, lrpar, lipar
+           real(dp), intent(in) :: xold, x
+           real(dp), intent(inout) :: y(n)
+           ! y can be modified if necessary to keep it in valid range of possible solutions.
+           real(dp), intent(inout), target :: rwork_y(*)
+           integer, intent(inout), target :: iwork_y(*)
+           integer, intent(inout), pointer :: ipar(:) ! (lipar)
+           real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
+           interface
+              include 'num_interp_y.dek'
+           end interface
+           integer, intent(out) :: irtrn ! < 0 causes solver to return to calling program.
+           type(NScool_info), pointer :: s
+           integer :: ierr
+           logical :: print_terminal_header
+           character(len=256) :: filename      
+      
+           irtrn = 0
+           ierr = 0
+
+           ! get the crust information information
+           call get_NScool_info_ptr(ipar(i_id), s, ierr)
+           if (ierr /= 0) then
+              write (error_unit,*) 'unable to access NScool info in get_derivatives'
+              irtrn = -1
+              return
+           end if
+           if (n /= s% nz) then
+              write (error_unit,*) 'wrong number of equations in solver'
+              irtrn = -2
+              return
+           end if
+
+           s% model = nr
+           s% tsec = x
+           s% dt = x-xold
+      
+           s% lnT(1:n) = y(1:n)
+           s% T(1:n) = exp(s% lnT(1:n))
+           call interpolate_temps(s)
+      
+           call get_coefficients(s,ierr)
+           if (ierr /= 0) then
+              write (error_unit,*) 'error while interpolating coefficients'
+              irtrn = -3
+              return
+           end if
+      
+           call evaluate_luminosity(s, ierr)
+           if (ierr /= 0) then
+              write (error_unit,*) 'error while evaluating luminosity'
+              irtrn = -3
+              return
+           end if
+
+           ! update terminal information
+           if (mod(s% model,s% write_interval_for_terminal) == 0) then
+              if (mod(ipar(i_num_terminal_writes),s% write_interval_for_terminal_header) == 0) then
+                 print_terminal_header = .TRUE.
+              else
+                 print_terminal_header = .FALSE.
+              end if
+              call do_write_terminal(ipar(i_id), ierr, print_terminal_header)
+              if (ierr /= 0) then
+                 write(error_unit,*) 'failure writing to terminal'
+                 return
+              end if
+              ipar(i_num_terminal_writes) = ipar(i_num_terminal_writes) + 1
+           end if
+      
+           ! update history log
+           if (mod(s% model, s% write_interval_for_history) == 0) then
+              call do_write_history(ipar(i_id),ierr)
+              if (ierr /= 0) then
+                 write (error_unit,*) 'failure writing history log'
+                 return
+              end if
+              write (output_unit,'(a,i0,a,/)') 'saving model ',s% model,' information to history log'
+           end if
+      
+           ! update profile log
+           if (mod(s% model, s% write_interval_for_profile) == 0) then
+              write(filename,'(a,i4.4)') 'profile',s% model
+              call do_write_profile(ipar(i_id),ierr)
+              if (ierr /= 0) then
+                 write (error_unit,*) 'failure writing profile log'
+                 return
+              end if
+              write (output_unit,'(a,i0,a,/)') 'saving model ',s% model,' information to profile log'
+           end if
+        end subroutine evaluate_timestep
+
+        subroutine get_derivatives(n, x, h, y, f, lrpar, rpar, lipar, ipar, ierr)
         use const_def, only: dp
         integer, intent(in) :: n, lrpar, lipar
         real(dp), intent(in) :: x, h
@@ -17,7 +235,7 @@ contains
         real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
         integer, intent(out) :: ierr ! nonzero means retry with smaller timestep.
         type(NScool_info), pointer :: s
-        
+
         ierr = 0
         call get_NScool_info_ptr(ipar(i_id), s, ierr)
         ! fatal erors
@@ -30,11 +248,11 @@ contains
             write (*,*) 'wrong number of equations in solver'
             stop
         end if
-        
+
         s% lnT(1:n) = y(1:n)
         s% T(1:n) = exp(s% lnT(1:n))
         call interpolate_temps(s)
-        
+
         call get_coefficients(s, ierr)
         call evaluate_luminosity(s,ierr)
 
