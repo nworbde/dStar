@@ -22,6 +22,7 @@
     
     logical :: fix_atmosphere_temperature_when_accreting
     real(dp) :: atmosphere_temperature_when_accreting
+    real(dp) :: Mdot
     
     real(dp) :: core_mass
     real(dp) :: core_radius

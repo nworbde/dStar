@@ -22,8 +22,9 @@
     fix_core_temperature = .TRUE.
     core_temperature = 5.0d7
     fix_atmosphere_temperature_when_accreting = .TRUE.
-    atmosphere_temperature_when_accreting = 1.0d8
-
+    atmosphere_temperature_when_accreting = 5.0d8
+    accretion_rate = 1.0e18
+    
     ! extra controls for hook routines
     extra_real_controls(:) = 0.0
     extra_integer_controls(:) = 0

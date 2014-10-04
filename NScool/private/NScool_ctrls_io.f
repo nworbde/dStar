@@ -21,6 +21,7 @@ module NScool_ctrls_io
         core_temperature, & 
         fix_atmosphere_temperature_when_accreting, & 
         atmosphere_temperature_when_accreting, &
+        Mdot, &
         core_mass, &
         core_radius, &
         lgPcrust_bot, &
@@ -79,6 +80,7 @@ contains
     end subroutine set_default_controls
 
     subroutine store_controls(s,ierr)
+        use constants_def, only : Msun, secyer
        use num_lib, only : solver_option
        type(NScool_info), pointer :: s
        integer, intent(out) :: ierr
@@ -111,6 +113,7 @@ contains
        s% core_temperature = core_temperature
        s% fix_atmosphere_temperature_when_accreting = fix_atmosphere_temperature_when_accreting
        s% atmosphere_temperature_when_accreting = atmosphere_temperature_when_accreting
+       s% Mdot = Mdot
        s% Mcore = core_mass
        s% Rcore = core_radius
        s% Psurf = 10.0**lgPcrust_top

@@ -54,9 +54,11 @@ contains
 
         allocate(z(n))
         z = s% lnT(1:s% nz)
-
+        if (s% fix_atmosphere_temperature_when_accreting .and. s% Mdot > 0.0_dp) then
+            z(1) = log(s% atmosphere_temperature_when_accreting)
+        end if
+        
         itol = 0
-
         ! use the core temperature as a reference for relative accuracy
         rtol = 1.0e-3
         atol = 1.0e-3 * minval(z)
@@ -275,6 +277,10 @@ contains
         &   + s% enuc(1:n-1) - s% enu(1:n-1))*s% ePhi(1:n-1)/s% Cp(1:n-1)/s% T(1:n-1)
         f(n) = 0.0
         
+        if (s% fix_atmosphere_temperature_when_accreting .and. s% Mdot > 0.0_dp) then
+            f(1) = 0.0_dp
+        end if
+        
     end subroutine get_derivatives
     
     subroutine get_jacobian(n, x, h, y, f, dfdy, ldfy, lrpar, rpar, lipar, ipar, ierr)
@@ -344,6 +350,11 @@ contains
         ! J(k+1,k) : 1 <= k <= n-1
         dfdy(3,1:n-1) = -CTdminv(2:n)*s% e2Phi_bar(2:n) * dLpdlnT(1:n-1)
         dfdy(3,n-1) = 0.0   ! for the isothermal core
+
+        if (s% fix_atmosphere_temperature_when_accreting .and. s% Mdot > 0.0_dp) then
+            dfdy(1,2) = 0.0_dp
+            dfdy(2:3,1) = 0.0_dp
+        end if
     end subroutine get_jacobian
     
     subroutine get_num_jacobian(n, x, h, y, f, dfdy, ldfy, lrpar, rpar, lipar, ipar, ierr)

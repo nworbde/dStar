@@ -41,8 +41,6 @@ program test_NScool
     call do_setup_crust_transport(s, ierr)
     call check_okay('do_setup_crust_transport',ierr)
     
-    s% Mdot = 1.0e18_dp
-    
     call do_integrate_crust(NScool_id,ierr)
 !     call get_coefficients(s, ierr)
 !     call check_okay('get_coefficients',ierr)

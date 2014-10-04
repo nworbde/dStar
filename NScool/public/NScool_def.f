@@ -27,7 +27,6 @@ module NScool_def
         
         real(dp) :: tsec      ! current value of time in seconds
         real(dp) :: dt        ! value of timestep just taken, in seconds
-        real(dp) :: Mdot      ! accretion rate measured at infinity [g/s]
         integer :: model      ! counter that is incremented after each successful step
       
         ! information about the composition

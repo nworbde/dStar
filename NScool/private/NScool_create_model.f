@@ -119,7 +119,6 @@ contains
         s% rho_bar(2:s% nz) = 0.5*(s% rho(1:s% nz-1)*s% dm(2:s% nz) + s% rho(2:s% nz)*s% dm(1:s% nz-1)) / &
         &   s% dm_bar(2:s% nz)
         
-        
         ! now set the surface gravity and load the atmosphere
         s% grav = stov% mass(stov% nzs) + s% Mcore * mass_g * Gnewton /  &
         &   (stov% radius(stov% nzs)*length_g + s% Rcore*1.0e5)**2 * s% eLambda_bar(1)
@@ -127,7 +126,7 @@ contains
         Plight = s% grav * 10.0_dp**s% lg_atm_light_element_column
     	call dStar_atm_load_table('pcy97',s% grav, Plight,ierr)
         if (failure('dStar_atm_load_table')) return
-        
+
     contains
         function failure(str)
             character(len=*), intent(in) :: str

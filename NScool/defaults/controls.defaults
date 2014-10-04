@@ -22,7 +22,8 @@
     core_temperature = 1.0d8
     fix_atmosphere_temperature_when_accreting = .TRUE.
     atmosphere_temperature_when_accreting = 1.0d8
-
+    Mdot = 1.0d18 ! g/s
+    
     ! extra controls for hook routines
     extra_real_controls(:) = 0.0
     extra_integer_controls(:) = 0
