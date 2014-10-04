@@ -33,7 +33,9 @@ module NScool_ctrls_io
         lgP_min_heating_inner, &
         lgP_max_heating_inner, &
         Q_heating_inner, &
-        lg_atm_light_element_column
+        lg_atm_light_element_column, &
+        fix_Qimp, &
+        Qimp
         
 contains
     subroutine do_one_setup(id,inlist,ierr)
@@ -127,6 +129,8 @@ contains
        s% lgP_max_heating_inner = lgP_max_heating_inner
        s% Q_heating_inner = Q_heating_inner
        s% lg_atm_light_element_column = lg_atm_light_element_column
+       s% fix_Qimp = fix_Qimp
+       s% Qimp = Qimp
 
    end subroutine store_controls
    

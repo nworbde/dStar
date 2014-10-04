@@ -42,3 +42,7 @@
 
     ! controls for the atmosphere
     real(dp) :: lg_atm_light_element_column  ! lg(cgs), for the PCY atmosphere fit
+    
+    ! controls for the composition
+    logical :: fix_Qimp
+    real(dp) :: Qimp

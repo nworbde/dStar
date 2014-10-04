@@ -1,5 +1,6 @@
     !   used for loading an existing structure model
-    load_model_file = .TRUE.
+    ! currently unused
+    load_model_file = .FALSE.
     model_file = ''
     
     ! controls for output
@@ -46,3 +47,6 @@
     Q_heating_inner = 1.5 ! MeV
     
     lg_atm_light_element_column = 8.0
+    
+    fix_Qimp = .FALSE.
+    Qimp = 0.0

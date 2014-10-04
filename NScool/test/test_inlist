@@ -23,7 +23,7 @@
     core_temperature = 5.0d7
     fix_atmosphere_temperature_when_accreting = .TRUE.
     atmosphere_temperature_when_accreting = 5.0d8
-    accretion_rate = 1.0e18
+    Mdot = 1.0e18
     
     ! extra controls for hook routines
     extra_real_controls(:) = 0.0
@@ -40,4 +40,7 @@
     target_resolution_lnP = 0.1
     
     lg_atm_light_element_column = 8.0
+    fix_Qimp = .TRUE.
+    Qimp = 100.0
+    
 /

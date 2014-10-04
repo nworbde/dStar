@@ -156,6 +156,14 @@ contains
         call allocate_NScool_iso_arrays(s, ierr)
         call dStar_crust_get_composition(lgP_bar, s% ncharged, s% charged_ids, s% Yion_bar, s% Xneut_bar, s% ionic_bar, ierr)
         if (ierr /= 0) return
+        
+        ! can fix the impurity parameter to a specified value; this should be replaced by
+        ! a function call to allow a more customizable option
+        if (s% fix_Qimp) then
+            write (*,*) 'setting Qimp = ',s% Qimp
+            s% ionic_bar(1:s% nz)% Q = s% Qimp
+        end if
+
         ! for the cells, *for now*, inherit composition of the top face
         s% Yion(1:s% ncharged, 1:s% nz) = s% Yion_bar(1:s% ncharged, 1:s% nz)
         s% ionic(1:s% nz) = s% ionic_bar(1:s% nz)
