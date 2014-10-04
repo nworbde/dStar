@@ -108,7 +108,9 @@ contains
         ! temperatures: set to be isothermal (exp(Phi)*T = const)
         s% T(1:s% nz) = s% Tcore * s% ePhicore / s% ePhi(1:s% nz)
         s% T_bar(1:s% nz) = s% Tcore * s% ePhicore / s% ePhi_bar(1:s%nz)
-
+        s% lnT(1:s% nz) = log(s% T(1:s% nz))
+        s% lnT_bar(1:s% nz) = log(s% T_bar(1:s% nz))
+         
         ! now interpolate dm and rho to the facial points
         s% dm_bar(1) = 0.5*s% dm(1)
         s% dm_bar(2:s% nz) = 0.5*(s% dm(1:s% nz-1) + s% dm(2:s% nz))

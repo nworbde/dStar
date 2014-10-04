@@ -4,7 +4,7 @@ module NScool_profile
    character(len=*), parameter :: scival = 'es15.6', intval = 'i15', fltval = 'f15.6'
    character(len=*), parameter :: filename_fmt = '(a,i4.4)'
    integer, parameter :: num_header_cols = 7, header_col_width=15
-   integer, parameter :: num_profile_cols = 16, profile_col_width=15
+   integer, parameter :: num_profile_cols = 17, profile_col_width=15
 
    character(len=*), parameter :: header_count_fmt = '(7'//intval//')'
    character(len=*), parameter :: header_title_fmt = '(7a15)'
@@ -12,12 +12,14 @@ module NScool_profile
    character(len=*), parameter :: profile_count_fmt = '(17'//intval//')'
    character(len=*), parameter :: profile_title_fmt = '(17a15)'
    character(len=*), parameter :: profile_val_fmt = &
-   & '('//intval//',2'//scival//',2'//fltval//',4'//scival//',3'//fltval//',4'//scival//')'
+   & '('//intval//',2'//scival//',2'//fltval//',4'//scival//',4'//fltval//',4'//scival//')'
    character(len=header_col_width), dimension(num_header_cols) :: header_cols = [character(len=header_col_width) ::  &
       & 'model', 'time', 'core mass', 'core radius', 'accretion rate', 'heating lum.', 'cooling lum.']
    character(len=profile_col_width),dimension(num_profile_cols) :: profile_cols = [character(len=profile_col_width) ::  &
-      &'zone','mass','dm','eLambda','ePhi', &
-      &'temperature','luminosity','pressure','density','zbar','abar','Xn','cp','eps_nu','eps_nuc','K' ]
+      & 'zone','mass','dm','eLambda','ePhi', &
+      & 'temperature','luminosity','pressure','density', &
+      & 'zbar','abar','Xn','Qimp', &
+      & 'cp','eps_nu','eps_nuc','K' ]
    
    contains
    subroutine do_write_profile(id,ierr)
@@ -61,7 +63,8 @@ module NScool_profile
       write (iounit,*)
       do iz = 1, s% nz
          write(iounit,profile_val_fmt) iz, s% m(iz), s% dm(iz), s% eLambda(iz), s% ePhi(iz),  &
-         &  s% T(iz), s% L(iz), s% P(iz), s% rho(iz), s% ionic(iz)% Z, s% ionic(iz)% A, s% Xneut(iz),  &
+         &  s% T(iz), s% L(iz), s% P(iz), s% rho(iz),  &
+         &  s% ionic(iz)% Z, s% ionic(iz)% A, s% Xneut(iz),  s% ionic(iz)% Q, &
          &  s% Cp(iz), s% enu(iz), s% enuc(iz), s% Kcond(iz)
       end do
       

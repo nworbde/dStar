@@ -41,28 +41,30 @@ program test_NScool
     call do_setup_crust_transport(s, ierr)
     call check_okay('do_setup_crust_transport',ierr)
     
-    s% Mdot = 1.0e16
-    call get_coefficients(s, ierr)
-    call check_okay('get_coefficients',ierr)
-    call interpolate_temps(s)
-    call evaluate_luminosity(s,ierr)
-    call check_okay('evaluate_luminosity',ierr)
+    s% Mdot = 0.0_dp
     
-    s% T(1:s% nz) = s% T(1:s% nz)* [(1.0+0.5*sin(0.5*pi*real(i-1,dp)/real(s% nz-1,dp)), i=1, s% nz)]
+    call do_integrate_crust(NScool_id,ierr)
+!     call get_coefficients(s, ierr)
+!     call check_okay('get_coefficients',ierr)
+!     call interpolate_temps(s)
+!     call evaluate_luminosity(s,ierr)
+!     call check_okay('evaluate_luminosity',ierr)
     
-    h = 1.0d-5
-    allocate(y(s% nz), f(s% nz), fn(s% nz), dfdy(3, s% nz), dfdy_num(3,s% nz))
-    y = log(s% T)
-    allocate(rpar(num_deriv_rpar), ipar(num_deriv_ipar))
-    ipar(i_id) = NScool_id
-     call get_derivatives(s% nz, 0.0_dp, h, y, f, num_deriv_rpar, rpar, num_deriv_ipar, ipar, ierr)
-     call do_write_profile(NScool_id,ierr)
-     call check_okay('do_write_profile',ierr)
-    call get_jacobian(s% nz, 0.0_dp, h, y, f, dfdy, 3, num_deriv_rpar, rpar, num_deriv_ipar, ipar, ierr)
-    call get_num_jacobian(s% nz, 0.0_dp, h, y, f, dfdy_num, 3, num_deriv_rpar, rpar, num_deriv_ipar, ipar, ierr)
+!     s% T(1:s% nz) = s% T(1:s% nz)* [(1.0+0.5*sin(0.5*pi*real(i-1,dp)/real(s% nz-1,dp)), i=1, s% nz)]
     
-    do i = 1, s% nz
-       write (output_unit,'(i5,7es16.8)') i, 1.0_dp/f(i), dfdy(1:3,i), dfdy_num(1:3,i)
+!     h = 1.0d-5
+!     allocate(y(s% nz), f(s% nz), fn(s% nz), dfdy(3, s% nz), dfdy_num(3,s% nz))
+!     y = log(s% T)
+!     allocate(rpar(num_deriv_rpar), ipar(num_deriv_ipar))
+!     ipar(i_id) = NScool_id
+!      call get_derivatives(s% nz, 0.0_dp, h, y, f, num_deriv_rpar, rpar, num_deriv_ipar, ipar, ierr)
+!      call do_write_profile(NScool_id,ierr)
+!      call check_okay('do_write_profile',ierr)
+!     call get_jacobian(s% nz, 0.0_dp, h, y, f, dfdy, 3, num_deriv_rpar, rpar, num_deriv_ipar, ipar, ierr)
+!     call get_num_jacobian(s% nz, 0.0_dp, h, y, f, dfdy_num, 3, num_deriv_rpar, rpar, num_deriv_ipar, ipar, ierr)
+!
+!     do i = 1, s% nz
+!        write (output_unit,'(i5,7es16.8)') i, min(1.0_dp/f(i),9.0e99_dp), dfdy(1:3,i), dfdy_num(1:3,i)
 !         write (output_unit,'(i5,es16.8)') i, 1.0_dp/f(i)
 !         lnCp_val(1:4,1:s% n_tab) => s% tab_lnCp(1:4*s% n_tab, i)
 !         lnEnu_val(1:4,1:s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, i)
@@ -93,7 +95,7 @@ program test_NScool
 !         &   lnEnu/ln10, dlnEnu, s% enuc(i)
 ! !         write (output_unit,'(2es15.8,tr2,19(f10.6))') s% P_bar(i), s% T_bar(i), s% Yion_bar(1:s% ncharged,i),s% Xneut_bar(i)
 ! !         write (output_unit,'(2es15.8,tr2,f10.6,)') s% P_bar(i), s% T_bar(i), s% Xneut_bar(i)
-    end do
+!     end do
 ! !     write (output_unit,'(2es15.8,tr2,19(f10.6))') s% P_bar(i), s% T_bar(i), s% Yion_bar(1:s% ncharged,i), s% Xneut_bar(i)
 ! ! !     write (output_unit,'(es15.8,tr2,f14.10,tr1,es15.8,f14.10)') s% P_bar(s% nz), s% ePhi_bar(s% nz), s% m(s% nz),  &
 ! ! !     &   s% eLambda_bar(s% nz)
@@ -103,8 +105,8 @@ program test_NScool
 !
 !     write (output_unit, '(/,/,"L = ",es15.8,f12.8)') dot_product(s% dm, s% enuc),  &
 !     &   dot_product(s% dm, s% enuc) * ergs_to_mev/ s% Mdot /avogadro
-    write (output_unit,'(/,/,"dlnLs/dlnT = ",f12.8)') s% dlnLsdlnT
-    deallocate(rpar, ipar, y, f)
+!     write (output_unit,'(/,/,"dlnLs/dlnT = ",f12.8)') s% dlnLsdlnT
+!     deallocate(rpar, ipar, y, f)
     
     call NScool_shutdown
     

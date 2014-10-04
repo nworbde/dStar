@@ -53,14 +53,14 @@ contains
         max_steps = s% maximum_number_of_models
 
         allocate(z(n))
-        z = s% lnT
+        z = s% lnT(1:s% nz)
 
         itol = 0
 
         ! use the core temperature as a reference for relative accuracy
         rtol = 1.0e-3
-        atol = 1.0e-3 * s% Tcore
-
+        atol = 1.0e-3 * minval(z)
+        
         zmin = 7.0*ln10
         zmax = 9.5*ln10
 
@@ -265,6 +265,7 @@ contains
 
         s% lnT(1:n) = y(1:n)
         s% T(1:n) = exp(s% lnT(1:n))
+
         call interpolate_temps(s)
 
         call get_coefficients(s, ierr)

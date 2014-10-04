@@ -5,16 +5,16 @@ module NScool_history
    integer, parameter :: num_header_cols = 4, header_col_width=15
    integer, parameter :: num_history_cols = 7, history_col_width=15
 
-   character(len=*), parameter :: header_count_fmt = '(5'//intval//')'
-   character(len=*), parameter :: header_title_fmt = '(5a15)'
-   character(len=*), parameter :: header_val_fmt = '(5'//scival//')'
-   character(len=*), parameter :: history_count_fmt = '(5'//intval//')'
-   character(len=*), parameter :: history_title_fmt = '(5a15)'
-   character(len=*), parameter :: history_val_fmt = '('//intval//','//scival//',5'//fltval//')'
+   character(len=*), parameter :: header_count_fmt = '(4'//intval//')'
+   character(len=*), parameter :: header_title_fmt = '(4a15)'
+   character(len=*), parameter :: header_val_fmt = '(4'//scival//')'
+   character(len=*), parameter :: history_count_fmt = '(7'//intval//')'
+   character(len=*), parameter :: history_title_fmt = '(7a15)'
+   character(len=*), parameter :: history_val_fmt = '('//intval//scival//',5'//fltval//')'
    character(len=header_col_width), dimension(num_header_cols) :: header_cols = [character(len=header_col_width) ::  &
-      & 'gravity', 'core mass', 'core radius', 'core temperature' ]
+      & 'gravity', 'core mass', 'core radius', 'core temp.' ]
    character(len=history_col_width),dimension(num_history_cols) :: history_cols = [character(len=history_col_width) ::  &
-      & 'model','time','lg(Mdot)','lg(Teff)','lg(Lsurf)','lg(Lnu)','lg(Lnuc)' ]
+      & 'model','time/s','lg(Mdot)','lg(Teff)','lg(Lsurf)','lg(Lnu)','lg(Lnuc)' ]
    
    logical, save :: history_first_call = .TRUE.
    
@@ -74,9 +74,20 @@ module NScool_history
          call free_iounit(iounit)
          return
       end if
-      write(iounit,history_val_fmt) s% model, s% tsec, log10(s% Mdot), log10(s% Teff), log10(s% Lsurf), log10(Lnu), log10(Lnuc)
+      write(iounit,history_val_fmt) s% model, s% tsec, safelog10(s% Mdot), log10(s% Teff), log10(s% Lsurf),  &
+      & log10(Lnu), safelog10(Lnuc)
       close(iounit)
       call free_iounit(iounit)
+  contains
+      function safelog10(x)
+          real(dp), intent(in) :: x
+          real(dp) :: safelog10
+          if (x <= 0.0_dp) then
+              safelog10 = 0.0_dp
+          else 
+              safelog10 = log10(x)
+          end if
+      end function safelog10
    end subroutine do_write_history
 
 end module NScool_history
