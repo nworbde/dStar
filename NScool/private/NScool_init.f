@@ -38,7 +38,7 @@ contains
         s% Pcore = 0.0     ! pressure at core boundary
         s% Mcore = 0.0     ! mass of core
         s% Rcore = 0.0     ! radius of core
-        s% grav = 0.0
+        s% grav = 0.0      ! surface gravity
         s% tsec = 0.0      ! current value of time in seconds
         s% dt = 0.0        ! value of timestep just taken, in seconds
         s% Mdot = 0.0      ! accretion rate measured at infinity [g/s]
@@ -115,5 +115,12 @@ contains
         integer, intent(out) :: ierr
         call free_NScool_data(id, ierr)        
     end subroutine dealloc_NScool_data
+    
+    subroutine model_builder(id, ierr)
+        use create_model
+        integer, intent(in) :: id
+        integer, intent(out) :: ierr
+        call do_create_crust_model(id, ierr)
+    end subroutine model_builder
     
 end module init

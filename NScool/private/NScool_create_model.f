@@ -18,6 +18,33 @@ module create_model
     
 contains
     
+    subroutine do_create_crust_model(id, ierr)
+        integer, intent(in) :: id
+        integer, intent(out) :: ierr
+        type(NScool_info), pointer :: s
+        
+        call get_NScool_info_ptr(id,s,ierr)
+        call do_setup_crust_zones(s, ierr)
+        if (failed('do_setup_crust_zones')) return
+        
+        call do_setup_crust_composition(s, ierr)
+        if (failed('do_setup_crust_composition')) return
+        
+        call do_setup_crust_transport(s, ierr)
+        if (failed('do_setup_crust_transport')) return
+        
+    contains
+        function failed(msg)
+            use, intrinsic :: iso_fortran_env, only: error_unit
+            character(len=*), intent(in) :: msg
+            logical :: failed
+            failed = .FALSE.
+            if (ierr == 0) return
+            write (*,*) 'do_create_crust_model failed for ',trim(msg)
+            failed = .TRUE.
+        end function failed
+    end subroutine do_create_crust_model
+    
     subroutine do_setup_crust_zones(s, ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit, output_unit
         use constants_def

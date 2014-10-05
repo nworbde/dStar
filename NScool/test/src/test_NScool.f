@@ -31,15 +31,16 @@ program test_NScool
     call NScool_setup(NScool_id,inlist,ierr)
     call check_okay('NScool_setup',ierr)
     ierr = 0
-!     call write_controls(output_unit,ierr)
-    
-    call get_NScool_info_ptr(NScool_id,s,ierr)
-    call do_setup_crust_zones(s, ierr)
-    call check_okay('do_setup_crust_zones',ierr)
-    call do_setup_crust_composition(s, ierr)
-    call check_okay('do_setup_crust_composition',ierr)
-    call do_setup_crust_transport(s, ierr)
-    call check_okay('do_setup_crust_transport',ierr)
+
+    call NScool_create_model(NScool_id,ierr)
+
+!     call get_NScool_info_ptr(NScool_id,s,ierr)
+!     call do_setup_crust_zones(s, ierr)
+!     call check_okay('do_setup_crust_zones',ierr)
+!     call do_setup_crust_composition(s, ierr)
+!     call check_okay('do_setup_crust_composition',ierr)
+!     call do_setup_crust_transport(s, ierr)
+!     call check_okay('do_setup_crust_transport',ierr)
     
     call do_integrate_crust(NScool_id,ierr)
 !     call get_coefficients(s, ierr)
