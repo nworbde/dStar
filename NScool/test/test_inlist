@@ -1,14 +1,15 @@
+&controls
     !   used for loading an existing structure model
-    ! currently unused
-    load_model_file = .FALSE.
+    load_model_file = .TRUE.
     model_file = ''
     
     ! controls for output
     write_interval_for_terminal = 1
     write_interval_for_terminal_header = 5
-    write_interval_for_history = 10
-    write_interval_for_profile = 10
+    write_interval_for_history = 1
+    write_interval_for_profile = 1
     starting_number_for_profile = 0
+    
     output_directory = 'LOGS'
     
     ! controls for the solver
@@ -16,7 +17,7 @@
     maximum_number_of_models = 10000
     maximum_timestep = 0.0
         ! implies that max = tend-t
-    maximum_end_time = 3.0d7
+    maximum_end_time = 1.0d9
         ! seconds
     integration_tolerance = 1.0d-4
     ! limits on temperature: if a zone goes outside these bounds, reduce stepsize
@@ -26,12 +27,11 @@
 
     ! macroscopic NS parameters
     fix_core_temperature = .TRUE.
-    core_temperature = 1.0d8
+    core_temperature = 3.0d8
     fix_atmosphere_temperature_when_accreting = .TRUE.
-    atmosphere_temperature_when_accreting = 1.0d8
-    Mdot = 1.0d18 ! g/s
-    
-    start_time = 0.0    ! s
+    atmosphere_temperature_when_accreting = 5.0d8
+    Mdot = 1.0e17
+    start_time = 0.0
     
     ! extra controls for hook routines
     extra_real_controls(:) = 0.0
@@ -45,21 +45,11 @@
     lgPcrust_bot = 32.5 ! cgs
     lgPcrust_top = 27.0 ! cgs
     
-    target_resolution_lnP = 0.1
-    
-    lgP_min_heating_outer = 26.86
-    lgP_max_heating_outer = 30.13
-    Q_heating_outer = 0.3 ! MeV
-    lgP_min_heating_inner = 30.42
-    lgP_max_heating_inner = 31.20
-    Q_heating_inner = 1.5 ! MeV
-    
-    !  controls the shell Urca cooling
-    turn_on_shell_Urca = .FALSE.
-    shell_Urca_luminosity_coeff = 1.0
-    lgP_shell_Urca = 28.5
+    target_resolution_lnP = 0.05
     
     lg_atm_light_element_column = 8.0
+    fix_Qimp = .TRUE.
+    Qimp = 100.0
     
-    fix_Qimp = .FALSE.
-    Qimp = 0.0
+    turn_on_shell_Urca = .TRUE.
+/

@@ -46,11 +46,11 @@ contains
 		end if
 	end subroutine dStar_crust_load_table
     
-	subroutine dStar_crust_get_results(lgP,lgRho,dlgRho,lgNb,dlgNb,ierr)
+	subroutine dStar_crust_get_results(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
 		use iso_fortran_env, only : error_unit
 		use interp_1d_lib, only : interp_value_and_slope
 		real(dp), intent(in) :: lgP
-		real(dp), intent(out) :: lgRho,lgNb,dlgRho,dlgNb
+		real(dp), intent(out) :: lgRho,lgEps,dlgRho,dlgEps
 		integer, intent(out) :: ierr
 		real(dp) :: lgP_c
 		type(crust_table_type), pointer :: tab
@@ -64,12 +64,12 @@ contains
 
 		! clip lgP to table
 		lgP_c = max(lgP,tab% lgP_min)
-		lgP_c = min(lgP,tab% lgP_max)
+		lgP_c = min(lgP_c,tab% lgP_max)
 		call interp_value_and_slope(tab% lgP, tab% nv, tab% lgRho, lgP_c, lgRho, dlgRho, ierr)
 		if (ierr /= 0) then
 			write (error_unit,'(a,i3)') routine_name//': ierr = ',ierr
 		end if
-		call interp_value_and_slope(tab% lgP, tab% nv, tab% lgNb, lgP_c, lgNb, dlgNb, ierr)
+		call interp_value_and_slope(tab% lgP, tab% nv, tab% lgEps, lgP_c, lgEps, dlgEps, ierr)
 		if (ierr /= 0) then
 			write (error_unit,'(a,i3)') routine_name//': ierr = ',ierr
 		end if

@@ -47,8 +47,8 @@ subroutine ion_mixture(rq,rs,Gamma_e,ionic,ncharged,charged_ids,Yion,Gamma,ionQ,
 	! set the phase
 	rsi = rs*ionic% Z73*Mu
 	Gamma = Gamma_e * ionic% Z53
-	if (Gamma < rq% Gamma_melt .or. rsi < rq% rsi_melt) then
-	! if (Gamma < rq% Gamma_melt) then
+!     if (Gamma < rq% Gamma_melt .or. rsi < rq% rsi_melt) then
+    if (Gamma < rq% Gamma_melt) then
 		phase = liquid_phase
 	else
 		phase = solid_phase

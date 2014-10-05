@@ -6,4 +6,6 @@ data
 *.mod
 test_output.data
 test_output
+test_log
 tester
+LOGS

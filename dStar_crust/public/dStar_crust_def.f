@@ -12,7 +12,7 @@ module dStar_crust_def
         real(dp), dimension(:), allocatable :: lgP
         ! storage of interpolation coefficients
         real(dp), dimension(:), pointer :: lgRho=>null()
-        real(dp), dimension(:), pointer :: lgNb=>null()
+        real(dp), dimension(:), pointer :: lgEps=>null()
     end type crust_table_type
 
     type(crust_table_type), target :: crust_table
