@@ -277,8 +277,17 @@ contains
                 call get_crust_neutrino_emissivity(s% rho(iz), Ttab, s% ionic(iz), chi, Tc(neutron_1S0),  &
                 &   eps_nu, nu_channels)
                 lnEnu_val(1,itemp) = log(eps_nu% total/s% rho(iz))
+                
             end do
 
+            ! add in the shell Urca cooling
+            if (s% turn_on_shell_Urca .and. iz < s% nz) then
+                if (log10(s% P_bar(iz)) < s% lgP_shell_Urca .and. log10(s% P_bar(iz+1)) > s% lgP_shell_Urca) then
+                    lnEnu_val(1,1:s% n_tab) = log(exp(lnEnu_val(1,1:s% n_tab))  &
+                    &   + 1.0e36_dp*s% shell_Urca_luminosity_coeff * (exp(s% tab_lnT(1:s% n_tab))/5.0e8_dp)**5/s% dm(iz))
+                end if
+            end if
+            
             allocate(work(s% n_tab*pm_work_size))
             lnEnu_interp(1:4*s% n_tab) => s% tab_lnEnu(1:4*s% n_tab,iz)
             call interp_pm(s% tab_lnT, s% n_tab, lnEnu_interp, pm_work_size, work, &

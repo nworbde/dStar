@@ -20,10 +20,10 @@
 
     ! macroscopic NS parameters
     fix_core_temperature = .TRUE.
-    core_temperature = 5.0d7
+    core_temperature = 3.0d8
     fix_atmosphere_temperature_when_accreting = .TRUE.
     atmosphere_temperature_when_accreting = 5.0d8
-    Mdot = 1.0e18
+    Mdot = 1.0e17
     
     ! extra controls for hook routines
     extra_real_controls(:) = 0.0
@@ -37,10 +37,11 @@
     lgPcrust_bot = 32.5 ! cgs
     lgPcrust_top = 27.0 ! cgs
     
-    target_resolution_lnP = 0.1
+    target_resolution_lnP = 0.05
     
     lg_atm_light_element_column = 8.0
     fix_Qimp = .TRUE.
     Qimp = 100.0
     
+    turn_on_shell_Urca = .TRUE.
 /

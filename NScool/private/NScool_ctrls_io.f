@@ -33,6 +33,9 @@ module NScool_ctrls_io
         lgP_min_heating_inner, &
         lgP_max_heating_inner, &
         Q_heating_inner, &
+        turn_on_shell_Urca, &
+        shell_Urca_luminosity_coeff, &
+        lgP_shell_Urca, &
         lg_atm_light_element_column, &
         fix_Qimp, &
         Qimp
@@ -128,6 +131,10 @@ contains
        s% lgP_min_heating_inner = lgP_min_heating_inner
        s% lgP_max_heating_inner = lgP_max_heating_inner
        s% Q_heating_inner = Q_heating_inner
+       s% turn_on_shell_Urca = turn_on_shell_Urca
+       s% shell_Urca_luminosity_coeff = shell_Urca_luminosity_coeff
+       s% lgP_shell_Urca = lgP_shell_Urca
+       
        s% lg_atm_light_element_column = lg_atm_light_element_column
        s% fix_Qimp = fix_Qimp
        s% Qimp = Qimp

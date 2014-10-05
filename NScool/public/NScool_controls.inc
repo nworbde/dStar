@@ -39,7 +39,12 @@
     real(dp) :: lgP_min_heating_inner
     real(dp) :: lgP_max_heating_inner
     real(dp) :: Q_heating_inner ! MeV
-
+    
+    !  controls the shell Urca cooling
+    logical :: turn_on_shell_Urca
+    real(dp) :: shell_Urca_luminosity_coeff
+    real(dp) :: lgP_shell_Urca
+    
     ! controls for the atmosphere
     real(dp) :: lg_atm_light_element_column  ! lg(cgs), for the PCY atmosphere fit
     
