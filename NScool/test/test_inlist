@@ -8,6 +8,8 @@
     write_interval_for_terminal_header = 5
     write_interval_for_history = 1
     write_interval_for_profile = 1
+    starting_number_for_profile = 0
+    
     output_directory = 'LOGS'
     
     ! controls for the solver
@@ -29,6 +31,7 @@
     fix_atmosphere_temperature_when_accreting = .TRUE.
     atmosphere_temperature_when_accreting = 5.0d8
     Mdot = 1.0e17
+    start_time = 0.0
     
     ! extra controls for hook routines
     extra_real_controls(:) = 0.0

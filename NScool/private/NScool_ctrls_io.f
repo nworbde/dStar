@@ -9,6 +9,7 @@ module NScool_ctrls_io
         write_interval_for_terminal_header, & 
         write_interval_for_history, & 
         write_interval_for_profile, & 
+        starting_number_for_profile, &
         output_directory, & 
         which_solver, & 
         maximum_number_of_models, & 
@@ -25,6 +26,7 @@ module NScool_ctrls_io
         fix_atmosphere_temperature_when_accreting, & 
         atmosphere_temperature_when_accreting, &
         Mdot, &
+        start_time, &
         core_mass, &
         core_radius, &
         lgPcrust_bot, &
@@ -101,6 +103,7 @@ contains
        s% write_interval_for_terminal_header = write_interval_for_terminal_header
        s% write_interval_for_history = write_interval_for_history
        s% write_interval_for_profile = write_interval_for_profile
+       s% starting_number_for_profile = starting_number_for_profile
        s% output_directory = output_directory
        s% which_solver = trim(which_solver) !solver_option(trim(which_solver),ierr)
        if (ierr /= 0) then
@@ -125,6 +128,8 @@ contains
        s% fix_atmosphere_temperature_when_accreting = fix_atmosphere_temperature_when_accreting
        s% atmosphere_temperature_when_accreting = atmosphere_temperature_when_accreting
        s% Mdot = Mdot
+       s% start_time = start_time
+       
        s% Mcore = core_mass
        s% Rcore = core_radius
        s% Psurf = 10.0**lgPcrust_top

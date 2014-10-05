@@ -182,8 +182,8 @@ contains
               return
            end if
 
-           s% model = nr
-           s% tsec = x
+           s% model = nr + s% starting_number_for_profile
+           s% tsec = x + s% start_time
            s% dt = x-xold
       
            s% lnT(1:n) = y(1:n)

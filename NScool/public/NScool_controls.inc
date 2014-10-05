@@ -5,6 +5,7 @@
     integer :: write_interval_for_terminal_header
     integer :: write_interval_for_history
     integer :: write_interval_for_profile
+    integer :: starting_number_for_profile
     
     character(len=256) :: output_directory
    
@@ -27,6 +28,8 @@
     logical :: fix_atmosphere_temperature_when_accreting
     real(dp) :: atmosphere_temperature_when_accreting
     real(dp) :: Mdot
+    
+    real(dp) :: start_time
     
     real(dp) :: core_mass
     real(dp) :: core_radius

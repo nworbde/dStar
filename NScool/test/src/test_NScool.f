@@ -43,6 +43,14 @@ program test_NScool
 !     call check_okay('do_setup_crust_transport',ierr)
     
     call do_integrate_crust(NScool_id,ierr)
+    
+    call get_NScool_info_ptr(NScool_id,s,ierr)
+    ! now test the switch
+    s% Mdot = 0.0_dp
+    s% starting_number_for_profile = s% model + 1
+    s% start_time = s% tsec
+    
+    call do_integrate_crust(NScool_id,ierr)
 !     call get_coefficients(s, ierr)
 !     call check_okay('get_coefficients',ierr)
 !     call interpolate_temps(s)
