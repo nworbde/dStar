@@ -167,6 +167,7 @@ contains
     end subroutine do_setup_crust_zones
     
     subroutine do_setup_crust_composition(s, ierr)
+        use, intrinsic :: iso_fortran_env, only: error_unit
         use nucchem_def
         use nucchem_lib
         use storage
@@ -187,7 +188,7 @@ contains
         ! can fix the impurity parameter to a specified value; this should be replaced by
         ! a function call to allow a more customizable option
         if (s% fix_Qimp) then
-            write (*,*) 'setting Qimp = ',s% Qimp
+            write (error_unit,'(a,f7.2)') 'setting Qimp = ',s% Qimp
             s% ionic_bar(1:s% nz)% Q = s% Qimp
         end if
 

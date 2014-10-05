@@ -105,6 +105,7 @@ contains
           & num_deriv_rpar, rpar, num_deriv_ipar, ipar, error_unit, idid)
 
         ! post-mortem
+        write(error_unit,*)
         select case(idid)
         case(1)
           write(error_unit,*) "computation successful"
@@ -226,7 +227,7 @@ contains
                  write (error_unit,*) 'failure writing history log'
                  return
               end if
-              write (output_unit,'(a,i0,a,/)') 'saving model ',s% model,' information to history log'
+              write (error_unit,'(a,i0,a)') 'saving model ',s% model,' to history log'
            end if
       
            ! update profile log
@@ -237,7 +238,7 @@ contains
                  write (error_unit,*) 'failure writing profile log'
                  return
               end if
-              write (output_unit,'(a,i0,a,/)') 'saving model ',s% model,' information to profile log'
+              write (error_unit,'(a,i0,a)') 'saving model ',s% model,' to profile log'
            end if
         end subroutine evaluate_timestep
 

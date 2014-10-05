@@ -47,4 +47,13 @@ contains
        call model_builder(id, ierr)
     end subroutine NScool_create_model
 
+    subroutine NScool_evolve_model(id, ierr)
+        use NScool_evolve, only: do_integrate_crust
+        integer, intent(in) :: id
+        integer, intent(out) :: ierr
+        
+        ierr = 0
+        call do_integrate_crust(id,ierr)
+    end subroutine NScool_evolve_model
+
 end module NScool_lib

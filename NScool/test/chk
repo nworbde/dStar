@@ -10,6 +10,6 @@ function check_okay {
         fi
 }
 
-./tester >& test_output.data
+./tester > test_output.data 2> test_log
 check_okay
-# ndiff --quiet --relerr 1.0e-6 test_output.data sample_output.data
+ndiff --quiet --relerr 1.0e-4 test_output.data sample_output.data

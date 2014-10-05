@@ -162,7 +162,6 @@ contains
 
         npts = ceiling(lnP - lnPend)/rpar(tov_output_step_crust) + 1
         
-        print *, 'alloc_tov_model with ',npts
         call alloc_tov_model(npts, s, ierr)
         s% nzs = 0
         s% core_mass = rpar(tov_core_mass)
@@ -170,7 +169,6 @@ contains
         
         if (ierr /= 0) return
         
-        print *,'call dop853'
 		call dop853(n,tov_derivs_crust,lnP,y,lnPend,h,tov_default_max_step_size,tov_default_max_steps, &
 			& rtol,atol,itol, tov_solout_crust, iout, work, lwork, iwork, liwork,  &
 			&	num_tov_rpar, rpar, num_tov_ipar, ipar, lout, idid)

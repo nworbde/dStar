@@ -22,7 +22,7 @@ contains
         
         ierr = 0
         write(error_unit,'(a)')  &
-        & 'loading nuclib from '//trim(nuclib_filename)
+        & 'loading nuclib from '//trim(datadir)//'/nucchem'
         call do_load_nuclib(nuclib_filename,nuclib_cache,ierr)
         write(error_unit,'(/,a,i0,a)')  &
         & 'done. ',nuclib% Nnuclides, &
