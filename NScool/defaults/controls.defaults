@@ -17,6 +17,11 @@
         ! implies that max = tend-t
     maximum_end_time = 3.0d7
         ! seconds
+    integration_tolerance = 1.0d-4
+    ! limits on temperature: if a zone goes outside these bounds, reduce stepsize
+    min_lg_temperature_integration = 7.0
+    max_lg_temperature_integration = 9.5
+    
 
     ! macroscopic NS parameters
     fix_core_temperature = .TRUE.

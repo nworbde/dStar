@@ -14,6 +14,9 @@ module NScool_ctrls_io
         maximum_number_of_models, & 
         maximum_timestep, & 
         maximum_end_time, & 
+        integration_tolerance, & 
+        min_lg_temperature_integration, &
+        max_lg_temperature_integration, &
         extra_real_controls, & 
         extra_integer_controls, & 
         extra_logical_controls, & 
@@ -111,6 +114,9 @@ contains
        s% maximum_number_of_models = maximum_number_of_models
        s% maximum_timestep = maximum_timestep
        s% maximum_end_time = maximum_end_time
+       s% integration_tolerance = integration_tolerance
+       s% min_lg_temperature_integration = min_lg_temperature_integration
+       s% max_lg_temperature_integration = max_lg_temperature_integration
        s% extra_real_controls = extra_real_controls
        s% extra_integer_controls = extra_integer_controls
        s% extra_logical_controls = extra_logical_controls

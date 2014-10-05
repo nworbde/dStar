@@ -6,7 +6,6 @@ module NScool_evolve
     integer, parameter :: num_deriv_ipar = 2
     integer, parameter :: num_deriv_rpar = 0
     
-    
 contains
 
     subroutine do_integrate_crust(NScool_id,ierr)
@@ -60,11 +59,12 @@ contains
         
         itol = 0
         ! use the core temperature as a reference for relative accuracy
-        rtol = 1.0e-3
-        atol = 1.0e-3 * minval(z)
+        rtol = s% integration_tolerance
+        atol = s% integration_tolerance * minval(z)
         
-        zmin = 7.0*ln10
-        zmax = 9.5*ln10
+        ! bounds for temperatures
+        zmin = s% min_lg_temperature_integration*ln10
+        zmax = s% max_lg_temperature_integration*ln10
 
         ijac = 1
         nzmax = 0

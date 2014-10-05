@@ -8,10 +8,14 @@
     
     character(len=256) :: output_directory
    
+    ! integration controls
     character(len=32) :: which_solver
     integer :: maximum_number_of_models
     real(dp) :: maximum_timestep
     real(dp) :: maximum_end_time
+    real(dp) :: integration_tolerance
+    real(dp) :: min_lg_temperature_integration
+    real(dp) :: max_lg_temperature_integration
     
     real(dp), dimension(num_extra_real_controls) :: extra_real_controls
     integer, dimension(num_extra_integer_controls) :: extra_integer_controls
