@@ -53,6 +53,7 @@ contains
         use dStar_eos_lib
         use dStar_crust_def
         use dStar_crust_lib
+        use NScool_private_def, only: dStar_data_dir
         use NScool_crust_tov
         use storage
         
@@ -65,17 +66,17 @@ contains
         write (error_unit,*) 'establishing crust zones...'
         
         write (error_unit,*) 'initializing microphysics...'
-        call nucchem_init('../../data',ierr)
+        call nucchem_init(trim(dStar_data_dir),ierr)
         if (failure('nucchem_init')) return
 	
-        call sf_startup('../../data',ierr)
+        call sf_startup(trim(dStar_data_dir),ierr)
         if (failure('sf_startup')) return
 	
         ! gaps are hard-wired for now
-        call sf_load_gaps('ns','gc','t72',ierr)
+        call sf_load_gaps('ns','sfb03','t72',ierr)
         if (failure('sf_load_gaps')) return
 	
-        call dStar_eos_startup('../../data')
+        call dStar_eos_startup(trim(dStar_data_dir))
         if (failure('dStar_eos_startup')) return
 	
         s% eos_handle = alloc_dStar_eos_handle(ierr)
@@ -85,13 +86,13 @@ contains
         call dStar_eos_set_controls(s% eos_handle,suppress_warnings=.TRUE.)
     
         write (error_unit,*) 'loading crust model...'
-        call dStar_crust_startup('../../data',ierr)
+        call dStar_crust_startup(trim(dStar_data_dir),ierr)
         if (failure('dStar_crust_startup')) return
         
         call dStar_crust_load_table('hz90',s% eos_handle, s% Tcore, ierr)
         if (failure('dStar_crust_load_table')) return
 
-    	call dStar_atm_startup('../../data',ierr)
+    	call dStar_atm_startup(trim(dStar_data_dir),ierr)
         if (failure('dStar_atm_startup')) return
 
         write(error_unit,*) 'integrating TOV equations...'
