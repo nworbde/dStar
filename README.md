@@ -19,3 +19,5 @@ For each module, the install script
 
 ##How to use
 **Under construction**
+For each module, look in the `test` directory for an example of how to run the module.
+
