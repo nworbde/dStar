@@ -72,8 +72,9 @@ contains
         call sf_startup(trim(dStar_data_dir),ierr)
         if (failure('sf_startup')) return
 	
-        ! gaps are hard-wired for now
-        call sf_load_gaps('ns','sfb03','t72',ierr)
+        call sf_load_gaps(trim(s% which_proton_1S0_gap), trim(s% which_neutron_1S0_gap), &
+            & trim(s% which_neutron_3P2_gap), ierr)
+!         call sf_load_gaps('ns','sfb03','t72',ierr)
         if (failure('sf_load_gaps')) return
 	
         call dStar_eos_startup(trim(dStar_data_dir))

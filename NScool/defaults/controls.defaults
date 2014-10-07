@@ -54,6 +54,10 @@
     lgP_max_heating_inner = 31.20
     Q_heating_inner = 1.5 ! MeV
     
+    which_proton_1S0_gap = 'ns'
+    which_neutron_1S0_gap = 'gc'
+    which_neutron_3P2_gap = 't72'
+    
     !  controls the shell Urca cooling
     turn_on_shell_Urca = .FALSE.
     shell_Urca_luminosity_coeff = 1.0
