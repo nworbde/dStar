@@ -92,7 +92,7 @@ contains
         tab% lgP = lgP
         lgRho_val(1,:) = lgRho
         lgEps_val(1,:) = lgEps
-        
+                
         allocate(work(tab% nv*pm_work_size))
         call interp_pm(tab% lgP, tab% nv, tab% lgRho, pm_work_size, work, &
         &   'do_generate_crust_table: Rho', ierr)
