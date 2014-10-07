@@ -55,5 +55,6 @@ clean_data_caches Tc_data
 clean_data_caches nucchem
 clean_data_caches eos
 clean_data_caches atm_data
+clean_data_caches crust_data
 
 echo
