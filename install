@@ -31,5 +31,6 @@ do_one dStar_eos
 do_one conductivity
 do_one dStar_atm
 do_one dStar_crust
+do_one NScool
 
 echo
