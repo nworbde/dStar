@@ -38,6 +38,9 @@ module NScool_ctrls_io
         lgP_min_heating_inner, &
         lgP_max_heating_inner, &
         Q_heating_inner, &
+        which_proton_1S0_gap, &
+        which_neutron_1S0_gap, &
+        which_neutron_3P2_gap, &
         turn_on_shell_Urca, &
         shell_Urca_luminosity_coeff, &
         lgP_shell_Urca, &
@@ -142,6 +145,11 @@ contains
        s% lgP_min_heating_inner = lgP_min_heating_inner
        s% lgP_max_heating_inner = lgP_max_heating_inner
        s% Q_heating_inner = Q_heating_inner
+       
+       s% which_proton_1S0_gap = which_proton_1S0_gap
+       s% which_neutron_1S0_gap = which_neutron_1S0_gap
+       s% which_neutron_3P2_gap = which_neutron_3P2_gap
+       
        s% turn_on_shell_Urca = turn_on_shell_Urca
        s% shell_Urca_luminosity_coeff = shell_Urca_luminosity_coeff
        s% lgP_shell_Urca = lgP_shell_Urca

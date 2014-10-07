@@ -145,7 +145,7 @@ contains
         real(dp) :: x1, x3, y1, y3, epsx, epsy, lgRho_guess
         integer :: imax, ierr
         
-        Pfac = 0.25*threepisquare*hbar*clight*avo**(2.0*onethird)
+        Pfac = 0.25*(threepisquare)**onethird *hbar*clight*avo**(4.0*onethird)
         Ntab = size(lgP)
         imax = 20
         epsx = 1.0d-8

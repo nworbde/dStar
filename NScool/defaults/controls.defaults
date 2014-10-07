@@ -54,6 +54,42 @@
     lgP_max_heating_inner = 31.20
     Q_heating_inner = 1.5 ! MeV
     
+!   selection of superfluid gaps, courtesy Dany Page
+!
+!       attr    reference notes
+!
+!      proton 1S0   
+!   ================
+!   ccy72-ms    proton 1s0. ccy, nucl.phys. a179(1972): p.320. from curve msii) fig. 4.
+!       ao85    proton 1s0. ao, nucl.phys. a437(1985): p.487 from dotted curve fig. 15.
+!     eeho96    proton 1S0. Elgaroy, Engvik, Hjorth-Jensen & Osnes, Nucl. Phys. A604 (1996), p. 466
+!        t73    proton 1s0. t73, prog.th.phys. 50(1973):p.1754
+!   ccy72-ps    proton 1s0. ccy, nucl.phys. a179(1972): p.320. from curve psi) fig. 4.
+!     bcll92    proton 1S0. Baldo, Cugnon, Lejeune & Lombardo, NP A536 (1992), p. 349
+!     ccdk93    proton 1S0. Chen, Clark, Dave & Khodel, Nucl. Phys. A555 (1993), p. 59
+!         ns    proton 1s0 ns as cited by ao nucl.phys. a437(1985): p.487 from fig. 15.
+!
+!     neutron 1S0   
+!   ================
+!   gipsf08-3    neutron 1S0. Gondolfi, Illarionov, Pederiva, Schmidt & Fantoni, PRL 111 (2008), 132501; Gezerlis & Carlson at k_F=0054; Agrees with the Gorkov-BCS formula at very low k_F; Closes at k_F = 1.5
+!   gipsf08-2    neutron 1S0. Gondolfi, Illarionov, Pederiva, Schmidt & Fantoni, PRL 111 (2008), 132501; Gezerlis & Carlson at k_F=0054; Agrees with the Gorkov-BCS formula at very low k_F; Closes at k_F = 1.3
+!      sfb03    neutron 1s0. Schwenk, Friman, & Brown, Nucl.Phys. A713: 191 (2003)
+!         gc    neutron 1S0. mock-up of Gezerlis & Carlson, using Takatsuka, prog.theor.phys. 48: 1517 (1972)
+!     ccdk93    Chen, Clark, Dave & Khodel, Nucl. Phys. A555: 59 (1993) neutron 1s0 gap
+!    gipsf08    neutron 1S0. Gondolfi, Illarionov, Pederiva, Schmidt & Fantoni, PRL 111 (2008), 132501; Gezerlis & Carlson at k_F=0054; Agrees with the Gorkov-BCS formula at very low k_F; Closes at k_F = 1.1
+!        wap    neutron 1S0. Wambach, Ainsworth & Pines Nucl. Phys. A555: 128 (1993)
+!
+!     neutron 3P2   
+!   ================
+!     hgrr70    neutron 3p2. hgrr, phys.rev.lett. 24(1970):p.775.    m*=1
+!        t72    neutron 3p2. Takasuka rep.prog.theor.phys. 48(1972):p.1517. from fig.2   m*=1
+!       ao85    neutron 3p2 Amundsun & Østgaard, nucl.phys. a442(1985):p.163.
+!     bcll92    neutron 3p2. Baldo, Cugnon, Leujeune & Lombardo, N.Ph. A536 (1992), p. 349
+    
+    which_proton_1S0_gap = 'ns'
+    which_neutron_1S0_gap = 'gc'
+    which_neutron_3P2_gap = 't72'
+    
     !  controls the shell Urca cooling
     turn_on_shell_Urca = .FALSE.
     shell_Urca_luminosity_coeff = 1.0

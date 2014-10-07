@@ -47,6 +47,11 @@
     real(dp) :: lgP_max_heating_inner
     real(dp) :: Q_heating_inner ! MeV
     
+    ! controls for the superfluidity
+    character(len=32) :: which_proton_1S0_gap
+    character(len=32) :: which_neutron_1S0_gap
+    character(len=32) :: which_neutron_3P2_gap
+    
     !  controls the shell Urca cooling
     logical :: turn_on_shell_Urca
     real(dp) :: shell_Urca_luminosity_coeff
