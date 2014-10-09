@@ -47,7 +47,7 @@ contains
         n = s% nz
         t = 0.0      
         tend = s% maximum_end_time
-        h = 0.0
+        h = s% dt
         max_step_size = s% maximum_timestep
         max_steps = s% maximum_number_of_models
 
