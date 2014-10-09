@@ -84,6 +84,14 @@ contains
           close(iounit)
           if (ierr /= 0) then
              write(*,'(///,a)') 'failed while reading control namelist file '//trim(filename)
+
+             ! the following will generate a more informative description of the failure
+             close(iounit)
+             open (newunit=iounit,file=trim(filename),  &
+             & action='read', delim='quote', status='old', iostat=ierr)
+             read(iounit,nml=controls)
+             close(iounit)
+             stop
           end if
        end if
     end subroutine read_controls
