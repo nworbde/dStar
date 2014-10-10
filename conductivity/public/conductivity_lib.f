@@ -14,16 +14,16 @@ module conductivity_lib
 		logical, dimension(num_conductivity_channels) :: K_components
 
 		which_ee = icond_sy06
-        which_eQ = icond_eQ_potekhin
+    which_eQ = icond_eQ_potekhin
 		K_components = cond_use_all
 		
 		if (present(use_pcy)) then
 			if (use_pcy) which_ee = icond_pcy
 		end if
 		
-        if (present(use_page)) then
-            if (use_page) which_eQ = icond_eQ_page
-        end if
+    if (present(use_page)) then
+        if (use_page) which_eQ = icond_eQ_page
+    end if
         
 		if (present(which_components)) K_components = which_components
 		

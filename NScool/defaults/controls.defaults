@@ -90,6 +90,33 @@
     which_neutron_1S0_gap = 'gc'
     which_neutron_3P2_gap = 't72'
     
+    ! controls for the conductivity: setting these = .TRUE. means don't use the defaults
+    use_pcy_for_ee_scattering = .FALSE.
+    use_page_for_eQ_scattering = .FALSE.
+    ! set which channels to include; we don't include neutron SF by default just yet
+    use_ee_conductivity = .TRUE.
+    use_ei_conductivity = .TRUE.
+    use_eQ_conductivity = .TRUE.
+    use_sf_conductivity = .FALSE.
+    
+    ! EOS controls: set to < 0 to use defaults
+    eos_gamma_melt_pt = -1.0
+    eos_rsi_melt_pt = -1.0
+    eos_nuclide_abundance_threshold = -1.0
+    eos_pasta_transition_in_fm3 = -1.0
+    eos_cluster_transition_in_fm3 = -1.0
+    
+    ! neutrino controls: set which channels to include
+    use_core_nu_bremsstrahlung = .TRUE.
+    use_core_nu_mUrca = .TRUE.
+    use_core_nu_dUrca = .FALSE.
+    use_core_nu_PBF = .TRUE.
+    use_crust_nu_pair = .TRUE.
+    use_crust_nu_photo = .TRUE.
+    use_crust_nu_plasma = .TRUE.
+    use_crust_nu_bremsstrahlung = .TRUE.
+    use_crust_nu_pbf = .TRUE.
+    
     !  controls the shell Urca cooling
     turn_on_shell_Urca = .FALSE.
     shell_Urca_luminosity_coeff = 1.0

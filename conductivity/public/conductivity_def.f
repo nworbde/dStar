@@ -11,11 +11,17 @@ module conductivity_def
 	logical, dimension(num_conductivity_channels), parameter :: cond_use_all =  &
 				& [ .TRUE., .TRUE., .TRUE., .TRUE.]
 	
-	! flag to control which ee scattering fmla. is used. default is Shternin & Yakovlev '06
-	integer, parameter :: icond_sy06 = 1, icond_pcy = 2
+	! flag to control which ee scattering fmla. is used. 
+  ! default: Shternin & Yakovlev (2006)
+	integer, parameter :: icond_sy06 = 1
+  ! Potekhin, Chabrier and Yakovlev (1997)
+  integer, parameter :: icond_pcy = 2
 
-	! flag to control which eQ scattering fmla. is used. default is Potekhin
-	integer, parameter :: icond_eQ_potekhin = 1, icond_eQ_page = 2
+	! flag to control which eQ scattering fmla. is used.
+  ! default: Potekhin (private comm.)
+	integer, parameter :: icond_eQ_potekhin = 1
+  ! Dany Page (private comm.)
+  integer, parameter :: icond_eQ_page = 2
 
 	type conductivity_components
 		real(dp) :: total

@@ -41,6 +41,26 @@ module NScool_ctrls_io
         which_proton_1S0_gap, &
         which_neutron_1S0_gap, &
         which_neutron_3P2_gap, &
+        use_pcy_for_ee_scattering, &
+        use_page_for_eQ_scattering, &
+        use_ee_conductivity, &
+        use_ei_conductivity, &
+        use_eQ_conductivity, &
+        use_sf_conductivity, &
+        eos_gamma_melt_pt, &
+        eos_rsi_melt_pt, &
+        eos_nuclide_abundance_threshold, &
+        eos_pasta_transition_in_fm3, &
+        eos_cluster_transition_in_fm3, &
+        use_core_nu_bremsstrahlung, &
+        use_core_nu_mUrca, &
+        use_core_nu_dUrca, &
+        use_core_nu_PBF, &
+        use_crust_nu_pair, &
+        use_crust_nu_photo, &
+        use_crust_nu_plasma, &
+        use_crust_nu_bremsstrahlung, &
+        use_crust_nu_pbf, &
         turn_on_shell_Urca, &
         shell_Urca_luminosity_coeff, &
         lgP_shell_Urca, &
@@ -157,6 +177,30 @@ contains
        s% which_proton_1S0_gap = which_proton_1S0_gap
        s% which_neutron_1S0_gap = which_neutron_1S0_gap
        s% which_neutron_3P2_gap = which_neutron_3P2_gap
+
+       s% use_pcy_for_ee_scattering = use_pcy_for_ee_scattering
+       s% use_page_for_eQ_scattering = use_page_for_eQ_scattering
+
+       s% use_ee_conductivity = use_ee_conductivity
+       s% use_ei_conductivity = use_ei_conductivity
+       s% use_eQ_conductivity = use_eQ_conductivity
+       s% use_sf_conductivity = use_sf_conductivity
+    
+       s% eos_gamma_melt_pt = eos_gamma_melt_pt
+       s% eos_rsi_melt_pt = eos_rsi_melt_pt
+       s% eos_nuclide_abundance_threshold = eos_nuclide_abundance_threshold
+       s% eos_pasta_transition_in_fm3 = eos_pasta_transition_in_fm3
+       s% eos_cluster_transition_in_fm3 = eos_cluster_transition_in_fm3
+    
+       s% use_core_nu_bremsstrahlung = use_core_nu_bremsstrahlung
+       s% use_core_nu_mUrca = use_core_nu_mUrca
+       s% use_core_nu_dUrca = use_core_nu_dUrca
+       s% use_core_nu_PBF = use_core_nu_PBF
+       s% use_crust_nu_pair = use_crust_nu_pair
+       s% use_crust_nu_photo = use_crust_nu_photo
+       s% use_crust_nu_plasma = use_crust_nu_plasma
+       s% use_crust_nu_bremsstrahlung = use_crust_nu_bremsstrahlung
+       s% use_crust_nu_pbf = use_crust_nu_pbf
        
        s% turn_on_shell_Urca = turn_on_shell_Urca
        s% shell_Urca_luminosity_coeff = shell_Urca_luminosity_coeff

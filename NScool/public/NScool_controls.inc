@@ -52,6 +52,33 @@
     character(len=32) :: which_neutron_1S0_gap
     character(len=32) :: which_neutron_3P2_gap
     
+    ! controls for the conductivity: setting these = .TRUE. means don't use the defaults
+    logical :: use_pcy_for_ee_scattering
+    logical :: use_page_for_eQ_scattering
+    ! set which channels to include
+    logical :: use_ee_conductivity
+    logical :: use_ei_conductivity
+    logical :: use_eQ_conductivity
+    logical :: use_sf_conductivity
+    
+    ! EOS controls: set to < 0 to use defaults
+    real(dp) :: eos_gamma_melt_pt
+    real(dp) :: eos_rsi_melt_pt
+    real(dp) :: eos_nuclide_abundance_threshold
+    real(dp) :: eos_pasta_transition_in_fm3
+    real(dp) :: eos_cluster_transition_in_fm3
+    
+    ! neutrino controls: set which channels to include
+    logical :: use_core_nu_bremsstrahlung
+    logical :: use_core_nu_mUrca
+    logical :: use_core_nu_dUrca
+    logical :: use_core_nu_PBF
+    logical :: use_crust_nu_pair
+    logical :: use_crust_nu_photo
+    logical :: use_crust_nu_plasma
+    logical :: use_crust_nu_bremsstrahlung
+    logical :: use_crust_nu_pbf
+    
     !  controls the shell Urca cooling
     logical :: turn_on_shell_Urca
     real(dp) :: shell_Urca_luminosity_coeff
