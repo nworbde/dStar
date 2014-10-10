@@ -58,6 +58,9 @@ module NScool_def
         real(dp), pointer, dimension(:) :: lnCp    ! ln(specific heat)
         real(dp), pointer, dimension(:) :: Cp      ! specific heat at const. pressure
         real(dp), pointer, dimension(:) :: dlnCp_dlnT ! derivative
+        real(dp), pointer, dimension(:) :: lnGamma  ! ln(plasma Gamma)
+        real(dp), pointer, dimension(:) :: Gamma    ! plasma Gamma: parameterizes strength of ion coulomb coupling
+        real(dp), pointer, dimension(:) :: dlnGamma_dlnT    ! derivative
         real(dp), pointer, dimension(:) :: enu     ! specific neutrino emissivity
         real(dp), pointer, dimension(:) :: lnenu   ! ln(specific neutrino emissivity)
         real(dp), pointer, dimension(:) :: dlnenu_dlnT   ! derivative
@@ -89,6 +92,7 @@ module NScool_def
         real(dp), pointer, dimension(:,:) :: tab_lnenu  ! (4*n_tab, nz) coefficients for ln(enu)
         real(dp), pointer, dimension(:,:) :: tab_lnCp   ! (4*n_tab, nz) coefficients for ln(Cp)
         real(dp), pointer, dimension(:,:) :: tab_lnK    ! (4*n_tab, nz) coefficients for ln(Kcond)
+        real(dp), pointer, dimension(:,:) :: tab_lnGamma  ! (4*n_tab, nz) coefficients for ln(plasma Gamma)
 
         logical :: in_use
         

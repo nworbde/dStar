@@ -239,8 +239,8 @@ contains
         type(conductivity_components) :: Kcomponents
         real(dp) :: chi, Ttab, enu_tab
         real(dp), dimension(:), pointer :: work=>null()
-        real(dp), dimension(:,:), pointer :: lnEnu_val, lnKcond_val, lnCp_val
-        real(dp), dimension(:), pointer :: lnEnu_interp, lnKcond_interp, lnCp_interp
+        real(dp), dimension(:,:), pointer :: lnEnu_val, lnKcond_val, lnCp_val, lnGamma_val
+        real(dp), dimension(:), pointer :: lnEnu_interp, lnKcond_interp, lnCp_interp, lnGamma_interp
         real(dp) :: nn, kn, Tc(max_number_sf_types)
         type(crust_eos_component), dimension(num_crust_eos_components) :: components
         ! for error checking
@@ -262,9 +262,10 @@ contains
         s% tab_lnT(1:s% n_tab) = [(lgT_tab_min*ln10 + (lgT_tab_max-lgT_tab_min)*ln10*real(itemp-1,dp)/real(s% n_tab-1,dp), &
         &   itemp = 1, s% n_tab)]
         
-        ! cell average quantities: Cp and enu
+        ! cell average quantities: Cp, plasma Gamma, and enu
         do iz = 1, s% nz
             lnCp_val(1:4,1:s% n_tab) => s% tab_lnCp(1:4*s% n_tab, iz)
+            lnGamma_val(1:4,1:s% n_tab) => s% tab_lnGamma(1:4*s% n_tab, iz)
             lnEnu_val(1:4,1:s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, iz)
             do itemp = 1, s% n_tab
                 Ttab = exp(s% tab_lnT(itemp))
@@ -273,16 +274,18 @@ contains
                 &   s% eos_handle, s% rho(iz), Ttab, s% ionic(iz), s% ncharged, s% charged_ids, s% Yion(1:s% ncharged,iz), &
                 &   eos_results, eos_phase, chi, components)
                 lnCp_val(1,itemp) = log(eos_results(i_Cp))
-                if (is_bad_num(lnCp_val(1,itemp)) .and. itemp == 40) then
-                    print *,'bad CV'
-                    do ieos = 1, num_crust_eos_components
-                        print *, ieos
-                        print *,components(ieos)
-                    end do
-                    print *, s% ionic(iz), s% Yion(1:s% ncharged,iz)
-                end if
+                lnGamma_val(1,itemp) = log(eos_results(i_Gamma))
+!                 if (is_bad_num(lnCp_val(1,itemp)) .and. itemp == 40) then
+!                     print *,'bad CV'
+!                     do ieos = 1, num_crust_eos_components
+!                         print *, ieos
+!                         print *,components(ieos)
+!                     end do
+!                     print *, s% ionic(iz), s% Yion(1:s% ncharged,iz)
+!                 end if
+!   Set the pressure based on the lowest temperature in the table.
                 if (itemp == 1) s% P(iz) = exp(eos_results(i_lnP))
-                
+
                 ! perform interpolation of density to first cell face
                 if (iz == 1 .and. itemp == 1) then
                     s% rho_bar(iz) = s% rho(iz)*(s% P_bar(iz)/s% P(iz))**(1.0/eos_results(i_chiRho))
@@ -298,7 +301,7 @@ contains
                 
             end do
 
-            ! add in the shell Urca cooling
+            ! add in the shell Urca cooling: this should be a call to a (potentially user-defined) function
             if (s% turn_on_shell_Urca .and. iz < s% nz) then
                 if (log10(s% P_bar(iz)) < s% lgP_shell_Urca .and. log10(s% P_bar(iz+1)) > s% lgP_shell_Urca) then
                     lnEnu_val(1,1:s% n_tab) = log(exp(lnEnu_val(1,1:s% n_tab))  &
@@ -312,7 +315,10 @@ contains
             &   'do_setup_crust_transport: lnEnu', ierr)
             lnCp_interp(1:4*s% n_tab) => s% tab_lnCp(1:4*s% n_tab,iz)
             call interp_pm(s% tab_lnT, s% n_tab, lnCp_interp, pm_work_size, work, &
-            &   'do_setup_crust_transport: lnCp', ierr)            
+            &   'do_setup_crust_transport: lnCp', ierr)
+            lnGamma_interp(1:4*s% n_tab) => s% tab_lnGamma(1:4*s% n_tab, iz)
+            call interp_pm(s% tab_lnT, s% n_tab, lnGamma_interp, pm_work_size, work,  &
+            &   'do_setup_crust_transport: Gamma', ierr)
             deallocate(work)
             
         end do
