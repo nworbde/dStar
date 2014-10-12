@@ -85,7 +85,17 @@ contains
     
         ! switch off the warnings about quantum effects
         call dStar_eos_set_controls(s% eos_handle,suppress_warnings=.TRUE.)
-    
+        if (s% eos_gamma_melt_pt > 0.0)  &
+        & call dStar_eos_set_controls(s% eos_handle,gamma_melt_pt=s% eos_gamma_melt_pt)
+        if (s% eos_rsi_melt_pt > 0.0)  &
+        & call dStar_eos_set_controls(s% eos_handle,rsi_melt_pt=s% eos_rsi_melt_pt)
+        if (s% eos_nuclide_abundance_threshold > 0.0)  &
+        & call dStar_eos_set_controls(s% eos_handle,nuclide_abundance_threshold=s% eos_nuclide_abundance_threshold)
+        if (s% eos_pasta_transition_in_fm3 > 0.0)  &
+        & call dStar_eos_set_controls(s% eos_handle,pasta_transition_in_fm3=s% eos_pasta_transition_in_fm3)
+        if (s% eos_cluster_transition_in_fm3 > 0.0)  &
+        & call dStar_eos_set_controls(s% eos_handle,cluster_transition_in_fm3=s% eos_cluster_transition_in_fm3)
+            
         write (error_unit,*) 'loading crust model...'
         call dStar_crust_startup(trim(dStar_data_dir),ierr)
         if (failure('dStar_crust_startup')) return
@@ -220,10 +230,8 @@ contains
         
         type(NScool_info), pointer :: s
         integer, intent(out) :: ierr
-        logical, dimension(num_crust_nu_channels), parameter :: nu_channels  &
-           & = [.TRUE., .TRUE., .TRUE., .TRUE., .FALSE.]
-        logical, dimension(num_conductivity_channels), parameter :: cond_channels  &
-           & = [ .TRUE., .TRUE., .TRUE., .FALSE. ]
+        logical, dimension(num_crust_nu_channels) :: nu_channels
+        logical, dimension(num_conductivity_channels) :: cond_channels
         type(crust_neutrino_emissivity_channels) :: eps_nu
         integer :: iz, itemp, ieos
         integer :: eos_phase
@@ -231,8 +239,8 @@ contains
         type(conductivity_components) :: Kcomponents
         real(dp) :: chi, Ttab, enu_tab
         real(dp), dimension(:), pointer :: work=>null()
-        real(dp), dimension(:,:), pointer :: lnEnu_val, lnKcond_val, lnCp_val
-        real(dp), dimension(:), pointer :: lnEnu_interp, lnKcond_interp, lnCp_interp
+        real(dp), dimension(:,:), pointer :: lnEnu_val, lnKcond_val, lnCp_val, lnGamma_val
+        real(dp), dimension(:), pointer :: lnEnu_interp, lnKcond_interp, lnCp_interp, lnGamma_interp
         real(dp) :: nn, kn, Tc(max_number_sf_types)
         type(crust_eos_component), dimension(num_crust_eos_components) :: components
         ! for error checking
@@ -244,12 +252,20 @@ contains
         call allocate_NScool_work_arrays(s, ierr)
         if (ierr /= 0) return
         
+        ! set up the conductivity and neutrino channels
+        nu_channels = [ s% use_crust_nu_pair, s% use_crust_nu_photo, s% use_crust_nu_plasma, &
+        & s% use_crust_nu_bremsstrahlung, s% use_crust_nu_pbf ]
+        
+        cond_channels = [ s% use_ee_conductivity, &
+        & s% use_ei_conductivity, s% use_eQ_conductivity, s% use_sf_conductivity ]
+        
         s% tab_lnT(1:s% n_tab) = [(lgT_tab_min*ln10 + (lgT_tab_max-lgT_tab_min)*ln10*real(itemp-1,dp)/real(s% n_tab-1,dp), &
         &   itemp = 1, s% n_tab)]
         
-        ! cell average quantities: Cp and enu
+        ! cell average quantities: Cp, plasma Gamma, and enu
         do iz = 1, s% nz
             lnCp_val(1:4,1:s% n_tab) => s% tab_lnCp(1:4*s% n_tab, iz)
+            lnGamma_val(1:4,1:s% n_tab) => s% tab_lnGamma(1:4*s% n_tab, iz)
             lnEnu_val(1:4,1:s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, iz)
             do itemp = 1, s% n_tab
                 Ttab = exp(s% tab_lnT(itemp))
@@ -258,16 +274,18 @@ contains
                 &   s% eos_handle, s% rho(iz), Ttab, s% ionic(iz), s% ncharged, s% charged_ids, s% Yion(1:s% ncharged,iz), &
                 &   eos_results, eos_phase, chi, components)
                 lnCp_val(1,itemp) = log(eos_results(i_Cp))
-                if (is_bad_num(lnCp_val(1,itemp)) .and. itemp == 40) then
-                    print *,'bad CV'
-                    do ieos = 1, num_crust_eos_components
-                        print *, ieos
-                        print *,components(ieos)
-                    end do
-                    print *, s% ionic(iz), s% Yion(1:s% ncharged,iz)
-                end if
+                lnGamma_val(1,itemp) = log(eos_results(i_Gamma))
+!                 if (is_bad_num(lnCp_val(1,itemp)) .and. itemp == 40) then
+!                     print *,'bad CV'
+!                     do ieos = 1, num_crust_eos_components
+!                         print *, ieos
+!                         print *,components(ieos)
+!                     end do
+!                     print *, s% ionic(iz), s% Yion(1:s% ncharged,iz)
+!                 end if
+!   Set the pressure based on the lowest temperature in the table.
                 if (itemp == 1) s% P(iz) = exp(eos_results(i_lnP))
-                
+
                 ! perform interpolation of density to first cell face
                 if (iz == 1 .and. itemp == 1) then
                     s% rho_bar(iz) = s% rho(iz)*(s% P_bar(iz)/s% P(iz))**(1.0/eos_results(i_chiRho))
@@ -283,7 +301,7 @@ contains
                 
             end do
 
-            ! add in the shell Urca cooling
+            ! add in the shell Urca cooling: this should be a call to a (potentially user-defined) function
             if (s% turn_on_shell_Urca .and. iz < s% nz) then
                 if (log10(s% P_bar(iz)) < s% lgP_shell_Urca .and. log10(s% P_bar(iz+1)) > s% lgP_shell_Urca) then
                     lnEnu_val(1,1:s% n_tab) = log(exp(lnEnu_val(1,1:s% n_tab))  &
@@ -297,7 +315,10 @@ contains
             &   'do_setup_crust_transport: lnEnu', ierr)
             lnCp_interp(1:4*s% n_tab) => s% tab_lnCp(1:4*s% n_tab,iz)
             call interp_pm(s% tab_lnT, s% n_tab, lnCp_interp, pm_work_size, work, &
-            &   'do_setup_crust_transport: lnCp', ierr)            
+            &   'do_setup_crust_transport: lnCp', ierr)
+            lnGamma_interp(1:4*s% n_tab) => s% tab_lnGamma(1:4*s% n_tab, iz)
+            call interp_pm(s% tab_lnT, s% n_tab, lnGamma_interp, pm_work_size, work,  &
+            &   'do_setup_crust_transport: Gamma', ierr)
             deallocate(work)
             
         end do
@@ -317,8 +338,10 @@ contains
                                 
                 call get_thermal_conductivity(s% rho_bar(iz), Ttab, chi, eos_results(i_Gamma),  &
                 &   eos_results(i_Theta), s% ionic_bar(iz), &
-                &   Kcomponents, which_components=cond_channels)
+                &   Kcomponents, use_pcy=s% use_pcy_for_ee_scattering, use_page=s% use_page_for_eQ_scattering, &
+                &   which_components=cond_channels)
                 lnKcond_val(1,itemp) = log(Kcomponents% total)
+
             end do
             allocate(work(s% n_tab*pm_work_size))
             lnKcond_interp(1:4*s% n_tab) => s% tab_lnK(1:4*s% n_tab,iz)

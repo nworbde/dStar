@@ -76,6 +76,9 @@ contains
         nullify(s% lnCp)
         nullify(s% Cp)
         nullify(s% dlnCp_dlnT)
+        nullify(s% lnGamma)
+        nullify(s% Gamma)
+        nullify(s% lnGamma)
         nullify(s% enu)
         nullify(s% lnenu)
         nullify(s% dlnenu_dlnT)
@@ -106,6 +109,7 @@ contains
         nullify(s% tab_lnT) ! (n_tab) junction points for interpolation; same for all grid points
         nullify(s% tab_lnenu)  ! (4*n_tab, nz) coefficients for ln(enu)
         nullify(s% tab_lnCp)  ! (4*n_tab, nz) coefficients for ln(Cp)
+        nullify(s% tab_lnGamma)
         nullify(s% tab_lnK)   ! (4*n_tab, nz) coefficients for ln(Kcond)
     end function alloc_NScool_data
     

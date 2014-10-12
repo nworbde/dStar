@@ -133,6 +133,12 @@ contains
             if (failed('Cp')) exit
             call do1(s% dlnCp_dlnT)
             if (failed('dlnCp_dlnT')) exit
+            call do1(s% lnGamma)
+            if (failed('lnGamma')) exit
+            call do1(s% Gamma)
+            if (failed('Gamma')) exit
+            call do1(s% dlnGamma_dlnT)
+            if (failed('dlnGamma_dlnT')) exit
             call do1(s% enu)
             if (failed('enu')) exit
             call do1(s% lnenu)
@@ -222,6 +228,8 @@ contains
             if (failed('tab_lnenu')) exit
             call do2(s% tab_lnCp)
             if (failed('tab_lnCp')) exit
+            call do2(s% tab_lnGamma)
+            if (failed('tab_lnGamma')) exit
             call do2(s% tab_lnK)
             if (failed('tab_lnK')) exit
             return

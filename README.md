@@ -8,7 +8,7 @@ A collection of modules for computing neutron star structure and evolution.
 
 ##How to install
   1. Follow the instructions on the MESA website to build a working version of `MESA`, and ensure that the environment variable `MESA_DIR` points to that directory.
-  2. After forking or cloning the dStar repository, go into the top-level directory and type `./install`.  If you had comiled it previously, you should do a `./clean` first to force a clean install.
+  2. After forking or cloning the dStar repository, go into the top-level directory and type `./install`.  If you had compiled it previously, you should do a `./clean` first to force a clean install.
 
 ###What the installation does
 For each module, the install script
@@ -22,3 +22,6 @@ For each module, the install script
 **Under construction**
 For each module, look in the `test` directory for an example of how to run the module.
 
+##Upcoming improvements
+  1. add load/save options for models
+  

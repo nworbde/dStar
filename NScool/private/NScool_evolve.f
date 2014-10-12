@@ -47,7 +47,7 @@ contains
         n = s% nz
         t = 0.0      
         tend = s% maximum_end_time
-        h = 0.0
+        h = s% dt
         max_step_size = s% maximum_timestep
         max_steps = s% maximum_number_of_models
 
@@ -466,12 +466,13 @@ contains
         type(NScool_info), pointer :: s
         integer, intent(out) :: ierr
         integer :: iz
-        real(dp), dimension(:), pointer :: lnKcond_interp, lnCp_interp, lnEnu_interp
+        real(dp), dimension(:), pointer :: lnKcond_interp, lnCp_interp, lnGamma_interp, lnEnu_interp
         
         do iz = 1, s% nz
             
             lnKcond_interp(1:4*s% n_tab) => s% tab_lnK(1:4*s% n_tab, iz)
             lnCp_interp(1:4*s% n_tab) => s% tab_lnCp(1:4*s% n_tab, iz)
+            lnGamma_interp(1:4*s% n_tab) => s% tab_lnGamma(1:4*s% n_tab, iz)
             lnEnu_interp(1:4*s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, iz)
         
     		call interp_value_and_slope(s% tab_lnT, s% n_tab, lnKcond_interp, s% lnT_bar(iz), s% lnK(iz), s% dlnK_dlnT(iz), ierr)
@@ -480,11 +481,16 @@ contains
             call interp_value_and_slope(s% tab_lnT, s% n_tab, lnCp_interp, s% lnT(iz), s% lnCp(iz), s% dlnCp_dlnT(iz), ierr)
             if (failure('lnCp',iz)) return
             
+            call interp_value_and_slope(s% tab_lnT, s% n_tab, lnGamma_interp, s% lnT(iz), s% lnGamma(iz),  &
+            &   s% dlnGamma_dlnT(iz), ierr)
+            if (failure('lnGamma',iz)) return
+            
             call interp_value_and_slope(s% tab_lnT, s% n_tab, lnEnu_interp, s% lnT(iz), s% lnenu(iz), s% dlnenu_dlnT(iz), ierr)
             if (failure('lnEnu',iz)) return
             
             s% Kcond = exp(s% lnK)
             s% Cp = exp(s% lnCp)
+            s% Gamma = exp(s% lnGamma)
             s% enu = exp(s% lnenu)
             
             call get_nuclear_heating(s, ierr)
