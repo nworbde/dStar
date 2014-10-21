@@ -18,6 +18,7 @@ $(TEST) : $(TEST_OBJS)
 
 install: $(TEST)
 	cp $(TEST) ..
+	mkdir -p ../LOGS
 
 clean:
 	-@rm -f *.o *.mod $(TEST)

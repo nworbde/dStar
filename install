@@ -23,6 +23,11 @@ function do_one {
 
 echo
 
+# make the lib and include directories
+mkdir -p lib
+mkdir -p include
+
+# now build the modules
 do_one constants
 do_one superfluid
 do_one nucchem
