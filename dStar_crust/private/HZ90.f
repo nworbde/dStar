@@ -6,6 +6,7 @@ module hz90
     real(dp), parameter :: transition_width = 0.02  
     
     integer, parameter :: HZ90_number = 19
+    integer, parameter :: HZ08_number = 34
     character(len=iso_name_length), parameter, dimension(HZ90_number) :: HZ90_network = [ character(len=iso_name_length) :: &
     &   'n', &
     &   'mg40', &
@@ -27,6 +28,42 @@ module hz90
     &   'cr56', &
     &   'fe56' ]
     
+    character(len=iso_name_length), parameter, dimension(HZ08_number) :: HZ08_network = [ character(len=iso_name_length) :: &
+    &   'n', &
+    &   'ne36', &
+    &   'mg46', &
+    &   'mg42', &
+    &   'si50', &
+    &   'si54', &
+    &   'si62', &
+    &   's56', &
+    &   's60', &
+    &   's68', &
+    &   'ar62', &
+    &   'ar66', &
+    &   'ar74', &
+    &   'ca68', &
+    &   'ca72', &
+    &   'ca80', &
+    &   'ti74', &
+    &   'ti86', &
+    &   'ti116', &
+    &   'cr80', &
+    &   'cr92', &
+    &   'cr118', &
+    &   'fe86', &
+    &   'fe120', &
+    &   'ni92', &
+    &   'ni124', &
+    &   'ge106', &
+    &   'se106', &
+    &   'kr106', &
+    &   'sr106', &
+    &   'zr106', &
+    &   'mo106', &
+    &   'ru106', &
+    &   'pd106' ]
+    
     integer, parameter :: number_layers = 17
     
     character(len=iso_name_length), parameter, dimension(number_layers+1) :: ion_composition = [ &
@@ -41,7 +78,19 @@ module hz90
     real(dp), parameter, dimension(number_layers+1) :: Xn = [ &
     &   0.0, 0.0, 0.0, 0.0, 0.0,  &
     &   0.07, 0.18, 0.29, 0.39, 0.45, 0.50, 0.55, 0.61, 0.70, 0.73, 0.76, 0.80, 0.80]
+
     
+    integer, parameter :: number_HZ08_layers = 29
+    
+    character(len=iso_name_length), parameter, dimension(number_HZ08_layers+1) :: HZ08_ion_composition = [ &
+    &   character(len=iso_name_length) ::  &
+    &   'pd106', 'ru106', 'mo106', 'zr106', 'sr106', 'kr106', 'se106', 'ge106', 'ni92', 'fe86', 'cr80', 'ti74', &
+    &   'ca68', 'ar62', 's56', 'si50', 'mg42', 'ca72', 'ar66', 's60', 'si54', 'cr92', 'ti86', 'ca80', 'ar74', &
+    &   's68', 'ni124', 'fe120', 'cr118', 'ti116' ]
+!     real(dp), parameter, dimension(number_HZ08_layers) :: HZ08_transition_pressures = [ &
+!     & ]
+!     real(dp), parameter, dimension(number_HZ08_layers+1) :: HZ08_Xn = [ &
+!     & ]
 contains
     
     subroutine do_make_crust(lgP, Yion, Xneut, charged_ids, ncharged, ion_info)
