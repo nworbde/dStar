@@ -2,7 +2,7 @@ include $(MESA_DIR)/utils/makefile_header
 
 DSTAR_LIB_DIR = ../../../lib
 LOAD_LOCAL = -L$(LOCAL_LIB_DIR) -lconductivity
-LOAD_OTHER = -L$(DSTAR_LIB_DIR) -lsuperfluid -lneutrino -lconstants -ldstar_eos -lnucchem -L$(MESA_LIB_DIR) -linterp_1d -lconst -lutils
+LOAD_OTHER = -L$(DSTAR_LIB_DIR) -lneutrino -lconstants -ldstar_eos -lsuperfluid  -lnucchem -L$(MESA_LIB_DIR) -linterp_1d -lconst -lutils
 DSTAR_INC = ../../../include
 
 TEST = tester
