@@ -2,7 +2,7 @@ program test_NScool
     use NScool_def
     use NScool_lib
 
-    character(len=*), parameter :: my_dStar_dir = '../../../dStar'
+    character(len=*), parameter :: my_dStar_dir = '../../'
     character(len=*), parameter :: inlist = 'test_inlist'
     type(NScool_info), pointer :: s
     integer :: ierr, NScool_id
