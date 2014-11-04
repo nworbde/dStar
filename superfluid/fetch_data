@@ -13,7 +13,7 @@ function check_okay {
 function verify_datafile {
     db=$1
     key_cksm=$2
-    chk=`which md5`
+    chk=$3
     this_cksm=`$chk -q $db`
     if [ $this_cksm !=  $key_cksm ]; then
         echo "FAILED"
@@ -77,20 +77,30 @@ mkdir -p data
 check_okay
 cd data
 
-need_to_fetch=1
+chkr=`which md5`
+if [ ! $chkr ]; then
+    echo "no md5 command available, skipping verification"
+fi
+
+need_to_fetch=0
 for i in `seq 20`; do
     indx=$((i-1))
     df="Tc_data/${sf_datafiles[$indx]}"
     if [ -f $df ]; then
         printf "   $df exists...verifying: "
-        verify_datafile $df ${chksums[$indx]}
-        if [ $? -ne 0 ]; then
-            echo "failed"
-            need_to_fetch=1
+        if [ $chkr ]; then
+            verify_datafile $df ${chksums[$indx]} $chkr
+            if [ $? -ne 0 ]; then
+                echo "failed"
+                need_to_fetch=1
+            else
+                echo "passed"
+            fi
         else
-            echo "passed"
-            need_to_fetch=0
+            echo "skipped"
         fi
+    else
+        need_to_fetch=1
     fi
 done
 
@@ -106,9 +116,13 @@ if [ $need_to_fetch -eq 1 ]; then
     for i in `seq 20`; do
         indx=$((i-1))
         printf "   ${sf_datafiles[$indx]}: "
-        verify_datafile ${sf_datafiles[$indx]} ${chksums[$indx]}
-        check_okay
-        echo "passed"
+        if [ $chkr ]; then
+            verify_datafile ${sf_datafiles[$indx]} ${chksums[$indx]} $chkr
+            check_okay
+            echo "passed"
+        else
+            echo "skipped"
+        fi
     done
 fi
 
