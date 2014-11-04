@@ -52,11 +52,22 @@ function get_datafile {
 function verify_datafile {
     db=$1
     key_cksm=$2
-    chk=`which md5`
-    this_cksm=`$chk -q $db`
-    echo "checksum is  $this_cksm"
+    chk=""
+    if [ `which md5sum` ]; then
+        chk=`which md5sum`
+        echo "using $chk"
+        this_cksm=( `$chk $db` )
+    elif [ `which md5` ]; then
+        chk=`which md5`
+        echo "using $chk"
+        this_cksm=( `$chk -q $db` )
+    else
+        echo "no md5 or md5sum available, skipping verification"
+        return 0
+    fi
+    echo "checksum is  ${this_cksm[0]}"
     echo "compare with $key_cksm"
-    if [ $this_cksm !=  $key_cksm ]; then
+    if [ ${this_cksm[0]} !=  $key_cksm ]; then
         echo "FAILED"
         return 1
     fi
