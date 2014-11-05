@@ -13,11 +13,15 @@ function check_okay {
 function verify_datafile {
     db=$1
     key_cksm=$2
-    chk=`which md5`
-    this_cksm=`$chk -q $db`
-    if [ $this_cksm !=  $key_cksm ]; then
+    chk=$3
+    if [ ${chk##*/} = "md5" ]; then
+        this_cksm=( `$chk -q $db` )
+    else
+        this_cksm=( `$chk $db` )
+    fi
+    if [ ${this_cksm[0]} !=  $key_cksm ]; then
         echo "FAILED"
-        echo "checksum is  $this_cksm"
+        echo "checksum is  ${this_cksm[0]}"
         echo "compare with $key_cksm"
         return 1
     fi
@@ -77,20 +81,36 @@ mkdir -p data
 check_okay
 cd data
 
-need_to_fetch=1
+chkr=""
+if [ `which md5sum` ]; then
+    chkr=`which md5sum`
+    echo "using $chkr"
+elif [ `which md5` ]; then
+    chkr=`which md5`
+    echo "using $chkr"
+else
+    echo "no md5 or md5sum available, skipping verification"
+fi
+
+need_to_fetch=0
 for i in `seq 20`; do
     indx=$((i-1))
     df="Tc_data/${sf_datafiles[$indx]}"
     if [ -f $df ]; then
         printf "   $df exists...verifying: "
-        verify_datafile $df ${chksums[$indx]}
-        if [ $? -ne 0 ]; then
-            echo "failed"
-            need_to_fetch=1
+        if [ $chkr ]; then
+            verify_datafile $df ${chksums[$indx]} $chkr
+            if [ $? -ne 0 ]; then
+                echo "failed"
+                need_to_fetch=1
+            else
+                echo "passed"
+            fi
         else
-            echo "passed"
-            need_to_fetch=0
+            echo "skipped"
         fi
+    else
+        need_to_fetch=1
     fi
 done
 
@@ -106,9 +126,13 @@ if [ $need_to_fetch -eq 1 ]; then
     for i in `seq 20`; do
         indx=$((i-1))
         printf "   ${sf_datafiles[$indx]}: "
-        verify_datafile ${sf_datafiles[$indx]} ${chksums[$indx]}
-        check_okay
-        echo "passed"
+        if [ $chkr ]; then
+            verify_datafile ${sf_datafiles[$indx]} ${chksums[$indx]} $chkr
+            check_okay
+            echo "passed"
+        else
+            echo "skipped"
+        fi
     done
 fi
 

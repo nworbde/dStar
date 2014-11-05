@@ -1,8 +1,9 @@
 program test_NScool
+    use iso_fortran_env, only : output_unit
     use NScool_def
     use NScool_lib
 
-    character(len=*), parameter :: my_dStar_dir = '../../../dStar'
+    character(len=*), parameter :: my_dStar_dir = '../../'
     character(len=*), parameter :: inlist = 'test_inlist'
     type(NScool_info), pointer :: s
     integer :: ierr, NScool_id
@@ -31,6 +32,8 @@ program test_NScool
     call NScool_evolve_model(NScool_id,ierr)
     
     call NScool_shutdown
+    
+    write (output_unit,'(/,/,a,i3)') 'test_NScool exited with ierr = ',ierr
     
 contains
 	subroutine check_okay(msg,ierr)
