@@ -1,4 +1,5 @@
 program test_NScool
+    use iso_fortran_env, only : output_unit
     use NScool_def
     use NScool_lib
 
@@ -31,6 +32,8 @@ program test_NScool
     call NScool_evolve_model(NScool_id,ierr)
     
     call NScool_shutdown
+    
+    write (output_unit,'(/,/,a,i3)') 'test_NScool exited with ierr = ',ierr
     
 contains
 	subroutine check_okay(msg,ierr)
