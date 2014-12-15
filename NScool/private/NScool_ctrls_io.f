@@ -38,6 +38,10 @@ module NScool_ctrls_io
         lgP_min_heating_inner, &
         lgP_max_heating_inner, &
         Q_heating_inner, &
+        turn_on_extra_heating, &
+        lgP_min_heating_shallow, &
+        lgP_max_heating_shallow, &
+        Q_heating_shallow, &
         which_proton_1S0_gap, &
         which_neutron_1S0_gap, &
         which_neutron_3P2_gap, &
@@ -173,6 +177,10 @@ contains
        s% lgP_min_heating_inner = lgP_min_heating_inner
        s% lgP_max_heating_inner = lgP_max_heating_inner
        s% Q_heating_inner = Q_heating_inner
+       s% turn_on_extra_heating = turn_on_extra_heating
+       s% lgP_min_heating_shallow = lgP_min_heating_shallow
+       s% lgP_max_heating_shallow = lgP_max_heating_shallow
+       s% Q_heating_shallow = Q_heating_shallow
        
        s% which_proton_1S0_gap = which_proton_1S0_gap
        s% which_neutron_1S0_gap = which_neutron_1S0_gap

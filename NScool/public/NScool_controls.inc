@@ -46,6 +46,10 @@
     real(dp) :: lgP_min_heating_inner
     real(dp) :: lgP_max_heating_inner
     real(dp) :: Q_heating_inner ! MeV
+    logical  :: turn_on_extra_heating
+    real(dp) :: lgP_min_heating_shallow
+    real(dp) :: lgP_max_heating_shallow
+    real(dp) :: Q_heating_shallow ! MeV
     
     ! controls for the superfluidity
     character(len=32) :: which_proton_1S0_gap
