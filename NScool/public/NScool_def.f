@@ -7,6 +7,14 @@ module NScool_def
     integer, parameter :: num_extra_integer_controls = 32
     integer, parameter :: num_extra_logical_controls = 32
 
+    ! interfaces for customizable routines
+    abstract interface
+    subroutine set_Qimp_interface(id,ierr)
+        integer, intent(in) :: id
+        integer, intent(out) :: ierr
+    end subroutine set_Qimp_interface
+    end interface
+
     type NScool_info
         integer :: id     ! id for this star
             
@@ -95,6 +103,9 @@ module NScool_def
         real(dp), pointer, dimension(:,:) :: tab_lnGamma  ! (4*n_tab, nz) coefficients for ln(plasma Gamma)
 
         logical :: in_use
+        
+        procedure(set_Qimp_interface), pointer, nopass ::  &
+            & other_set_Qimp => null()
         
     end type NScool_info
 

@@ -33,6 +33,9 @@
     
     start_time = 0.0    ! s
     
+    ! other routines
+    use_other_set_Qimp = .FALSE.
+    
     ! extra controls for hook routines
     extra_real_controls(:) = 0.0
     extra_integer_controls(:) = 0
