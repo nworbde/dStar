@@ -534,6 +534,14 @@ contains
         Q = s% Q_heating_inner
         call do_one
         
+        ! extra, if it exists
+        if (s% turn_on_extra_heating) then
+            Ptop = 10.0**s% lgP_min_heating_shallow
+            Pbot = 10.0**s% lgP_max_heating_shallow
+            Q = s% Q_heating_shallow
+            call do_one
+        end if
+        
     contains
         subroutine do_one()
             real(dp) :: M_norm

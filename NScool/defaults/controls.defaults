@@ -33,6 +33,9 @@
     
     start_time = 0.0    ! s
     
+    ! other routines
+    use_other_set_Qimp = .FALSE.
+    
     ! extra controls for hook routines
     extra_real_controls(:) = 0.0
     extra_integer_controls(:) = 0
@@ -53,6 +56,11 @@
     lgP_min_heating_inner = 30.42
     lgP_max_heating_inner = 31.20
     Q_heating_inner = 1.5 ! MeV
+    turn_on_extra_heating = .FALSE.
+    lgP_min_heating_shallow = 27.0
+    lgP_max_heating_shallow = 28.0
+    Q_heating_shallow = 3.0! MeV
+    
     
 !   selection of superfluid gaps, courtesy Dany Page
 !

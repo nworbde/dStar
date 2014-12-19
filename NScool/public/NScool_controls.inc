@@ -18,6 +18,8 @@
     real(dp) :: min_lg_temperature_integration
     real(dp) :: max_lg_temperature_integration
     
+    logical :: use_other_set_Qimp
+    
     real(dp), dimension(num_extra_real_controls) :: extra_real_controls
     integer, dimension(num_extra_integer_controls) :: extra_integer_controls
     logical, dimension(num_extra_logical_controls) :: extra_logical_controls
@@ -46,6 +48,10 @@
     real(dp) :: lgP_min_heating_inner
     real(dp) :: lgP_max_heating_inner
     real(dp) :: Q_heating_inner ! MeV
+    logical  :: turn_on_extra_heating
+    real(dp) :: lgP_min_heating_shallow
+    real(dp) :: lgP_max_heating_shallow
+    real(dp) :: Q_heating_shallow ! MeV
     
     ! controls for the superfluidity
     character(len=32) :: which_proton_1S0_gap

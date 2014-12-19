@@ -18,6 +18,7 @@ module NScool_ctrls_io
         integration_tolerance, & 
         min_lg_temperature_integration, &
         max_lg_temperature_integration, &
+        use_other_set_Qimp, &
         extra_real_controls, & 
         extra_integer_controls, & 
         extra_logical_controls, & 
@@ -38,6 +39,10 @@ module NScool_ctrls_io
         lgP_min_heating_inner, &
         lgP_max_heating_inner, &
         Q_heating_inner, &
+        turn_on_extra_heating, &
+        lgP_min_heating_shallow, &
+        lgP_max_heating_shallow, &
+        Q_heating_shallow, &
         which_proton_1S0_gap, &
         which_neutron_1S0_gap, &
         which_neutron_3P2_gap, &
@@ -151,9 +156,12 @@ contains
        s% integration_tolerance = integration_tolerance
        s% min_lg_temperature_integration = min_lg_temperature_integration
        s% max_lg_temperature_integration = max_lg_temperature_integration
+       
+       s% use_other_set_Qimp = use_other_set_Qimp
        s% extra_real_controls = extra_real_controls
        s% extra_integer_controls = extra_integer_controls
        s% extra_logical_controls = extra_logical_controls
+
        s% fix_core_temperature = fix_core_temperature
        s% core_temperature = core_temperature
        s% fix_atmosphere_temperature_when_accreting = fix_atmosphere_temperature_when_accreting
@@ -173,6 +181,10 @@ contains
        s% lgP_min_heating_inner = lgP_min_heating_inner
        s% lgP_max_heating_inner = lgP_max_heating_inner
        s% Q_heating_inner = Q_heating_inner
+       s% turn_on_extra_heating = turn_on_extra_heating
+       s% lgP_min_heating_shallow = lgP_min_heating_shallow
+       s% lgP_max_heating_shallow = lgP_max_heating_shallow
+       s% Q_heating_shallow = Q_heating_shallow
        
        s% which_proton_1S0_gap = which_proton_1S0_gap
        s% which_neutron_1S0_gap = which_neutron_1S0_gap
