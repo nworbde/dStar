@@ -26,6 +26,7 @@
     
     logical :: fix_core_temperature
     real(dp) :: core_temperature
+    logical :: make_inner_boundary_insulating
     
     logical :: fix_atmosphere_temperature_when_accreting
     real(dp) :: atmosphere_temperature_when_accreting
