@@ -9,7 +9,6 @@ contains
 	subroutine nucchem_init(datadir, ierr)
         use iso_fortran_env, only: error_unit
         use nucchem_io
-        use nucchem_storage
 		character(len=*), intent(in) :: datadir
 		integer, intent(out) :: ierr
         character(len=*),parameter :: nuclib_db = 'nuclib_db'
@@ -35,7 +34,9 @@ contains
 
 	subroutine nucchem_shutdown()
 		use utils_lib
+        use nucchem_storage, only: free_nuclib_data
 		call integer_dict_free(nuclide_dict)
+        call free_nuclib_data(nuclib)
 		nucchem_is_initialized = .FALSE.
 	end subroutine nucchem_shutdown
 
