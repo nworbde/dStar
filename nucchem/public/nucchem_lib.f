@@ -36,6 +36,7 @@ contains
 		use utils_lib
         use nucchem_storage, only: free_nuclib_data
 		call integer_dict_free(nuclide_dict)
+        nullify(nuclide_dict)
         call free_nuclib_data(nuclib)
 		nucchem_is_initialized = .FALSE.
 	end subroutine nucchem_shutdown
