@@ -351,7 +351,11 @@ contains
         ! surface point
         dfdy(2,1) = dfdy(2,1) + CTdminv(1)*(s% e2Phi_bar(2)*dLpdlnT(1) - s% e2Phi_bar(1)*s% L(1)*s% dlnLsdlnT)
         ! core point
-        dfdy(2,n) = 0.0
+        if (s% make_inner_boundary_insulating .and. .not. s% fix_core_temperature) then
+            dfdy(2,n) = dfdy(2,n) + CTdminv(n)*(- s% e2Phi_bar(n)*dLdlnT(n))
+        else
+            dfdy(2,n) = 0.0
+        end if
         
         ! J(k+1,k) : 1 <= k <= n-1
         dfdy(3,1:n-1) = -CTdminv(2:n)*s% e2Phi_bar(2:n) * dLpdlnT(1:n-1)
