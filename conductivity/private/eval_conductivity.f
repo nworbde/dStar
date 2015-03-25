@@ -67,7 +67,8 @@ subroutine conductivity(rho,T,chi,Gamma,eta,ionic,kappa,which_ee,which_eQ,K_comp
         kappa% ee  = 0.0
         kappa% ei = 0.0
         kappa% eQ = 0.0
-        kappa% sf = 0.0     
+        kappa% sf = 0.0    
+        kappa% kap = 0.0 
     end subroutine clear_kappa
 end subroutine conductivity
 
@@ -341,7 +342,7 @@ function Rosseland_kappa(rho,T,ionic) result(kap)
     
     T6 = T*1.0e-6_dp
     T_Ry = T6/0.15789_dp/ionic% Z2
-    kap_th = 8.0_dp*onethird*pi*(electroncharge**2/Me_n)**2 * ionic% Ye/amu
+    kap_th = 8.0_dp*onethird*pi*(electroncharge**2/Melectron/clight2)**2 * ionic% Ye/amu
     c7 = (108.8_dp+77.6_dp*T_Ry**0.834_dp)/(1.0_dp+0.502_dp*T_Ry**0.355_dp+0.245_dp*T_Ry**0.834_dp)
     kap_ff = kap_th*2.0e4_dp*ionic% Z2*rho/c7/ionic% A/T6**3.5
     
