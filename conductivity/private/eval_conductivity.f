@@ -11,7 +11,7 @@ subroutine conductivity(rho,T,chi,Gamma,eta,ionic,kappa,which_ee,which_eQ,K_comp
     type(conductivity_components), intent(out) :: kappa
     integer, intent(in) :: which_ee, which_eQ
     logical, dimension(num_conductivity_channels), intent(in) :: K_components
-    real(dp) :: nn,nion, nu, nu_c, kappa_pre, ne, kF, xF, eF, Gamma_e
+    real(dp) :: nn,nion, nu, nu_c, kappa_pre, ne, kF, xF, eF, Gamma_e, opacity
     
     ne = rho/amu*ionic%Ye
     kF = (threepisquare*ne)**onethird
@@ -55,7 +55,11 @@ subroutine conductivity(rho,T,chi,Gamma,eta,ionic,kappa,which_ee,which_eQ,K_comp
         nion = (1.0-ionic%Yn)*rho/Mneutron/ionic% A /density_n
         kappa% sf =  sPh(nn,nion,T,ionic)
     end if
-    kappa% total = kappa_pre/nu + kappa% sf
+    if (K_components(icond_kap)) then
+        opacity = Rosseland_kappa(rho,T,ionic)
+        kappa% kap = 4.0*onethird*arad*clight*T**3/rho/opacity
+    end if
+    kappa% total = kappa_pre/nu + kappa% sf + kappa% kap
     
     contains
     subroutine clear_kappa()
@@ -324,5 +328,31 @@ function sPh(nn, nion, temperature, ionic)
     Lsph = Llph*(vs/gmix)**2*(1.0+(1.0-alpha**2)**2 * wt**2)/alpha/wt**2
     sPh = onethird*Cv*vs*Lsph * K_n
 end function sPh
+
+function Rosseland_kappa(rho,T,ionic) result(kap)
+    ! implements Rosseland mean for free-free and Thompson scattering according to the fit of
+    ! Potekhin and Chabrier (2001, A&A)
+    use nucchem_def, only: composition_info_type
+    use constants_def
+    real(dp), intent(in) :: rho,T
+    type(composition_info_type), intent(in) :: ionic
+    real(dp) :: kap
+    real(dp) :: T6, kap_th, kap_ff, f, c7, T_Ry
+    
+    T6 = T*1.0e-6_dp
+    T_Ry = T6/0.15789_dp/ionic% Z2
+    kap_th = 8.0_dp*onethird*pi*(electroncharge**2/Me_n)**2 * ionic% Ye/amu
+    c7 = (108.8_dp+77.6_dp*T_Ry**0.834_dp)/(1.0_dp+0.502_dp*T_Ry**0.355_dp+0.245_dp*T_Ry**0.834_dp)
+    kap_ff = kap_th*2.0e4_dp*ionic% Z2*rho/c7/ionic% A/T6**3.5
+    
+    f = kap_ff/(kap_ff+kap_th)
+    kap = (kap_th + kap_ff)*A(f,T_Ry)
+contains
+    function A(f,T)
+        real(dp), intent(in) :: f,T
+        real(dp) :: A
+        A = 1.0_dp + (1.097_dp+0.777_dp*T)/(1.0+0.536_dp*T)*f**0.617_dp*(1.0_dp-f)**0.77_dp
+    end function A
+end function Rosseland_kappa
 
 end module eval_conductivity

@@ -58,8 +58,8 @@ program test_cond
             eta = res(i_Theta) !1.0/TpT
             Gamma = res(i_Gamma)
             call get_thermal_conductivity(rho,T,chi,Gamma,eta,ionic,kappa)
-            print '(5f6.2,6es14.6)', &
-                & lgr,lgT,ionic%Z,ionic%A,ionic%Yn,Gamma,kappa% total,kappa%ee,kappa%ei,kappa%eQ,kappa%sf
+            print '(5f6.2,7es14.6)', &
+                & lgr,lgT,ionic%Z,ionic%A,ionic%Yn,Gamma,kappa% total,kappa%ee,kappa%ei,kappa%eQ,kappa%sf,kappa%kap
         end do
     end subroutine do_one
 end program test_cond
