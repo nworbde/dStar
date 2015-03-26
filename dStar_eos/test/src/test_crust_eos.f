@@ -35,6 +35,7 @@ program test_crust_eos
 	call compute_composition_moments(3,chem_ids,Y,ionic,Xsum,ncharged, charged_ids, Yion,  &
 			& exclude_neutrons = .TRUE.)
 	call write_headers
+	call do_one(1.0e2_dp)
 	call do_one(1.0e5_dp)
 	call do_one(1.0e7_dp)
 	call do_one(1.0e9_dp)
@@ -98,10 +99,12 @@ program test_crust_eos
 				& lgr,lgT,res(i_Gamma),res(i_Theta),res(i_Cv)/boltzmann/avogadro,res(i_lnE)/ln10,res(i_lnP)/ln10,res(i_lnS)/ln10, &
 				& res(i_chiRho),res(i_chiT),res(i_Gamma1),res(i_Gamma3),  &
 				& res(i_grad_ad), res(i_mu_e),res(i_mu_n)
-!                 print *, phase
-			! write (*,'(a,7es12.4)') 'electron: ',eos_components(icrust_eos_ep)
-			! write (*,'(a,7es12.4)') 'ion: ',eos_components(icrust_eos_ion)
-			! write (*,'(a,7es12.4)') 'neutron: ',eos_components(icrust_eos_neutron)
+			
+			write (*,'(a11,7a12)') 'component: ','pressure','energy','entropy','free energy','Cv','chi_rho','chi_T'
+			write (*,'(a11,7es12.4)') 'electron: ',eos_components(icrust_eos_ep)
+			write (*,'(a11,7es12.4)') 'ion: ',eos_components(icrust_eos_ion)
+			write (*,'(a11,7es12.4)') 'neutron: ',eos_components(icrust_eos_neutron)
+			write (*,'(a11,7es12.4)') 'radiation: ',eos_components(icrust_eos_radiation)
 		end do
 	end subroutine do_one
 
