@@ -7,9 +7,9 @@ program test_cond
     
     integer :: eos_handle,ierr,i,j
     ! composition taken from HZ090 for Fe-chain accreted crust
-    integer, dimension(6:14), parameter ::  zz = [26,26,26,26,24,20,14,24,24], &
-    &   aa = [56,56,56,56,56,56,46,96,96]
-    real(dp), dimension(6:14), parameter :: xn = [0.00,0.00,0.00,0.00,0.00,0.00,0.07,0.76,0.80]
+    integer, dimension(2:14), parameter ::  zz = [2,2,2,2,26,26,26,26,24,20,14,24,24], &
+    &   aa = [4,4,4,4,56,56,56,56,56,56,46,96,96]
+    real(dp), dimension(2:14), parameter :: xn = [0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.07,0.76,0.80]
     integer, dimension(2) :: Z,  N, chem_ids, charged_ids
     real(dp), dimension(2) :: Y, Yion
     integer :: ncharged
@@ -25,7 +25,7 @@ program test_cond
     ! components(icrust_eos_ion) = .TRUE.
     ! call crust_eos_set_components(eos_handle,components,ierr)
     
-    do i = 6,14
+    do i = 2,14
         N = [1,aa(i)-zz(i)]
         Z = [0,zz(i)]
         chem_ids = [(get_nuclide_index_from_ZN(Z(j),N(j)),j=1,2)]
@@ -50,8 +50,8 @@ program test_cond
         
         lgr = log10(rho)
         chi = use_default_nuclear_size
-        do ii = 1, 11
-            lgT = 7.5_dp + real(ii-1,dp)/10.0_dp
+        do ii = 1, 16
+            lgT = 7.0_dp + real(ii-1,dp)/10.0_dp
             T = 10.0**lgT
             call eval_crust_eos(eos_handle,rho,T,ionic, &
                 & ncharged, charged_ids, Yion, res, phase, chi, eos_components)
