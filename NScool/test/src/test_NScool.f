@@ -28,6 +28,8 @@ program test_NScool
     s% Mdot = 0.0_dp
     s% starting_number_for_profile = s% model + 1
     s% start_time = s% tsec
+    ! specify new maximum_end_time for length of cooling 
+    s% maximum_end_time = 1.0d3*(s% tsec)
     
     call NScool_evolve_model(NScool_id,ierr)
     
