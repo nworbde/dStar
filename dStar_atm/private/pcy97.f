@@ -5,7 +5,7 @@ module pcy97
 	
 	contains
 	
-	subroutine do_get_Teff(grav, Plight, Tb, Teff, flux)
+	subroutine do_get_pcy97_Teff(grav, Plight, Tb, Teff, flux)
 		use constants_def
 		real(dp), intent(in) :: grav	! surface gravity, in the local frame
 		real(dp), intent(in) :: Plight	! pressure at which layer of light elements terminates
@@ -41,6 +41,6 @@ module pcy97
 			end if
 		end subroutine PCYfit
 
-	end subroutine do_get_Teff
+	end subroutine do_get_pcy97_Teff
 
 end module pcy97

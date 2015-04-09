@@ -28,7 +28,7 @@ contains
             if (ierr == 0) return
         end if
         
-        ! if we don't have the table, or could not load it, then generatue a 
+        ! if we don't have the table, or could not load it, then generate a 
         ! new one and write to cache
         tab% nv = atm_default_number_table_points
         tab% lgTb_min = atm_default_lgTbmin
@@ -59,9 +59,16 @@ contains
         delta_lgTb = tab% lgTb_max - lgTbmin
         N = tab% nv
         allocate(Teff(N),flux(N),Tb(N))
-        
         Tb = [ (10.0**(lgTbmin + real(i-1,dp)*(delta_lgTb)/real(N-1,dp)),  &
         &   i = 1, N)]
+                
+        ! following is not OOP
+!         select case (prefix)
+!             case ('pcy97')
+!                 call do_get_pcy97_Teff(grav, Plight, Tb, Teff, flux)
+!             case ('bc09')
+!                 call do_get_bc09_Teff(grav, Plight, Tb, Teff, flux)
+!         end select
         call do_get_Teff(grav, Plight, Tb, Teff, flux)
         call do_allocate_atm_table(tab, N, ierr)
         Teff_val(1:4,1:N) => tab% lgTeff(1:4*N)
