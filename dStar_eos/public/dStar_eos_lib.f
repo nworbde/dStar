@@ -24,6 +24,11 @@ module dStar_eos_lib
 			return
 		end if
 	end subroutine dStar_eos_startup
+    
+    subroutine dStar_eos_shutdown()
+        use helm_alloc, only: free_helm_table
+        call free_helm_table(eos_ht)
+    end subroutine dStar_eos_shutdown
 
 	function alloc_dStar_eos_handle(ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit

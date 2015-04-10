@@ -24,6 +24,7 @@ module NScool_ctrls_io
         extra_logical_controls, & 
         fix_core_temperature, & 
         core_temperature, & 
+        make_inner_boundary_insulating, &
         fix_atmosphere_temperature_when_accreting, & 
         atmosphere_temperature_when_accreting, &
         Mdot, &
@@ -164,6 +165,7 @@ contains
 
        s% fix_core_temperature = fix_core_temperature
        s% core_temperature = core_temperature
+       s% make_inner_boundary_insulating = make_inner_boundary_insulating
        s% fix_atmosphere_temperature_when_accreting = fix_atmosphere_temperature_when_accreting
        s% atmosphere_temperature_when_accreting = atmosphere_temperature_when_accreting
        s% Mdot = Mdot

@@ -15,6 +15,17 @@ contains
     end subroutine do_NScool_init
 
     subroutine do_NScool_shutdown()
+        use dStar_atm_lib
+        use dStar_crust_lib
+        use dStar_eos_lib
+        use nucchem_lib
+        use superfluid_lib
+        
+        call dStar_atm_shutdown
+        call dStar_crust_shutdown
+        call dStar_eos_shutdown
+        call nucchem_shutdown
+        call sf_shutdown
     end subroutine do_NScool_shutdown
 
     function alloc_NScool_data(ierr)

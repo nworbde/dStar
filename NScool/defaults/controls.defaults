@@ -27,6 +27,8 @@
     ! macroscopic NS parameters
     fix_core_temperature = .TRUE.
     core_temperature = 1.0d8
+    make_inner_boundary_insulating = .FALSE.
+    
     fix_atmosphere_temperature_when_accreting = .TRUE.
     atmosphere_temperature_when_accreting = 1.0d8
     Mdot = 1.0d18 ! g/s
