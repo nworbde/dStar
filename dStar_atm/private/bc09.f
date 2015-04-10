@@ -62,16 +62,19 @@ contains
         rpar(itau) = tau
         ipar(ihandle) = eos_handle
 
-     	! parameters for rootfind
+     	! parameters for root find
         imax = 20
         epsx = 1.0d-8
         epsy = 1.0d-8
         
+        ! use initial guess with ideal gas pressure and thompson scattering
+        kap_th = 8.0_dp*onethird*pi*(electroncharge**2/Melectron/clight2)**2 * (0.5)/amu        
+        rhoph_guess = 2.0*onethird*gravity/kap_th/(boltzmann*Teff)*amu
         ! brackets for root find 
-        x1 = 1.0d3 	! lower bound [g/cm^3]
+        x1 = 1.0d2 	! lower bound [g/cm^3]
         x3 = 1.0d9 	! upper bound [g/cm^3]
-        y1 = photosphere(x1,dfdrho,lrpar,rpar,lipar,ipar,ierr)  ! y1=Pph(x1)
-        y1 = rpar(iPph) 
+        y1 = photosphere(x1,dfdrho,lrpar,rpar,lipar,ipar,ierr)	! y1=Pph(x1)
+        y1 = rpar(iPph)
         y3 = photosphere(x3,dfdrho,lrpar,rpar,lipar,ipar,ierr)	! y3=Pph(x3)
         y3 = rpar(iPph)
         if (ierr /= 0) then
