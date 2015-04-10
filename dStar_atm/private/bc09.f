@@ -35,6 +35,7 @@ contains
         use constants_def
         use nucchem_def, only : nuclide_not_found
     	use nucchem_lib, only : get_nuclide_index
+    	use num_lib
         
         real(dp), intent(in) :: Teff,grav,tau
         real(dp), intent(out) :: Pphoto
@@ -43,6 +44,8 @@ contains
         real(dp) :: root_ph,rho,dfdrho
         integer, pointer :: ipar(:) => null() ! (lipar)
         real(dp), pointer :: rpar(:) => null()  ! (lrpar)
+        real(dp) :: x1, x3, y1, y3, epsx, epsy, rhoph_guess
+        integer :: imax
         
         ierr = 0
         allocate(ipar(number_photosphere_ipar), rpar(number_photosphere_rpar))
@@ -59,7 +62,20 @@ contains
         rpar(itau) = tau
         ipar(ihandle) = eos_handle
 
-        root_ph = photosphere(rho,dfdrho,lrpar,rpar,lipar,ipar,ierr)        
+     	! set up rootfind
+        imax = 20
+        epsx = 1.0d-8
+        epsy = 1.0d-8
+        
+        rhoph_guess = 1.d03
+
+        !root_ph = photosphere(rho,dfdrho,lrpar,rpar,lipar,ipar,ierr)        
+		root_ph = safe_root_with_initial_guess(photosphere,rhoph_guess,x1,x3,y1,y3 &
+            &   imax,epsx,epsy,lrpar,rpar,lipar,ipar,ierr)
+            if (ierr /= 0) then
+                write(*,*) 'unable to converge', , x1, x3, y1, y3
+                cycle
+            end if
         Pphoto = rpar(iPph)
         
         deallocate(ipar, rpar)
