@@ -62,18 +62,27 @@ contains
         rpar(itau) = tau
         ipar(ihandle) = eos_handle
 
-     	! set up rootfind
+     	! parameters for rootfind
         imax = 20
         epsx = 1.0d-8
         epsy = 1.0d-8
         
-        rhoph_guess = 1.d03
+        ! brackets for root find 
+        x1 = 1.0d3 	! lower bound [g/cm^3]
+        x3 = 1.0d9 	! upper bound [g/cm^3]
+        y1 = photosphere(x1,dfdrho,lrpar,rpar,lipar,ipar,ierr)  ! y1=Pph(x1)
+        y1 = rpar(iPph) 
+        y3 = photosphere(x3,dfdrho,lrpar,rpar,lipar,ipar,ierr)	! y3=Pph(x3)
+        y3 = rpar(iPph)
+        if (ierr /= 0) then
+        	write(*,*) 'unable to create brackets for photosphere root find'
+        	return
+        end if
 
-        !root_ph = photosphere(rho,dfdrho,lrpar,rpar,lipar,ipar,ierr)        
 		root_ph = safe_root_with_initial_guess(photosphere,rhoph_guess,x1,x3,y1,y3 &
             &   imax,epsx,epsy,lrpar,rpar,lipar,ipar,ierr)
             if (ierr /= 0) then
-                write(*,*) 'unable to converge', , x1, x3, y1, y3
+                write(*,*) 'unable to converge', rhoph_guess, x1, x3, y1, y3
                 cycle
             end if
         Pphoto = rpar(iPph)
