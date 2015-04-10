@@ -13,6 +13,10 @@ module conductivity_def
     & [ .TRUE., .TRUE., .TRUE., .TRUE., .TRUE. ]
     logical, dimension(num_conductivity_channels), parameter :: cond_use_only_conduction = &
     & [ .TRUE., .TRUE., .TRUE., .TRUE., .FALSE. ]
+    logical, dimension(num_conductivity_channels), parameter :: cond_use_only_kap = &
+    & [ .FALSE., .FALSE., .FALSE., .FALSE., .TRUE. ]
+    logical, dimension(num_conductivity_channels), parameter :: cond_exclude_sf = &
+    & [ .TRUE., .TRUE., .TRUE., .FALSE., .TRUE. ]
 
     ! flag to control which ee scattering fmla. is used. 
     ! default: Shternin & Yakovlev (2006)
