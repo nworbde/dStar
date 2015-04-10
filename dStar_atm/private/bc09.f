@@ -37,6 +37,8 @@ contains
         end do
         
         ! interpolate from dense table to get finished product
+        
+        deallocate(tabTb9,tabTeff_4)
     end subroutine do_get_bc09_Teff
     
     subroutine find_photospheric_pressure(Teff,grav,tau,Pphoto,eos_handle,ierr)
