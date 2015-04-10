@@ -4,7 +4,7 @@ program test_ph
 	use dStar_atm_lib
 	use bc09
 	
-	real(dp) :: lgTb,g,Plight,lgTeff,dlgTeff,lgflux,dlgflux
+	real(dp) :: Tb,g,Plight,Teff,flux
 	integer :: ierr,i
     
     call constants_init('',ierr)
@@ -14,7 +14,7 @@ program test_ph
 	g = 2.43e14_dp
 	Plight = 1.0e6_dp
 	
-	call do_get_bc09_Teff(grav, Plight, Tb, Teff, flux)
+	call do_get_bc09_Teff(g, Plight, Tb, Teff, flux)
 	call check_okay('do_get_bc09_Teff',ierr)
 
 	call dStar_atm_shutdown

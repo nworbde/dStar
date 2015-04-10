@@ -33,7 +33,8 @@ contains
         do i = 1, size_tab
 		tabTeff_4(i) = 1.
 		! get Pph(Teff)
-		call find_photospheric_pressure(tabTeff_4(i),grav,tau,Pphoto,eos_handle,ierr)            
+		call find_photospheric_pressure(tabTeff_4(i),grav,tau,Pphoto,eos_handle,ierr) 
+		write(*,*) tabTeff_4(i), Pphoto           
         end do
         
         ! interpolate from dense table to get finished product
