@@ -12,7 +12,7 @@ module NScool_history
    character(len=*), parameter :: history_title_fmt = '(7a15)'
    character(len=*), parameter :: history_val_fmt = '('//intval//scival//',5'//fltval//')'
    character(len=header_col_width), dimension(num_header_cols) :: header_cols = [character(len=header_col_width) ::  &
-      & 'gravity', 'core mass', 'core radius', 'core temp.' ]
+      & 'gravity', 'core_mass', 'core_radius', 'core_temp.' ]
    character(len=history_col_width),dimension(num_history_cols) :: history_cols = [character(len=history_col_width) ::  &
       & 'model','time/s','lg(Mdot)','lg(Teff)','lg(Lsurf)','lg(Lnu)','lg(Lnuc)' ]
    
