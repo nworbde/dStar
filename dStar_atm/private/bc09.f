@@ -4,9 +4,12 @@ module bc09
     integer, parameter :: igrav = 1
     integer, parameter :: itau = 2
     integer, parameter :: iTeff = 3
-    integer, parameter :: number_photosphere_rpar = 3
+    integer, parameter :: iPph = 4
+    integer, parameter :: iKph = 5
+    integer, parameter :: number_photosphere_rpar = 5
     integer, parameter :: ihandle = 1
-    integer, parameter :: number_photosphere_ipar = 1
+    integer, parameter :: ichem_id = 2
+    integer, parameter :: number_photosphere_ipar = 2
 
 contains
     
@@ -30,17 +33,47 @@ contains
     
     subroutine find_photospheric_pressure(Teff,grav,tau,Pphoto,eos_handle,ierr)
         use constants_def
+        use nucchem_def, only : nuclide_not_found
+    	use nucchem_lib, only : get_nuclide_index
+        
         real(dp), intent(in) :: Teff,grav,tau
         real(dp), intent(out) :: Pphoto
         integer, intent(in) :: eos_handle
         integer, intent(out) :: ierr
+        real(dp) :: root_ph,rho,dfdrho
+        integer, pointer :: ipar(:) => null() ! (lipar)
+        real(dp), pointer :: rpar(:) => null()  ! (lrpar)
         
+        ierr = 0
+        allocate(ipar(number_photosphere_ipar), rpar(number_photosphere_rpar))
+
+        ! hardwire photosphere compostion to pure He
+        ipar(ichem_id) = get_nuclide_index('he4')
+        if (ipar(ichem_id) == nuclide_not_found) then
+            ierr = nuclide_not_found
+            return
+        end if
+                
+        rpar(igrav) = grav
+        rpar(iTeff) = Teff
+        rpar(itau) = tau
+        ipar(ihandle) = eos_handle
+
+        root_ph = photosphere(rho,dfdrho,lrpar,rpar,lipar,ipar,ierr)        
+        Pphoto = rpar(iPph)
+        
+        deallocate(ipar, rpar)
     end subroutine find_photospheric_pressure    
 
     real(dp) function photosphere(rho, dfdrho, lrpar, rpar, lipar, ipar, ierr)
        ! returns with ierr = 0 if was able to evaluate f and df/dx at x
        ! if df/dx not available, it is okay to set it to 0
-       use const_def, only: dp
+       use constants_def
+       use nucchem_def
+       use nucchem_lib
+       use dStar_eos_lib
+       use conductivity_lib
+       
        integer, intent(in) :: lrpar, lipar
        real(dp), intent(in) :: rho
        real(dp), intent(out) :: dfdrho
@@ -49,28 +82,43 @@ contains
        integer, intent(out) :: ierr
        real(dp) :: gravity, tau_ph, Teff, P, kappa
        integer :: eos_handle
-       type(composition_info_type) :: ion
+       type(composition_info_type) :: ionic
        type(conductivity_components) :: K
        real(dp), dimension(num_dStar_eos_results) :: res
        integer :: phase, ncharged
-       integer, dimension(:) :: charged_ids
-       
+       integer, dimension(1) :: charged_ids, chem_ids
+	   real(dp),dimension(1) :: Y,Yion
+	   
        ierr = 0
+       
+       ! check inputs
+       if (rho < 0.0) then
+           ierr = -9
+           return
+       end if
+       
        gravity = rpar(igrav)
        tau_ph = rpar(itau)
        Teff = rpar(iTeff)
        eos_handle = ipar(ihandle)
-       
-       call eval_crust_eos(eos_handle,rho,Teff,ionic,ncharged,charged_ids,Yion, &
+	   chem_ids = ipar(ichem_id)
+
+       ! single species only
+       Y(1) = 1.0/nuclib% A(chem_ids(1))
+
+       call compute_composition_moments(1,chem_ids,Y,ionic,Xsum,ncharged, charged_ids, Yion,  &
+   			& exclude_neutrons = .TRUE.)
+       call eval_crust_eos(eos_handle,rho,Teff,ion,ncharged,charged_ids,Yion, &
        		&   res,phase,use_default_nuclear_size)
        
        P = exp(res(i_lnP))
-
-       get_thermal_conductivity(rho,T,chi,Gamma,eta,ionic,K,which_components)
-       kappa = K(icond_kap)
+       rpar(iPph) = P
+       get_thermal_conductivity(rho,T,chi,Gamma,eta,ionic,K,cond_use_only_kap)
+       kappa = 4.0*onethird*arad*clight*T**3/rho/K(icond_kap)
+       rpar(iKph) = kappa
+	   dfdrho = 0.0
        
        return P - 2.0*onethird*gravity/kappa
-    end function f
-
+    end function photosphere
 
 end module bc09
