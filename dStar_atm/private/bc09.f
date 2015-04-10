@@ -23,10 +23,18 @@ contains
 		real(dp), dimension(size(Tb)) :: Tb9, Teff6_4
         
         ! make a very dense table of Tb(Teff); then interpolate to get Teff(Tb)
-        integer :: size_tab ! = 4.0*size(Tb)
+        integer, parameter ::  size_tab = 4*size(Tb)
         real(dp), dimension(:), allocatable :: tabTb9, tabTeff_4
         
+        allocate(tabTb9(size_tab),tabTeff_4(size_tab))
+        
         ! compute dense table
+        
+        do i = 1, size_tab
+		tabTeff_4(i) = 1.
+		! get Pph(Teff)
+		call find_photospheric_pressure(tabTeff_4(i),grav,tau,Pphoto,eos_handle,ierr)            
+        end do
         
         ! interpolate from dense table to get finished product
     end subroutine do_get_bc09_Teff
@@ -44,7 +52,8 @@ contains
         real(dp) :: root_ph,rho,dfdrho
         integer, pointer :: ipar(:) => null() ! (lipar)
         real(dp), pointer :: rpar(:) => null()  ! (lrpar)
-        real(dp) :: x1, x3, y1, y3, epsx, epsy, rhoph_guess
+        real(dp) :: rhoph_guess, kap_th
+        real(dp) :: x1, x3, y1, y3, epsx, epsy
         integer :: imax
         
         ierr = 0
@@ -67,7 +76,7 @@ contains
         epsx = 1.0d-8
         epsy = 1.0d-8
         
-        ! use initial guess with ideal gas pressure and thompson scattering
+        ! use initial guess with ideal gas pressure and thomson scattering
         kap_th = 8.0_dp*onethird*pi*(electroncharge**2/Melectron/clight2)**2 * (0.5)/amu        
         rhoph_guess = 2.0*onethird*gravity/kap_th/(boltzmann*Teff)*amu
         ! brackets for root find 
@@ -141,8 +150,8 @@ contains
        
        P = exp(res(i_lnP))
        rpar(iPph) = P
-       get_thermal_conductivity(rho,T,chi,Gamma,eta,ionic,K,cond_use_only_kap)
-       kappa = 4.0*onethird*arad*clight*T**3/rho/K(icond_kap)
+       get_thermal_conductivity(rho,Teff,chi,Gamma,eta,ionic,K,cond_use_only_kap)
+       kappa = 4.0*onethird*arad*clight*Teff**3/rho/K(icond_kap)
        rpar(iKph) = kappa
 	   dfdrho = 0.0
        
