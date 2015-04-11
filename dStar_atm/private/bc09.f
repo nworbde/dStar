@@ -43,6 +43,7 @@ contains
         real(dp) :: root_ph,rho,dfdrho
         integer, pointer :: ipar(:) => null() ! (lipar)
         real(dp), pointer :: rpar(:) => null()  ! (lrpar)
+        integer :: i
         
         ierr = 0
         allocate(ipar(number_photosphere_ipar), rpar(number_photosphere_rpar))
@@ -58,10 +59,15 @@ contains
         rpar(iTeff) = Teff
         rpar(itau) = tau
         ipar(ihandle) = eos_handle
-
-        root_ph = photosphere(rho,dfdrho,lrpar,rpar,lipar,ipar,ierr)        
-        Pphoto = rpar(iPph)
         
+        do i = 1, 20
+            rho = 10.0**(-1+2.0*(i-1)/19.0)
+            root_ph = photosphere(rho,dfdrho,number_photosphere_rpar,rpar, &
+                & number_photosphere_ipar,ipar,ierr)
+            print '(2(a,es11.4))','rho = ',rho,'P - 2g/3k = ',root_ph   
+            Pphoto = rpar(iPph)
+            print '(a,es11.4)','Pphoto = ',Pphoto
+        end do
         deallocate(ipar, rpar)
     end subroutine find_photospheric_pressure    
 
@@ -80,7 +86,7 @@ contains
        integer, intent(inout), pointer :: ipar(:) ! (lipar)
        real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
        integer, intent(out) :: ierr
-       real(dp) :: gravity, tau_ph, Teff, P, kappa
+       real(dp) :: gravity, tau_ph, Teff, P, kappa, Gamma, eta, Xsum, chi
        integer :: eos_handle
        type(composition_info_type) :: ionic
        type(conductivity_components) :: K
@@ -102,23 +108,26 @@ contains
        Teff = rpar(iTeff)
        eos_handle = ipar(ihandle)
 	   chem_ids = ipar(ichem_id)
-
+       chi = use_default_nuclear_size
        ! single species only
        Y(1) = 1.0/nuclib% A(chem_ids(1))
 
        call compute_composition_moments(1,chem_ids,Y,ionic,Xsum,ncharged, charged_ids, Yion,  &
    			& exclude_neutrons = .TRUE.)
-       call eval_crust_eos(eos_handle,rho,Teff,ion,ncharged,charged_ids,Yion, &
-       		&   res,phase,use_default_nuclear_size)
+       call eval_crust_eos(eos_handle,rho,Teff,ionic,ncharged,charged_ids,Yion, &
+       		&   res,phase,chi)
        
        P = exp(res(i_lnP))
        rpar(iPph) = P
-       get_thermal_conductivity(rho,T,chi,Gamma,eta,ionic,K,cond_use_only_kap)
-       kappa = 4.0*onethird*arad*clight*T**3/rho/K(icond_kap)
+       eta = res(i_Theta) !1.0/TpT
+       Gamma = res(i_Gamma)
+       call get_thermal_conductivity(rho,Teff,chi, &
+           & Gamma,eta,ionic,K,which_components=cond_use_only_kap)
+       kappa = 4.0*onethird*arad*clight*Teff**3/rho/K% kap
        rpar(iKph) = kappa
 	   dfdrho = 0.0
        
-       return P - 2.0*onethird*gravity/kappa
+       photosphere = P - 2.0*onethird*gravity/kappa
     end function photosphere
 
 end module bc09
