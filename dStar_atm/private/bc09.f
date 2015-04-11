@@ -10,6 +10,10 @@ module bc09
     integer, parameter :: ihandle = 1
     integer, parameter :: ichem_id = 2
     integer, parameter :: number_photosphere_ipar = 2
+    
+    ! error codes
+    integer, parameter :: negative_photosphere_gas_pressure = -2
+    integer, parameter :: negative_photosphere_density = -3
 
 contains
     
@@ -20,22 +24,34 @@ contains
 		real(dp), intent(in), dimension(:) :: Tb	! temperature at a base column
 		real(dp), intent(out), dimension(:) :: Teff, flux	! effective temperature and flux
 		real(dp) :: eta, g14
-		real(dp), dimension(size(Tb)) :: Tb9, Teff6_4
+        integer ::  size_tab ! = 4*size(Tb)
+        real(dp), dimension(:), allocatable :: tabTb9, tabTeff, tabTeff6_4
         
-        ! make a very dense table of Tb(Teff); then interpolate to get Teff(Tb)
-        integer :: size_tab ! = 4.0*size(Tb)
-        real(dp), dimension(:), allocatable :: tabTb9, tabTeff_4
-        
+        ! make a very dense table of Tb(Teff); then interpolate to get Teff(Tb)        
+        size_tab = 4*size(Tb)
+        allocate(tabTb9(size_tab),tabTeff(size_tab),tabTeff6_4(size_tab))
+!         tau = ?
+!         Teff = ?
         ! compute dense table
+        do i = 1, size_tab
+            ! get Pph(Teff)
+            call find_photospheric_pressure(Teff,grav,tau,Pphoto,eos_handle,ierr) 
+		write(*,*) tabTeff_4(i), Pphoto           
+        end do
         
         ! interpolate from dense table to get finished product
+        
+        deallocate(tabTb9,tabTeff6_4)
     end subroutine do_get_bc09_Teff
     
     subroutine find_photospheric_pressure(Teff,grav,tau,Pphoto,eos_handle,ierr)
         use constants_def
         use nucchem_def, only : nuclide_not_found
     	use nucchem_lib, only : get_nuclide_index
-        
+    	use num_lib
+        integer, parameter :: default_maximum_iterations_photosphere = 20
+        real(dp), parameter :: default_tolerance_photosphere_rho = 1.0e-8_dp
+        real(dp), parameter :: default_tolerance_photosphere_condition = 1.0e-8_dp
         real(dp), intent(in) :: Teff,grav,tau
         real(dp), intent(out) :: Pphoto
         integer, intent(in) :: eos_handle
@@ -44,6 +60,12 @@ contains
         integer, pointer :: ipar(:) => null() ! (lipar)
         real(dp), pointer :: rpar(:) => null()  ! (lrpar)
         integer :: i
+        real(dp), parameter :: sigma_Th = 8.0_dp*onethird*pi*(electroncharge**2/Melectron/clight2)**2
+        real(dp) :: fallback_Pphoto
+        real(dp) :: rho_guess, kappa_Th, A, Z, Pgas
+        real(dp) :: rho1, rho3, drho, y1, y3
+        real(dp) :: eps_rho, eps_ph
+        integer :: maximum_iterations
         
         ierr = 0
         allocate(ipar(number_photosphere_ipar), rpar(number_photosphere_rpar))
@@ -59,15 +81,43 @@ contains
         rpar(iTeff) = Teff
         rpar(itau) = tau
         ipar(ihandle) = eos_handle
+
+        ! use initial guess with ideal gas pressure and thomson scattering
+        A = nuclib% A(ipar(ichem_id))
+        Z = nuclib% Z(ipar(ichem_id))
+        kappa_Th = sigma_Th*nuclib% Z/A
+        Pgas = twothird*gravity/kappa_th - onethird*arad*Teff**4
+        if (Pgas < 0.0_dp) then
+            ierr = negative_photosphere_gas_pressure
+            Pphoto = fallback_Pphoto
+            return
+        end if
+        rhoph_guess = Pgas*amu*A/(Z+1.0)/(boltzmann*Teff)
+        fallback_Pphoto = 2.0_dp*onethird*arad*Teff**4   
+        ! get brackets for root find
+        drho = 0.1_dp
+        maximum_iterations = 10
+        call look_for_brackets(rho_guess, drho, rho1, rho3, photosphere, y1, y3, maximum_iterations,  &
+            & lrpar, rpar, lipar, ipar, ierr)
+        if (ierr /= 0) then
+            print *,'unable to bracket root: ierr = ', ierr
+            Pphoto = fallback_Pphoto
+            return
+        end if
         
-        do i = 1, 20
-            rho = 10.0**(-1+2.0*(i-1)/19.0)
-            root_ph = photosphere(rho,dfdrho,number_photosphere_rpar,rpar, &
-                & number_photosphere_ipar,ipar,ierr)
-            print '(2(a,es11.4))','rho = ',rho,'P - 2g/3k = ',root_ph   
-            Pphoto = rpar(iPph)
-            print '(a,es11.4)','Pphoto = ',Pphoto
-        end do
+     	! set iteration count, tolerances
+        maximum_iterations = default_maximum_iterations_photosphere
+        eps_rho = default_tolerance_photosphere_rho
+        eps_ph = default_tolerance_photosphere_condition
+
+		root_ph = safe_root_with_initial_guess(photosphere,rhoph_guess,rho1,rho3,y1,y3 &
+            &   maximum_iterations,eps_rho,eps_ph,lrpar,rpar,lipar,ipar,ierr)
+
+        if (ierr /= 0) then
+            write(*,*) 'unable to converge', rhoph_guess, rho1, rho3, y1, y3
+            return
+        end if
+        Pphoto = rpar(iPph)
         deallocate(ipar, rpar)
     end subroutine find_photospheric_pressure    
 
@@ -99,7 +149,7 @@ contains
        
        ! check inputs
        if (rho < 0.0) then
-           ierr = -9
+           ierr = negative_photosphere_density
            return
        end if
        
