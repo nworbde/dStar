@@ -46,7 +46,7 @@ contains
         deallocate(tabTb9,tabTeff6_4)
     end subroutine do_get_bc09_Teff
     
-    subroutine find_photospheric_pressure(Teff,grav,tau,rho_ph,P_ph,eos_handle,ierr)
+    subroutine find_photospheric_pressure(Teff,grav,tau,rho_ph,P_ph,kappa,eos_handle,ierr)
         use iso_fortran_env, only: error_unit
         use constants_def
         use nucchem_def, only : nuclide_not_found, nuclib
@@ -58,7 +58,7 @@ contains
         real(dp), intent(in) :: Teff,grav,tau
         real(dp), intent(inout) :: rho_ph   ! on input set <= 0 to have routine generate guess; on 
         !   output, it contains the value of the photospheric density
-        real(dp), intent(out) :: P_ph
+        real(dp), intent(out) :: P_ph,kappa
         integer, intent(in) :: eos_handle
         integer, intent(out) :: ierr
         real(dp) :: lnrho_ph,lnrho
@@ -105,6 +105,7 @@ contains
             if (Pgas < 0.0_dp) then
                 ierr = negative_photosphere_gas_pressure
                 P_ph = fallback_Pphoto
+                kappa = kappa_Th
                 return
             end if
             lnrho_guess = log(Pgas*amu*A/(Z+1.0)/(boltzmann*Teff))
@@ -120,6 +121,7 @@ contains
             write(error_unit,*) 'unable to bracket root: ierr = ', ierr
             P_ph = fallback_Pphoto
             rho_ph = exp(lnrho_guess)
+            kappa = rpar(iKph)
             return
         end if
         
@@ -130,10 +132,12 @@ contains
             write(error_unit,*) 'unable to converge on photospheric density: ',lnrho_guess,lnrho_ph
             P_ph = fallback_Pphoto
             rho_ph = exp(lnrho_guess)
+            kappa = rpar(iKph)
             return
         end if
         P_ph = rpar(iPph)
         rho_ph = exp(lnrho_ph)
+        kappa = rpar(iKph)
         deallocate(ipar, rpar)
     end subroutine find_photospheric_pressure    
 
@@ -183,7 +187,7 @@ contains
        eta = res(i_Theta) !1.0/TpT
        Gamma = res(i_Gamma)
        call get_thermal_conductivity(rho,Teff,chi, &
-           & Gamma,eta,ionic,K,which_components=cond_use_only_kap)
+           & Gamma,eta,ionic,K,which_components=cond_exclude_sf) !cond_use_only_kap)
        kappa = 4.0*onethird*arad*clight*Teff**3/rho/K% kap
        rpar(iKph) = kappa
 	   dfdlnrho = 0.0
