@@ -46,12 +46,13 @@ contains
 		real(dp), intent(out), dimension(:) :: Teff, flux	! effective temperature and flux
 		real(dp) :: eta, g14
         integer ::  size_tab ! = 4*size(Tb)
-        real(dp), dimension(:), allocatable :: tabTb9, tabTeff, tabTeff6_4
+        real(dp), dimension(:), allocatable :: tabTb9, tabTeff, tabTeff6_4, tabRhoph, tabPph
         integer :: i
         
         ! make a very dense table of Tb(Teff); then interpolate to get Teff(Tb)        
         size_tab = 4*size(Tb)
-        allocate(tabTb9(size_tab),tabTeff(size_tab),tabTeff6_4(size_tab))
+        allocate(tabTb9(size_tab),tabTeff(size_tab),tabTeff6_4(size_tab) &
+        	&	tabRhoph(size_tab), tabPph(size_tab))
 
     	!tau = ???
 		rho_ph = -1.0
@@ -66,7 +67,9 @@ contains
            		print *,'error: ierr = ',ierr
             	rho_ph = -1.0
             	cycle
-       		 end if
+       		end if
+		    tabRhoph(i) = rho_ph
+		    tabPph(i) = P_ph
     	end do        
                
         ! interpolate from dense table to get finished product
