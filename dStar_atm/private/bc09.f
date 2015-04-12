@@ -74,7 +74,7 @@ contains
                
         ! interpolate from dense table to get finished product
         
-        deallocate(tabTb9,tabTeff,tabTeff6_4)
+        deallocate(tabTb9,tabTeff,tabTeff6_4,tabRhoph,tabPph)
     end subroutine do_get_bc09_Teff
     
     subroutine find_photospheric_pressure(Teff,grav,tau,rho_ph,P_ph,kappa,eos_handle,ierr)
