@@ -57,8 +57,10 @@ contains
 		rho_ph = -1.0
         ! compute dense table; get Pph(Teff)
         do i = size_tab,1,-1
-       	 lnTeff = log10(5.0e5) + (i-1)/real(size_tab-1)
+       	 	lnTeff = log10(5.0e5) + (i-1)/real(size_tab-1)
         	Teff = 10.0_dp**lnTeff
+        	tabTeff(i) = Teff
+        	tabTeff6_4(i) = (Teff/1.0d6)**4.0
         	call find_photospheric_pressure(Teff,grav,tau,rho_ph,P_ph,kappa,eos_handle,ierr)
         	if (ierr /= 0) then
            		print *,'error: ierr = ',ierr
@@ -69,7 +71,7 @@ contains
                
         ! interpolate from dense table to get finished product
         
-        deallocate(tabTb9,tabTeff6_4)
+        deallocate(tabTb9,tabTeff,tabTeff6_4)
     end subroutine do_get_bc09_Teff
     
     subroutine find_photospheric_pressure(Teff,grav,tau,rho_ph,P_ph,kappa,eos_handle,ierr)
