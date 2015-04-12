@@ -52,15 +52,21 @@ contains
         ! make a very dense table of Tb(Teff); then interpolate to get Teff(Tb)        
         size_tab = 4*size(Tb)
         allocate(tabTb9(size_tab),tabTeff(size_tab),tabTeff6_4(size_tab))
-!         tau = ?
-!         Teff = ?
-        ! compute dense table
-        do i = 1, size_tab
-            ! get Pph(Teff)
-!            call find_photospheric_pressure(Teff,grav,tau,Pphoto,eos_handle,ierr) 
-!		write(*,*) tabTeff_4(i), Pphoto           
-        end do
-        
+
+    	!tau = ???
+		rho_ph = -1.0
+        ! compute dense table; get Pph(Teff)
+        do i = size_tab,1,-1
+       	 lnTeff = log10(5.0e5) + (i-1)/real(size_tab-1)
+        	Teff = 10.0_dp**lnTeff
+        	call find_photospheric_pressure(Teff,grav,tau,rho_ph,P_ph,kappa,eos_handle,ierr)
+        	if (ierr /= 0) then
+           		print *,'error: ierr = ',ierr
+            	rho_ph = -1.0
+            	cycle
+       		 end if
+    	end do        
+               
         ! interpolate from dense table to get finished product
         
         deallocate(tabTb9,tabTeff6_4)
