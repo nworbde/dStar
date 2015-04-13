@@ -37,22 +37,33 @@ module bc09
     integer, parameter :: negative_photosphere_density = -3
     integer, parameter :: bad_composition = -4
     
+    ! defaults for integration
+    real(dp), parameter :: default_lnTeff_min = 5.0
+    real(dp), parameter :: default_lnTeff_max = 6.7
+    
 contains
     
-	subroutine do_get_bc09_Teff(grav, Plight, Tb, Teff, flux)
+	subroutine do_get_bc09_Teff(grav, Plight, Tb, Teff, flux, ierr, lnTeff_min, lnTeff_max)
 		use constants_def
 		real(dp), intent(in) :: grav	! surface gravity, in the local frame
 		real(dp), intent(in) :: Plight	! pressure at which layer of light elements terminates
 		real(dp), intent(in), dimension(:) :: Tb	! temperature at a base column
 		real(dp), intent(out), dimension(:) :: Teff, flux	! effective temperature and flux
-		real(dp) :: eta, g14
+        integer, intent(out) :: ierr
+        real(dp), intent(in), optional :: lnTeff_min, lnTeff_max ! limits for boundaries of dense table
         integer ::  size_tab ! = 4*size(Tb)
         real(dp), dimension(:), allocatable :: tabTb9, tabTeff, tabTeff6_4
         integer :: i
         
-        ! make a very dense table of Tb(Teff); then interpolate to get Teff(Tb)        
+        ! make a very dense table of Tb(Teff); then interpolate to get Teff(Tb)
         size_tab = 4*size(Tb)
         allocate(tabTb9(size_tab),tabTeff(size_tab),tabTeff6_4(size_tab))
+
+        ! would make sense to check that runs with the minimum and maximum Teff on the dense table
+        ! actually encompass the desired range of Tb
+        if (.not.present(lnTeff_min)) lnTeff_min = default_lnTeff_min
+        if (.not.present(lnTeff_max)) lnTeff_max = default_lnTeff_max
+        
 !         tau = ?
 !         Teff = ?
         ! compute dense table
@@ -77,10 +88,14 @@ contains
         real(dp), parameter :: default_tolerance_photosphere_lnrho = 1.0e-6_dp
         real(dp), parameter :: default_tolerance_photosphere_condition = 1.0e-8_dp
         integer, parameter :: number_species = 2
-        real(dp), intent(in) :: Teff,grav,tau
+        real(dp), intent(in) :: Teff    ! K
+        real(dp), intent(in) :: grav    ! cm/s**2
+        real(dp), intent(in) :: tau     ! may need to adjust to something other than 2.0/3.0, 
+            ! especially at higher temperatures
         real(dp), intent(inout) :: rho_ph   ! on input set <= 0 to have routine generate guess; on 
         !   output, it contains the value of the photospheric density
-        real(dp), intent(out) :: P_ph,kappa
+        real(dp), intent(out) :: P_ph   ! photospheric pressure, cgs units
+        real(dp), intent(out) :: kappa  ! opacity at photosphere
         integer, intent(in) :: eos_handle
         integer, intent(out) :: ierr
         real(dp) :: lnrho_ph,lnrho
