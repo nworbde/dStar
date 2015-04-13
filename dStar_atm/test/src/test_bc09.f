@@ -18,9 +18,9 @@ program test_bc09
     tau = 2.0*onethird
     rho_ph = -1.0_dp
     
-    write (*,'(4a9)') 'T (MK)', 'rho','P/g','kappa'
-    do i = 20,1,-1
-        lnTeff = log10(5.0e5) + (i-1)/19.0
+    write (*,'(4a10)') 'T (MK)', 'rho','P/g','kappa'
+    do i = 30,1,-1
+        lnTeff = log10(1.0e5) + 1.7*(i-1)/29.0
         Teff = 10.0_dp**lnTeff
         call find_photospheric_pressure(Teff,grav,tau,rho_ph,P_ph,kappa,eos_handle,ierr)
         if (ierr /= 0) then
@@ -28,7 +28,7 @@ program test_bc09
             rho_ph = -1.0
             cycle
         end if
-        write (*,'(4f9.4)') Teff*1.0e-6,rho_ph,P_ph/grav,kappa
+        write (*,'(4f10.4)') Teff*1.0e-6,rho_ph,P_ph/grav,kappa
     end do
     
     call dStar_eos_shutdown
