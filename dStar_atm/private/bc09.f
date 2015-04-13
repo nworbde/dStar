@@ -18,8 +18,9 @@ module bc09
     integer, parameter :: igrav = number_comp_rpar + 1
     integer, parameter :: itau = igrav + 1
     integer, parameter :: iTeff = itau + 1
-    integer, parameter :: iPph = iTeff + 1
-    integer, parameter :: iKph = iPph + 1
+    integer, parameter :: itemp = iTeff + 1
+    integer, parameter :: ipres = itemp + 1
+    integer, parameter :: iKph = ipres + 1
     integer, parameter :: iChi_rho = iKph + 1
     integer, parameter :: iChi_T = iChi_rho + 1
     integer, parameter :: del_ad = iChi_T + 1
@@ -32,10 +33,10 @@ module bc09
     ! further storage can be tacked on at end of ipar for charged id's
     
     ! error codes
-
     integer, parameter :: negative_photosphere_gas_pressure = -2
     integer, parameter :: negative_photosphere_density = -3
     integer, parameter :: bad_composition = -4
+    
 contains
     
 	subroutine do_get_bc09_Teff(grav, Plight, Tb, Teff, flux)
@@ -188,7 +189,7 @@ contains
             kappa = rpar(iKph)
             return
         end if
-        P_ph = rpar(iPph)
+        P_ph = rpar(ipres)
         rho_ph = exp(lnrho_ph)
         kappa = rpar(iKph)
         deallocate(ipar, rpar)
@@ -248,16 +249,128 @@ contains
        		&   res,phase,chi)
        
        P = exp(res(i_lnP))
-       rpar(iPph) = P
+       rpar(ipres) = P
        eta = res(i_Theta) !1.0/TpT
        Gamma = res(i_Gamma)
        call get_thermal_conductivity(rho,Teff,chi, &
            & Gamma,eta,ionic,K,which_components=cond_exclude_sf) !cond_use_only_kap)
-       kappa = 4.0*onethird*arad*clight*Teff**3/rho/K% kap
+       kappa = 4.0*onethird*arad*clight*Teff**3/rho/K% total
        rpar(iKph) = kappa
 	   dfdlnrho = 0.0
        
        photosphere = P - 2.0*onethird*gravity/kappa
     end function photosphere
+    
+    subroutine deriv(n, lnP, h, lnT4, dlnT4dlnP, lrpar, rpar, lipar, ipar, ierr)
+       use constants_def
+       use nucchem_def
+       use nucchem_lib
+       use dStar_eos_lib
+       use conductivity_lib
+
+       integer, intent(in) :: n, lrpar, lipar
+       real(dp), intent(in) :: lnP, h
+       real(dp), intent(inout) :: lnT4(n)
+       real(dp), intent(out) :: dlnT4dlnP(n)
+       integer, intent(inout), pointer :: ipar(:) ! (lipar)
+       real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
+       integer, intent(out) :: ierr ! nonzero means retry with smaller timestep.
+
+       ierr = 0
+
+       ! unpack the arguments
+       P = exp(lnP)
+       T = rpar(iTeff)*exp(0.25*lnT4(1))
+
+       rpar(ipres) = P
+       rpar(itemp) = T
+
+       ionic = composition_info_type(A = rpar(icomp_A), &
+       &    Z = rpar(icomp_Z), &
+       &    Z53 = rpar(icomp_Z53), &
+       &    Z2 = rpar(icomp_Z2), &
+       &    Z73 = rpar(icomp_Z73), &
+       &    Z52 = rpar(icomp_Z52), &
+       &    ZZ1_32 = rpar(icomp_ZZ1_32), &
+       &    Z2XoA2 = rpar(icomp_Z2XoA2), &
+       &    Ye = rpar(icomp_Ye), &
+       &    Yn = rpar(icomp_Yn), &
+       &    Q = rpar(icomp_Q) )
+       eos_handle = ipar(ihandle)
+       ncharged = ipar(iNcharged)
+       charged_ids=>ipar(number_base_ipar+1:number_base_ipar+ncharged)
+       Yion=>rpar(number_base_rpar+1:number_base_rpar+ncharged)
+       chi = use_default_nuclear_size
+
+       call eval_crust_eos(eos_handle,rho,Teff,ionic,ncharged,charged_ids,Yion, &
+               &   res,phase,chi)
+
+       P = exp(lnP)
+       rpar(ipres) = P
+       rpar(itemp) = T
+
+       call get_rho_from_PT()
+       eta = res(i_Theta) !1.0/TpT
+       Gamma = res(i_Gamma)
+       call get_thermal_conductivity(rho,T,chi, &
+           & Gamma,eta,ionic,K,which_components=cond_exclude_sf) !cond_use_only_kap)
+       kappa = 4.0*onethird*arad*clight*T**3/rho/K% total
+       rpar(iKph) = kappa
+
+       dlnT4dlnP(1) = 0.75_dp*kappa*P/grav/exp(lnT4(1))
+    end subroutine deriv
+
+    real(dp) function eval_pressure(lnrho, chi_rho, lrpar, rpar, lipar, ipar, ierr)
+       ! returns with ierr = 0 if was able to evaluate lnP and dlnP/dlnrho at rho
+       use constants_def
+       use nucchem_def
+       use nucchem_lib
+       use dStar_eos_lib
+
+       integer, intent(in) :: lrpar, lipar
+       real(dp), intent(in) :: lnrho
+       real(dp), intent(out) :: chi_rho
+       integer, intent(inout), pointer :: ipar(:) ! (lipar)
+       real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
+       integer, intent(out) :: ierr
+       real(dp) :: rho, T, P, chi, Pwant
+       integer :: eos_handle, ncharged, phase
+       type(composition_info_type) :: ionic
+       real(dp), dimension(num_dStar_eos_results) :: res
+       integer, pointer, dimension(:) :: charged_ids=>null()
+       real(dp), pointer, dimension(:) :: Yion=>null()
+
+       ierr = 0
+
+       ! unpack the arguments
+       rho = exp(lnrho)
+       ionic = composition_info_type(A = rpar(icomp_A), &
+       &    Z = rpar(icomp_Z), &
+       &    Z53 = rpar(icomp_Z53), &
+       &    Z2 = rpar(icomp_Z2), &
+       &    Z73 = rpar(icomp_Z73), &
+       &    Z52 = rpar(icomp_Z52), &
+       &    ZZ1_32 = rpar(icomp_ZZ1_32), &
+       &    Z2XoA2 = rpar(icomp_Z2XoA2), &
+       &    Ye = rpar(icomp_Ye), &
+       &    Yn = rpar(icomp_Yn), &
+       &    Q = rpar(icomp_Q) )
+       T = rpar(itemp)
+       Pwant = rpar(ipres)
+
+       eos_handle = ipar(ihandle)
+       ncharged = ipar(iNcharged)
+       charged_ids=>ipar(number_base_ipar+1:number_base_ipar+ncharged)
+       Yion=>rpar(number_base_rpar+1:number_base_rpar+ncharged)
+       chi = use_default_nuclear_size
+
+       call eval_crust_eos(eos_handle,rho,T,ionic,ncharged,charged_ids,Yion, &
+               &   res,phase,chi)
+
+       P = exp(res(i_lnP))
+       chi_rho = res(i_chiRho)
+
+       eval_pressure = P - Pwant
+    end function eval_pressure
 
 end module bc09
