@@ -1,4 +1,5 @@
 module bc09
+    use constants_def, only: dp
     
     ! data structure for the parameter arrays
     ! moments of the composition
@@ -20,7 +21,8 @@ module bc09
     integer, parameter :: iTeff = itau + 1
     integer, parameter :: itemp = iTeff + 1
     integer, parameter :: ipres = itemp + 1
-    integer, parameter :: iKph = ipres + 1
+    integer, parameter :: irho = ipres + 1
+    integer, parameter :: iKph = irho + 1
     integer, parameter :: iChi_rho = iKph + 1
     integer, parameter :: iChi_T = iChi_rho + 1
     integer, parameter :: del_ad = iChi_T + 1
@@ -121,25 +123,23 @@ contains
         ierr = 0
         
         ! composition is a He/Fe mix
-        ! set size of data structure for rpar, ipar
-        
-        lrpar = number_base_rpar + number_species
-        lipar = number_base_ipar + number_species
-        allocate(ipar(lipar), rpar(lrpar))
-
         chem_ids = [ get_nuclide_index('he4'), get_nuclide_index('fe56') ]
         if (any(chem_ids == nuclide_not_found)) then    ! this is a fatal error
             ierr = nuclide_not_found
             return
         endif
-        
-        ! set photosphere to be pure He
-        Y = [1.0_dp, 0.0_dp]
-        Y = Y/nuclib% A(chem_ids)
 
+        ! set size of data structure        
+        lrpar = number_base_rpar + number_species
+        lipar = number_base_ipar + number_species
+        allocate(ipar(lipar), rpar(lrpar))
+
+        ! set photosphere to be pure He and compute moments
+        Y = [1.0_dp, 0.0_dp]/nuclib% A(chem_ids)
         call compute_composition_moments(number_species,chem_ids,Y,ionic,Xsum, &
         &   ncharged, charged_ids, Yion, exclude_neutrons = .TRUE.)
 
+        ! sanity check on composition
         if (Xsum - 1.0_dp > 2.0*epsilon(1.0_dp)) then
             ierr = bad_composition
             return
@@ -170,7 +170,7 @@ contains
         maximum_iterations = default_maximum_iterations_photosphere
         eps_lnrho = default_tolerance_photosphere_lnrho
         eps_ph = default_tolerance_photosphere_condition
-        fallback_Pphoto = 2.0_dp*onethird*arad*Teff**4   
+        fallback_Pphoto = 2.0_dp*onethird*arad*Teff**4
 
         ! scale tolerance to a thomson scaterring atmosphere
         sigma_Th = 8.0_dp*onethird*pi*(electroncharge**2/Melectron/clight2)**2
@@ -326,6 +326,8 @@ contains
        Yion=>rpar(number_base_rpar+1:number_base_rpar+ncharged)
        chi = use_default_nuclear_size
 
+       call get_rho_from_PT()
+       rpar(irho) = exp(lnrho)
        call eval_crust_eos(eos_handle,rho,Teff,ionic,ncharged,charged_ids,Yion, &
                &   res,phase,chi)
 
@@ -333,7 +335,6 @@ contains
        rpar(ipres) = P
        rpar(itemp) = T
 
-       call get_rho_from_PT()
        eta = res(i_Theta) !1.0/TpT
        Gamma = res(i_Gamma)
        call get_thermal_conductivity(rho,T,chi, &
@@ -342,6 +343,16 @@ contains
        rpar(iKph) = kappa
 
        dlnT4dlnP(1) = 0.75_dp*kappa*P/grav/exp(lnT4(1))
+       
+    contains
+        subroutine get_rho_from_PT(ierr)
+            use num_lib, only: safe_root_without_brackets
+            integer, intent(out) :: ierr
+            lnrho = safe_root_without_brackets(eval_pressure,rho_guess,dlnrho,max_newt, &
+            &   imax, epsx,epsy,lrpar,rpar,lipar,ipar,ierr)
+            
+        end subroutine get_rho_from_PT
+
     end subroutine deriv
 
     real(dp) function eval_pressure(lnrho, chi_rho, lrpar, rpar, lipar, ipar, ierr)
