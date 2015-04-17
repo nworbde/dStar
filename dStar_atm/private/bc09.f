@@ -43,16 +43,17 @@ module bc09
     
 contains
     
-	subroutine do_get_bc09_Teff(grav, Plight, Tb, Teff, flux, ierr, lnTeff_min, lnTeff_max)
+	subroutine do_get_bc09_Teff(grav, Plight, Tb, Teff, flux, ierr, Teff_min, Teff_max)
 		use constants_def
 		real(dp), intent(in) :: grav	! surface gravity, in the local frame
 		real(dp), intent(in) :: Plight	! pressure at which layer of light elements terminates
 		real(dp), intent(in), dimension(:) :: Tb	! temperature at a base column
 		real(dp), intent(out), dimension(:) :: Teff, flux	! effective temperature and flux
         integer, intent(out) :: ierr
-        real(dp), intent(in), optional :: lnTeff_min, lnTeff_max ! limits for boundaries of dense table
+        real(dp), intent(in), optional :: Teff_min, Teff_max ! limits for boundaries of dense table
         integer ::  size_tab ! = 4*size(Tb)
         real(dp), dimension(:), allocatable :: tabTb9, tabTeff, tabTeff6_4
+        real(dp) :: lnTeff_min, lnTeff_max
         integer :: i
         
         ! make a very dense table of Tb(Teff); then interpolate to get Teff(Tb)
@@ -61,8 +62,16 @@ contains
 
         ! would make sense to check that runs with the minimum and maximum Teff on the dense table
         ! actually encompass the desired range of Tb
-        if (.not.present(lnTeff_min)) lnTeff_min = default_lnTeff_min
-        if (.not.present(lnTeff_max)) lnTeff_max = default_lnTeff_max
+        if (present(Teff_min)) then
+            lnTeff_min = log(Teff_min)
+        else
+            lnTeff_min = default_lnTeff_min
+        end if
+        if (present(Teff_max)) then
+            lnTeff_max = log(Teff_max)
+        else
+            lnTeff_max = default_lnTeff_max
+        end if
         
 !         tau = ?
 !         Teff = ?
