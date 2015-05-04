@@ -152,7 +152,7 @@ contains
            use NScool_profile, only : do_write_profile
            integer, intent(in) :: nr, n, lrpar, lipar
            real(dp), intent(in) :: xold, x
-           real(dp), intent(inout) :: y(n)
+           real(dp), intent(inout) :: y(:)
            ! y can be modified if necessary to keep it in valid range of possible solutions.
            real(dp), intent(inout), target :: rwork_y(*)
            integer, intent(inout), target :: iwork_y(*)
@@ -246,8 +246,8 @@ contains
         use const_def, only: dp
         integer, intent(in) :: n, lrpar, lipar
         real(dp), intent(in) :: x, h
-        real(dp), intent(inout) :: y(n) ! okay to edit y if necessary (e.g., replace negative values by zeros)
-        real(dp), intent(out) :: f(n) ! dy/dx
+        real(dp), intent(inout) :: y(:) ! okay to edit y if necessary (e.g., replace negative values by zeros)
+        real(dp), intent(out) :: f(:) ! dy/dx
         integer, intent(inout), pointer :: ipar(:) ! (lipar)
         real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
         integer, intent(out) :: ierr ! nonzero means retry with smaller timestep.
@@ -288,9 +288,9 @@ contains
         use const_def, only: dp
         integer, intent(in) :: n, ldfy, lrpar, lipar
         real(dp), intent(in) :: x, h
-        real(dp), intent(inout) :: y(n)
-        real(dp), intent(out) :: f(n) ! dy/dx
-        real(dp), intent(out) :: dfdy(ldfy, n)
+        real(dp), intent(inout) :: y(:)
+        real(dp), intent(out) :: f(:) ! dy/dx
+        real(dp), intent(out) :: dfdy(:,:) !dfdy(ldfy, n)
         ! dense: dfdy(i, j) = partial f(i) / partial y(j)
         ! banded: dfdy(i-j+mujac+1, j) = partial f(i) / partial y(j)
            ! uses rows 1 to mljac+mujac+1 of dfdy.

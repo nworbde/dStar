@@ -187,8 +187,8 @@ contains
 
     	integer, intent(in) :: n, lrpar, lipar
     	real(dp), intent(in) :: lnP, h
-    	real(dp), intent(inout) :: y(n)
-    	real(dp), intent(out) :: dy(n)
+    	real(dp), intent(inout) :: y(:)
+    	real(dp), intent(out) :: dy(:)
     	real(dp), intent(inout), pointer :: rpar(:)
     	integer, intent(inout), pointer :: ipar(:)
     	integer, intent(out) :: ierr
@@ -237,7 +237,7 @@ contains
         
     	integer, intent(in) :: nr, n, lrpar, lipar
     	real(dp), intent(in) :: xold, x
-    	real(dp), intent(inout) :: y(n)
+    	real(dp), intent(inout) :: y(:)
         real(dp), intent(inout), target :: rwork_y(*)
         integer, intent(inout), target :: iwork_y(*)
         integer, intent(inout), pointer :: ipar(:) ! (lipar)
