@@ -18,7 +18,7 @@ contains
 
         nuclib_filename = trim(datadir)//'/nucchem/'//nuclib_db
         nuclib_cache = trim(datadir)//'/nucchem/cache/'//nuclib_db//'.bin'
-        
+		
         ierr = 0
         write(error_unit,'(a)')  &
         & 'loading nuclib from '//trim(datadir)//'/nucchem'

@@ -23,9 +23,10 @@ function do_one {
 
 echo
 
-# make the lib and include directories
+# make the lib, include, and data directories
 mkdir -p lib
 mkdir -p include
+mkdir -p data
 
 # now build the modules
 do_one constants

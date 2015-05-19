@@ -12,7 +12,7 @@ module NScool_history
    character(len=*), parameter :: history_title_fmt = '(7a15)'
    character(len=*), parameter :: history_val_fmt = '('//intval//scival//',5'//fltval//')'
    character(len=header_col_width), dimension(num_header_cols) :: header_cols = [character(len=header_col_width) ::  &
-      & 'gravity', 'core mass', 'core radius', 'core temp.' ]
+      & 'gravity', 'core_mass', 'core_radius', 'core_temp.' ]
    character(len=history_col_width),dimension(num_history_cols) :: history_cols = [character(len=history_col_width) ::  &
       & 'model','time/s','lg(Mdot)','lg(Teff)','lg(Lsurf)','lg(Lnu)','lg(Lnuc)' ]
    
@@ -48,13 +48,11 @@ module NScool_history
          write (iounit,'(a,"/",2a,/)') trim(history_date),trim(history_time),trim(history_zone)
          write (iounit,header_count_fmt) (ih, ih=1,num_header_cols)
          write (iounit,header_title_fmt) adjustr(header_cols)
-         write (iounit,*)
          write (iounit,header_val_fmt) s% grav, s% Mcore, s% Rcore, s% Tcore
          write (iounit,*)
          write (iounit,*)
          write(iounit,history_count_fmt) (ih, ih=1,num_history_cols)
          write(iounit,history_title_fmt) adjustr(history_cols)
-         write (iounit,*)
          close(iounit)
          call free_iounit(iounit)
          history_first_call = .FALSE.
