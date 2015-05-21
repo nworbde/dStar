@@ -25,8 +25,8 @@ module bc09
     integer, parameter :: iKph = irho + 1
     integer, parameter :: iChi_rho = iKph + 1
     integer, parameter :: iChi_T = iChi_rho + 1
-    integer, parameter :: del_ad = iChi_T + 1
-    integer, parameter :: number_base_rpar = del_ad
+    integer, parameter :: idel_ad = iChi_T + 1
+    integer, parameter :: number_base_rpar = idel_ad
     ! further storage can be tacked on at end of rpar for Yion's
     
     integer, parameter :: ihandle = 1
@@ -89,51 +89,50 @@ contains
         deallocate(tabTb9,tabTeff6_4)
     end subroutine do_get_bc09_Teff
     
-    subroutine find_photospheric_pressure(Teff,grav,tau,rho_ph,P_ph,kappa,eos_handle,ierr)
+    subroutine do_integrate_bc09_atm(grav,lgyb,lgy_light,lgTeff,lgTb,eos_handle,ierr,rho,P,kappa)
         use iso_fortran_env, only: error_unit
         use constants_def
         use nucchem_def
-    	use nucchem_lib
-    	use num_lib
-        integer, parameter :: default_maximum_iterations_photosphere = 20
-        real(dp), parameter :: default_tolerance_photosphere_lnrho = 1.0e-6_dp
-        real(dp), parameter :: default_tolerance_photosphere_condition = 1.0e-8_dp
-        integer, parameter :: number_species = 2
-        real(dp), intent(in) :: Teff    ! K
+        use nucchem_lib
         real(dp), intent(in) :: grav    ! cm/s**2
-        real(dp), intent(in) :: tau     ! may need to adjust to something other than 2.0/3.0, 
-            ! especially at higher temperatures
-        real(dp), intent(inout) :: rho_ph   ! on input set <= 0 to have routine generate guess; on 
-        !   output, it contains the value of the photospheric density
-        real(dp), intent(out) :: P_ph   ! photospheric pressure, cgs units
-        real(dp), intent(out) :: kappa  ! opacity at photosphere
+        real(dp), intent(in) :: lgyb    ! log_10(g/cm**2); base of atmosphere
+        real(dp), intent(in) :: lgy_light   ! log_10(g/cm**2); light/heavy transition
+        real(dp), intent(in) :: lgTeff  ! log_10(K)
+        real(dp), intent(out) :: lgTb   ! log_10(K)
         integer, intent(in) :: eos_handle
         integer, intent(out) :: ierr
-        real(dp) :: lnrho_ph,lnrho
-        integer, pointer :: ipar(:) => null() ! (lipar)
-        real(dp), pointer :: rpar(:) => null()  ! (lrpar)
+        real(dp), intent(inout) :: rho  ! set < 0 to compute a guess
+        real(dp), intent(out) :: P, kappa ! for testing
+        ! composition
+        integer, parameter :: number_species = 2
         integer, dimension(number_species) :: charged_ids, chem_ids
         real(dp), dimension(number_species) :: Y, Yion
-        integer :: i, lrpar, lipar, maximum_iterations, ncharged
-        real(dp) :: sigma_Th, Xsum
-        real(dp) :: lnrho_guess, kappa_Th, Pgas, fallback_Pphoto
-        real(dp) :: lnrho1, lnrho3, dlnrho, ph1, ph3, eps_lnrho, eps_ph
+        real(dp) :: Xsum
+        integer :: ncharged
+        ! data arrays
+        integer :: lrpar, lipar
+        integer, pointer :: ipar(:) => null() ! (lipar)
+        real(dp), pointer :: rpar(:) => null()  ! (lrpar)
+        real(dp) :: Teff, tau!, rho, P, kappa
         type(composition_info_type) :: ionic
+        real(dp) :: lnP, lnT4(1), dlnT4dlnP(1), h
         
         ierr = 0
-        
         ! composition is a He/Fe mix
         chem_ids = [ get_nuclide_index('he4'), get_nuclide_index('fe56') ]
         if (any(chem_ids == nuclide_not_found)) then    ! this is a fatal error
             ierr = nuclide_not_found
             return
         endif
-
+        
         ! set size of data structure        
         lrpar = number_base_rpar + number_species
         lipar = number_base_ipar + number_species
         allocate(ipar(lipar), rpar(lrpar))
-
+        
+        Teff = 10.0**lgTeff
+        tau = twothird
+        
         ! set photosphere to be pure He and compute moments
         Y = [1.0_dp, 0.0_dp]/nuclib% A(chem_ids)
         call compute_composition_moments(number_species,chem_ids,Y,ionic,Xsum, &
@@ -166,6 +165,52 @@ contains
         ipar(iNcharged) = ncharged
         ipar(number_base_ipar+1:number_base_ipar+ncharged) = charged_ids
 
+        print *,'finding photosphere, rho guess = ',rho
+        call find_photospheric_pressure(Teff,grav,tau,rho,P,kappa, &
+            &   lrpar, rpar, lipar, ipar, ierr)
+        print *,'rho, P, K = ',rho,P,kappa
+        if (ierr /= 0) return
+        ! start the integration
+        rpar(irho) = rho
+        lnP = log(P)
+        lnT4(1) = 0.0
+        h = 0.1_dp
+        call deriv(1, lnP, h, lnT4, dlnT4dlnP, lrpar, rpar, lipar, ipar, ierr)
+        print *,'dlnT4/dlnP = ',dlnT4dlnP(1)
+        deallocate(ipar, rpar)
+        
+    end subroutine do_integrate_bc09_atm
+      
+    subroutine find_photospheric_pressure(Teff,grav,tau,rho_ph,P_ph,kappa, &
+        &   lrpar,rpar,lipar,ipar,ierr)
+        use iso_fortran_env, only: error_unit
+        use constants_def
+        use nucchem_def
+    	use nucchem_lib
+    	use num_lib
+        integer, parameter :: default_maximum_iterations_photosphere = 20
+        real(dp), parameter :: default_tolerance_photosphere_lnrho = 1.0e-6_dp
+        real(dp), parameter :: default_tolerance_photosphere_condition = 1.0e-8_dp
+        real(dp), intent(in) :: Teff    ! K
+        real(dp), intent(in) :: grav    ! cm/s**2
+        real(dp), intent(in) :: tau     ! may need to adjust to something other than 2.0/3.0, 
+            ! especially at higher temperatures
+        real(dp), intent(inout) :: rho_ph   ! on input set <= 0 to have routine generate guess; on 
+        !   output, it contains the value of the photospheric density
+        real(dp), intent(out) :: P_ph   ! photospheric pressure, cgs units
+        real(dp), intent(out) :: kappa  ! opacity at photosphere
+        integer, intent(in) :: lrpar, lipar
+        integer, intent(inout), pointer :: ipar(:) ! (lipar)
+        real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
+        integer, intent(out) :: ierr
+        real(dp) :: lnrho_ph,lnrho
+        integer :: i, maximum_iterations
+        real(dp) :: sigma_Th
+        real(dp) :: lnrho_guess, kappa_Th, Pgas, fallback_Pphoto
+        real(dp) :: lnrho1, lnrho3, dlnrho, ph1, ph3, eps_lnrho, eps_ph
+        
+        ierr = 0
+
      	! set iteration count, tolerances
         maximum_iterations = default_maximum_iterations_photosphere
         eps_lnrho = default_tolerance_photosphere_lnrho
@@ -174,7 +219,7 @@ contains
 
         ! scale tolerance to a thomson scaterring atmosphere
         sigma_Th = 8.0_dp*onethird*pi*(electroncharge**2/Melectron/clight2)**2
-        kappa_Th = sigma_Th*avogadro*ionic% Ye
+        kappa_Th = sigma_Th*avogadro*rpar(icomp_Ye)
         eps_ph = default_tolerance_photosphere_condition*tau*grav/kappa_Th
         
         ! use initial guess with ideal gas pressure and thomson scattering
@@ -186,11 +231,11 @@ contains
                 kappa = kappa_Th
                 return
             end if
-            lnrho_guess = log(Pgas*amu*ionic% A/(ionic% Z+1.0)/boltzmann/Teff)
+            lnrho_guess = log(Pgas*amu*rpar(icomp_A)/(rpar(icomp_Z)+1.0)/boltzmann/Teff)
         else
             lnrho_guess = log(rho_ph)
         end if
-
+        
         ! get brackets for root find
         dlnrho = 0.1_dp
         call look_for_brackets(lnrho_guess, dlnrho, lnrho1, lnrho3, photosphere, ph1, ph3, &
@@ -202,7 +247,7 @@ contains
             kappa = rpar(iKph)
             return
         end if
-        
+
 		lnrho_ph = safe_root_with_initial_guess(photosphere,lnrho_guess,lnrho1,lnrho3,ph1,ph3, &
             &   maximum_iterations,eps_lnrho,eps_ph,lrpar,rpar,lipar,ipar,ierr)
 
@@ -216,7 +261,6 @@ contains
         P_ph = rpar(ipres)
         rho_ph = exp(lnrho_ph)
         kappa = rpar(iKph)
-        deallocate(ipar, rpar)
     end subroutine find_photospheric_pressure    
 
     real(dp) function photosphere(lnrho, dfdlnrho, lrpar, rpar, lipar, ipar, ierr)
@@ -282,7 +326,7 @@ contains
        rpar(iKph) = kappa
 	   dfdlnrho = 0.0
        
-       photosphere = P - 2.0*onethird*gravity/kappa
+       photosphere = P - tau_ph*gravity/kappa
     end function photosphere
     
     subroutine deriv(n, lnP, h, lnT4, dlnT4dlnP, lrpar, rpar, lipar, ipar, ierr)
@@ -338,8 +382,13 @@ contains
        chi = use_default_nuclear_size
 
        ! find the density
+       print *,'derivs; looking for rho with guess',rpar(irho)
        lnrho_guess = log(rpar(irho))
        call get_rho_from_PT(ierr)
+       if (ierr /= 0) then
+           print *,'error in getting rho'
+           return
+       end if
        rho = exp(lnrho)
        rpar(irho) = rho
 
@@ -374,7 +423,7 @@ contains
 
     end subroutine deriv
 
-    real(dp) function eval_pressure(lnrho, chi_rho, lrpar, rpar, lipar, ipar, ierr)
+    real(dp) function eval_pressure(lnrho, dPdlnrho, lrpar, rpar, lipar, ipar, ierr)
        ! returns with ierr = 0 if was able to evaluate lnP and dlnP/dlnrho at rho
        use constants_def
        use nucchem_def
@@ -383,7 +432,7 @@ contains
 
        integer, intent(in) :: lrpar, lipar
        real(dp), intent(in) :: lnrho
-       real(dp), intent(out) :: chi_rho
+       real(dp), intent(out) :: dPdlnrho
        integer, intent(inout), pointer :: ipar(:) ! (lipar)
        real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
        integer, intent(out) :: ierr
@@ -422,7 +471,7 @@ contains
                &   res,phase,chi)
 
        P = exp(res(i_lnP))
-       chi_rho = res(i_chiRho)
+       dPdlnrho = P*res(i_chiRho)
 
        eval_pressure = P - Pwant
     end function eval_pressure
