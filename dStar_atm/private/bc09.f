@@ -294,21 +294,32 @@ contains
 
        integer, intent(in) :: n, lrpar, lipar
        real(dp), intent(in) :: lnP, h
-       real(dp), intent(inout) :: lnT4(n)
-       real(dp), intent(out) :: dlnT4dlnP(n)
+       real(dp), intent(inout) :: lnT4(:)
+       real(dp), intent(out) :: dlnT4dlnP(:)
        integer, intent(inout), pointer :: ipar(:) ! (lipar)
        real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
        integer, intent(out) :: ierr ! nonzero means retry with smaller timestep.
-
+       real(dp) :: lnrho_guess, Teff, P, T, lnrho, rho, chi, eta, Gamma, kappa, grav
+       integer :: eos_handle, ncharged, phase
+       real(dp), dimension(num_dStar_eos_results) :: res
+       integer, dimension(:), pointer :: charged_ids=>null()
+       real(dp), dimension(:), pointer :: Yion=>null()
+       type(composition_info_type) :: ionic
+       type(conductivity_components) :: K
+       
        ierr = 0
 
        ! unpack the arguments
+       Teff = rpar(iTeff)
        P = exp(lnP)
        T = rpar(iTeff)*exp(0.25*lnT4(1))
-
+       grav = rpar(igrav)
+       
+       ! store local values
        rpar(ipres) = P
        rpar(itemp) = T
 
+       ! set the composition information from rpar
        ionic = composition_info_type(A = rpar(icomp_A), &
        &    Z = rpar(icomp_Z), &
        &    Z53 = rpar(icomp_Z53), &
@@ -326,15 +337,15 @@ contains
        Yion=>rpar(number_base_rpar+1:number_base_rpar+ncharged)
        chi = use_default_nuclear_size
 
-       call get_rho_from_PT()
-       rpar(irho) = exp(lnrho)
+       ! find the density
+       lnrho_guess = log(rpar(irho))
+       call get_rho_from_PT(ierr)
+       rho = exp(lnrho)
+       rpar(irho) = rho
+
        call eval_crust_eos(eos_handle,rho,Teff,ionic,ncharged,charged_ids,Yion, &
                &   res,phase,chi)
-
-       P = exp(lnP)
-       rpar(ipres) = P
-       rpar(itemp) = T
-
+    
        eta = res(i_Theta) !1.0/TpT
        Gamma = res(i_Gamma)
        call get_thermal_conductivity(rho,T,chi, &
@@ -343,14 +354,22 @@ contains
        rpar(iKph) = kappa
 
        dlnT4dlnP(1) = 0.75_dp*kappa*P/grav/exp(lnT4(1))
-       
+
     contains
         subroutine get_rho_from_PT(ierr)
             use num_lib, only: safe_root_without_brackets
             integer, intent(out) :: ierr
-            lnrho = safe_root_without_brackets(eval_pressure,rho_guess,dlnrho,max_newt, &
-            &   imax, epsx,epsy,lrpar,rpar,lipar,ipar,ierr)
+            real(dp) :: dlnrho  ! increment for searching for brackets
+            real(dp) :: epsx, epsy
+            integer :: imax, max_newt
             
+            ierr = 0
+            max_newt = 20
+            imax = 60
+            epsx = 1.0e-6_dp
+            epsy = 1.0e-6_dp
+            lnrho = safe_root_without_brackets(eval_pressure,lnrho_guess,dlnrho,max_newt, &
+            &   imax, epsx,epsy,lrpar,rpar,lipar,ipar,ierr)
         end subroutine get_rho_from_PT
 
     end subroutine deriv
