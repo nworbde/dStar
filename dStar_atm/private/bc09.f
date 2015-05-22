@@ -89,11 +89,14 @@ contains
         deallocate(tabTb9,tabTeff6_4)
     end subroutine do_get_bc09_Teff
     
-    subroutine do_integrate_bc09_atm(grav,lgyb,lgy_light,lgTeff,lgTb,eos_handle,ierr,rho,P,kappa)
+    subroutine do_integrate_bc09_atm( &
+    &   grav,lgyb,lgy_light,lgTeff,lgTb,eos_handle,ierr,rho,P,kappa)
         use iso_fortran_env, only: error_unit
         use constants_def
         use nucchem_def
         use nucchem_lib
+        use num_lib
+        
         real(dp), intent(in) :: grav    ! cm/s**2
         real(dp), intent(in) :: lgyb    ! log_10(g/cm**2); base of atmosphere
         real(dp), intent(in) :: lgy_light   ! log_10(g/cm**2); light/heavy transition
@@ -115,7 +118,12 @@ contains
         real(dp), pointer :: rpar(:) => null()  ! (lrpar)
         real(dp) :: Teff, tau!, rho, P, kappa
         type(composition_info_type) :: ionic
-        real(dp) :: lnP, lnT4(1), dlnT4dlnP(1), h
+        ! integration
+        real(dp) :: lnP, lnPend, h, max_step_size, atol(1), rtol(1)
+        integer :: iout, itol, lwork, liwork, lout, idid, max_steps
+        real(dp), pointer, dimension(:) :: lnT4=>null()
+        integer, pointer, dimension(:) :: iwork=>null()
+        real(dp), pointer, dimension(:) :: work=>null()
         
         ierr = 0
         ! composition is a He/Fe mix
@@ -170,15 +178,66 @@ contains
             &   lrpar, rpar, lipar, ipar, ierr)
         print *,'rho, P, K = ',rho,P,kappa
         if (ierr /= 0) return
+
         ! start the integration
+        call dop853_work_sizes(1,0,liwork,lwork)
+        allocate(lnT4(1),iwork(liwork),work(lwork))
         rpar(irho) = rho
         lnP = log(P)
         lnT4(1) = 0.0
-        h = 0.1_dp
-        call deriv(1, lnP, h, lnT4, dlnT4dlnP, lrpar, rpar, lipar, ipar, ierr)
-        print *,'dlnT4/dlnP = ',dlnT4dlnP(1)
-        deallocate(ipar, rpar)
+        lnPend = ln10*(lgy_light + log10(grav))
+        h = 0.001_dp
+        max_step_size = 0.0_dp
+        max_steps = 10000
+        rtol(:) = 1.0e-5_dp
+        atol(:) = 1.0e-5_dp
+        itol = 0
+        iout = 0
+        lout = error_unit
+        iwork(:) = 0
+        work(:) = 0.0
+        call dop853(1,deriv,lnP,lnT4,lnPend,h,max_step_size,max_steps, &
+        &   rtol, atol, itol, null_solout, iout, work, lwork, iwork, liwork, &
+        &   lrpar, rpar, lipar, ipar, lout, idid)
         
+        if (idid < 0) then
+            ierr = idid 
+            return
+        end if
+
+        print *, 'reached bottom of light layer with lgT = ',0.25*lnT4(1)/ln10 + lgTeff
+        ! now integrate over the heavy layer
+        Y = [0.0_dp, 1.0_dp]/nuclib% A(chem_ids)
+        call compute_composition_moments(number_species,chem_ids,Y,ionic,Xsum, &
+        &   ncharged, charged_ids, Yion, exclude_neutrons = .TRUE.)
+
+        ! sanity check on composition
+        if (Xsum - 1.0_dp > 2.0*epsilon(1.0_dp)) then
+            ierr = bad_composition
+            return
+        end if
+        
+        ! stuff the parameter vectors
+        rpar(icomp_A) = ionic% A
+        rpar(icomp_Z) = ionic% Z
+        rpar(icomp_Z53) = ionic% Z53
+        rpar(icomp_Z2) = ionic% Z2
+        rpar(icomp_Z73) = ionic% Z73
+        rpar(icomp_Z52) = ionic% Z52
+        rpar(icomp_ZZ1_32) = ionic% ZZ1_32
+        rpar(icomp_Z2XoA2) = ionic% Z2XoA2
+        rpar(icomp_Ye) = ionic% Ye
+        rpar(icomp_Yn) = ionic% Yn
+        rpar(icomp_Q) = ionic% Q
+        
+        ! reset end point, h
+        lnPend = ln10*(lgyb + log10(grav))
+        h = 0.001_dp
+        call dop853(1,deriv,lnP,lnT4,lnPend,h,max_step_size,max_steps, &
+        &   rtol, atol, itol, null_solout, iout, work, lwork, iwork, liwork, &
+        &   lrpar, rpar, lipar, ipar, lout, idid)
+        lgTb = 0.25_dp*lnT4(1)/ln10 + lgTeff
+        deallocate(ipar, rpar, iwork, work, lnT4)
     end subroutine do_integrate_bc09_atm
       
     subroutine find_photospheric_pressure(Teff,grav,tau,rho_ph,P_ph,kappa, &
@@ -382,17 +441,17 @@ contains
        chi = use_default_nuclear_size
 
        ! find the density
-       print *,'derivs; looking for rho with guess',rpar(irho)
        lnrho_guess = log(rpar(irho))
        call get_rho_from_PT(ierr)
        if (ierr /= 0) then
            print *,'error in getting rho'
+           rpar(irho) = exp(lnrho_guess)
            return
        end if
        rho = exp(lnrho)
        rpar(irho) = rho
-
-       call eval_crust_eos(eos_handle,rho,Teff,ionic,ncharged,charged_ids,Yion, &
+       print *, 'rho = ',rho,' T = ',T
+       call eval_crust_eos(eos_handle,rho,T,ionic,ncharged,charged_ids,Yion, &
                &   res,phase,chi)
     
        eta = res(i_Theta) !1.0/TpT
@@ -401,9 +460,10 @@ contains
            & Gamma,eta,ionic,K,which_components=cond_exclude_sf) !cond_use_only_kap)
        kappa = 4.0*onethird*arad*clight*T**3/rho/K% total
        rpar(iKph) = kappa
-
+       print *,'kappa = ',kappa
+       
        dlnT4dlnP(1) = 0.75_dp*kappa*P/grav/exp(lnT4(1))
-
+       print *,'dlnT4dlnP = ',dlnT4dlnP(1)
     contains
         subroutine get_rho_from_PT(ierr)
             use num_lib, only: safe_root_without_brackets
@@ -417,7 +477,9 @@ contains
             imax = 60
             epsx = 1.0e-6_dp
             epsy = 1.0e-6_dp
-            lnrho = safe_root_without_brackets(eval_pressure,lnrho_guess,dlnrho,max_newt, &
+            dlnrho = 0.05_dp
+            lnrho = safe_root_without_brackets( &
+            &   eval_pressure,lnrho_guess,dlnrho,max_newt, &
             &   imax, epsx,epsy,lrpar,rpar,lipar,ipar,ierr)
         end subroutine get_rho_from_PT
 
@@ -472,7 +534,7 @@ contains
 
        P = exp(res(i_lnP))
        dPdlnrho = P*res(i_chiRho)
-
+       print *,'eval: rho, P = ',rho,P
        eval_pressure = P - Pwant
     end function eval_pressure
 
