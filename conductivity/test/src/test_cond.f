@@ -1,4 +1,5 @@
 program test_cond
+    use, intrinsic :: iso_fortran_env, only: output_unit
     use constants_lib
     use nucchem_def
     use nucchem_lib
@@ -25,6 +26,11 @@ program test_cond
     ! components(icrust_eos_ion) = .TRUE.
     ! call crust_eos_set_components(eos_handle,components,ierr)
     
+    write (output_unit, '(5a6,8a14,/,5("======"),8("=============="))') &
+        & 'lg(r)','lg(T)','<Z>','<A>','Y_n', &
+        & 'Gamma','eta_e', &
+        & 'K_tot','K_ee','K_ei','K_eQ','K_sF','kappa_rad'
+        
     do i = 2,14
         N = [1,aa(i)-zz(i)]
         Z = [0,zz(i)]
@@ -38,12 +44,13 @@ program test_cond
     end do
     call clear_composition(ionic)
     call nucchem_shutdown
+
     contains
     subroutine do_one(rho)
         real(dp), intent(in) :: rho
         real(dp) :: Gamma,eta,f,u,p,s,cv,chi_rho,chi_T
         integer :: phase
-        real(dp) :: K, lgr, lgT, T, TpT
+        real(dp) :: K, lgr, lgT, T, TpT, mu_e
         type(conductivity_components) :: kappa
         type(crust_eos_component), dimension(num_crust_eos_components) :: eos_components
         integer :: ii
@@ -57,9 +64,12 @@ program test_cond
                 & ncharged, charged_ids, Yion, res, phase, chi, eos_components)
             eta = res(i_Theta) !1.0/TpT
             Gamma = res(i_Gamma)
-            call get_thermal_conductivity(rho,T,chi,Gamma,eta,ionic,kappa)
-            print '(5f6.2,6es14.6)', &
-                & lgr,lgT,ionic%Z,ionic%A,ionic%Yn,Gamma,kappa% total,kappa%ee,kappa%ei,kappa%eQ,kappa%sf
+            mu_e = res(i_mu_e)
+            call get_thermal_conductivity(rho,T,chi,Gamma,eta,mu_e,ionic,kappa)
+            write (output_unit, '(5f6.2,8es14.6)') &
+                & lgr,lgT,ionic%Z,ionic%A,ionic%Yn, &
+                & Gamma,mu_e*mev_to_ergs/boltzmann/T, &
+                & kappa% total,kappa%ee,kappa%ei,kappa%eQ,kappa%sf,kappa% kap
         end do
     end subroutine do_one
 end program test_cond
