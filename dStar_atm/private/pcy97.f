@@ -5,21 +5,21 @@ module pcy97
 	
 	contains
 	
-	subroutine do_get_pcy97_Teff(grav, Plight, Tb, Teff, flux)
+	subroutine do_get_pcy97_Teff(grav, Plight, lgTb, lgTeff, lgflux)
 		use constants_def
 		real(dp), intent(in) :: grav	! surface gravity, in the local frame
 		real(dp), intent(in) :: Plight	! pressure at which layer of light elements terminates
-		real(dp), intent(in), dimension(:) :: Tb	! temperature at a base column
-		real(dp), intent(out), dimension(:) :: Teff, flux	! effective temperature and flux
+		real(dp), intent(in), dimension(:) :: lgTb	! temperature at a base column
+		real(dp), intent(out), dimension(:) :: lgTeff, lgflux	! effective temperature and flux
 		real(dp) :: eta, g14
-		real(dp), dimension(size(Tb)) :: Tb9, Teff6_4
+		real(dp), dimension(size(lgTb)) :: Tb9, Teff6_4
 		
 		eta = Plight/1.193e34_dp
 		g14 = grav * 1.0e-14_dp
-		Tb9 = Tb*1.0e-9_dp
+		Tb9 = 10.0_dp**lgTb*1.0e-9_dp
 		call PCYfit(g14,eta,Tb9,Teff6_4)
-		Teff = 1.0e6_dp*Teff6_4**0.25_dp
-		flux = sigma_SB*Teff6_4*1.0e24_dp
+		lgTeff = log10(1.0e6_dp*Teff6_4**0.25_dp)
+		lgflux = log10(sigma_SB*Teff6_4*1.0e24_dp)
 
 		contains
 		subroutine PCYfit(g14,eta,Tb9,Teff6_4)

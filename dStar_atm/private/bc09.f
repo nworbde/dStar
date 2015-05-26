@@ -35,62 +35,49 @@ module bc09
     integer, parameter :: negative_photosphere_gas_pressure = -2
     integer, parameter :: negative_photosphere_density = -3
     integer, parameter :: bad_composition = -4
-    
-    ! defaults for integration
-    real(dp), parameter :: default_lnTeff_min = 5.0
-    real(dp), parameter :: default_lnTeff_max = 6.7
-    
+        
     ! for debugging
     logical, parameter :: dbg = .FALSE.
     
 contains
     
-	subroutine do_get_bc09_Teff(grav, Plight, Tb, Teff, flux, ierr, Teff_min, Teff_max)
+	subroutine do_get_bc09_Teff(grav, Plight, Pb, lgTb, lgTeff, lgflux, ierr)
 		use constants_def
+        use dStar_eos_lib
+        
 		real(dp), intent(in) :: grav	! surface gravity, in the local frame
 		real(dp), intent(in) :: Plight	! pressure at which layer of light elements terminates
-		real(dp), intent(in), dimension(:) :: Tb	! temperature at a base column
-		real(dp), intent(out), dimension(:) :: Teff, flux	! effective temperature and flux
+        real(dp), intent(in) :: Pb      ! pressure at base of layer
+		real(dp), intent(out), dimension(:) :: lgTb	! temperature at a base column
+		real(dp), intent(in), dimension(:) :: lgTeff    ! effective temperature
+        real(dp), intent(out), dimension(:) :: lgflux	! flux
         integer, intent(out) :: ierr
-        real(dp), intent(in), optional :: Teff_min, Teff_max ! limits for boundaries of dense table
-        integer ::  size_tab ! = 4*size(Tb)
-        real(dp), dimension(:), allocatable :: tabTb9, tabTeff, tabTeff6_4
-        real(dp) :: lnTeff_min, lnTeff_max
-        integer :: i
+        integer :: i, n
+        integer :: eos_handle
+        real(dp) :: lgyb, lgy_light, rho_ph
         
-        ! make a very dense table of Tb(Teff); then interpolate to get Teff(Tb)
-        size_tab = 4*size(Tb)
-        allocate(tabTb9(size_tab),tabTeff(size_tab),tabTeff6_4(size_tab))
-
-        ! would make sense to check that runs with the minimum and maximum Teff on the dense table
-        ! actually encompass the desired range of Tb
-        if (present(Teff_min)) then
-            lnTeff_min = log(Teff_min)
-        else
-            lnTeff_min = default_lnTeff_min
-        end if
-        if (present(Teff_max)) then
-            lnTeff_max = log(Teff_max)
-        else
-            lnTeff_max = default_lnTeff_max
-        end if
+        ! constants, nucchem, and dStar_eos must be initialized
+        eos_handle = alloc_dStar_eos_handle(ierr)
+        lgyb = log10(Pb/grav)
+        lgy_light = log10(Plight/grav)
         
-!         tau = ?
-!         Teff = ?
-        ! compute dense table
-        do i = 1, size_tab
-            ! get Pph(Teff)
-!            call find_photospheric_pressure(Teff,grav,tau,Pphoto,eos_handle,ierr) 
-!		write(*,*) tabTeff_4(i), Pphoto           
+        rho_ph = -1.0_dp
+        ! start at the highest temperature and work down; array is assumed to be in ascending order
+        n = size(lgTeff)
+        do i = n,1,-1
+            call do_integrate_bc09_atm(grav,lgyb,lgy_light,lgTeff(i),lgTb(i),rho_ph,eos_handle,ierr)
+            if (ierr < 0) then
+                print *,'error in atmosphere integration with lgTeff = ', lgTeff(i)
+                return
+            end if
+            lgflux(i) = 4.0_dp*lgTeff(i)+log10(sigma_SB)
         end do
         
-        ! interpolate from dense table to get finished product
-        
-        deallocate(tabTb9,tabTeff6_4)
+        call free_dStar_eos_handle(eos_handle)
     end subroutine do_get_bc09_Teff
     
     subroutine do_integrate_bc09_atm( &
-    &   grav,lgyb,lgy_light,lgTeff,lgTb,eos_handle,ierr,rho,P,kappa)
+    &   grav,lgyb,lgy_light,lgTeff,lgTb,rho,eos_handle,ierr)
         use iso_fortran_env, only: error_unit
         use constants_def
         use nucchem_def
@@ -102,10 +89,9 @@ contains
         real(dp), intent(in) :: lgy_light   ! log_10(g/cm**2); light/heavy transition
         real(dp), intent(in) :: lgTeff  ! log_10(K)
         real(dp), intent(out) :: lgTb   ! log_10(K)
+        real(dp), intent(inout) :: rho  ! set < 0 to compute a guess, on output, contains rho_photosphere
         integer, intent(in) :: eos_handle
         integer, intent(out) :: ierr
-        real(dp), intent(inout) :: rho  ! set < 0 to compute a guess
-        real(dp), intent(out) :: P, kappa ! for testing
         ! composition
         integer, parameter :: number_species = 2
         integer, dimension(number_species) :: charged_ids, chem_ids
@@ -116,7 +102,7 @@ contains
         integer :: lrpar, lipar
         integer, pointer :: ipar(:) => null() ! (lipar)
         real(dp), pointer :: rpar(:) => null()  ! (lrpar)
-        real(dp) :: Teff, tau!, rho, P, kappa
+        real(dp) :: Teff, tau, P, kappa
         type(composition_info_type) :: ionic
         ! integration
         real(dp) :: lnP, lnPend, h, max_step_size, atol(1), rtol(1)
@@ -448,10 +434,6 @@ contains
            return
        end if
        
-       if (is_bad_num(kappa)) then
-           print *,'deriv',kappa, P
-           stop
-       end if
        dlnT4dlnP(1) = 0.75_dp*kappa*P/grav/exp(lnT4(1))
        dlnT4dlnP(1)  = min(dlnT4dlnP(1), 4.0*del_ad)       
 
