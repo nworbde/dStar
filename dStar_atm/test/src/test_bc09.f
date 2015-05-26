@@ -15,10 +15,10 @@ program test_bc09
     eos_handle = alloc_dStar_eos_handle(ierr)
 
     grav = 2.43e14_dp
-    lgyb = 12.0_dp
-    lgy_light = 9.0_dp
+    lgyb = log10(4.3e13_dp)
+    lgy_light = 5.0_dp
     
-    write (*,'(4a10)') 'T (MK)', 'rho','P/g','kappa'
+    write (*,'(5a10)') 'lg(Teff)', 'rho','P/g','kappa','lg(Tb)'
     rho_ph = -1.0_dp
     do i = 30,1,-1
         lgTeff = 5.5_dp + 1.2*(i-1)/29.0
@@ -27,7 +27,7 @@ program test_bc09
             print *,'error: ierr = ',ierr
             cycle
         end if
-        write (*,'(5f10.4)') 10.0_dp**(lgTeff-6.0),rho_ph,P_ph/grav,kappa,lgTb
+        write (*,'(5f10.4)') lgTeff,rho_ph,P_ph/grav,kappa,lgTb
     end do
     
     call dStar_eos_shutdown
