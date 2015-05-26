@@ -8,7 +8,7 @@ LOAD_LOCAL = -L$(LOCAL_LIB_DIR) -ldstar_atm
 LOAD_OTHER = -L$(DSTAR_LIB_DIR) -lconductivity -lneutrino -lconstants -ldstar_eos -lsuperfluid  -lnucchem -L$(MESA_LIB_DIR) $(LOAD_MESA_NUMERICS)
 
 TEST = tester
-TEST_OBJS = test_bc09.o #test_atm.o
+TEST_OBJS = test_atm.o #test_bc09.o
 
 default: install
 

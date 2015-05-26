@@ -1,18 +1,28 @@
 program test_atm
     use constants_lib
+    use constants_lib
+    use nucchem_lib
+    use dStar_eos_lib
+    use conductivity_lib
 	use dStar_atm_def
 	use dStar_atm_lib
 	
-	real(dp) :: lgTb,g,Plight,lgTeff,dlgTeff,lgflux,dlgflux
+	real(dp) :: lgTb,g,Plight,Pb,lgTeff,dlgTeff,lgflux,dlgflux
 	integer :: ierr,i
     
     call constants_init('',ierr)
+	call check_okay('constants_init',ierr)
+    call nucchem_init('../../data',ierr)
+	call check_okay('nucchem_init',ierr)
+    call dStar_eos_startup('../../data')
 	call dStar_atm_startup('../../data',ierr)
 	call check_okay('dStar_atm_startup',ierr)
 	
 	g = 2.43e14_dp
-	Plight = 1.0e6_dp
-	call dStar_atm_load_table('pcy97',g,Plight,ierr)
+	Plight = 2.43e19_dp
+    Pb = 4.3e13_dp*g
+    
+	call dStar_atm_load_table('pcy97',g,Plight,Pb,ierr)
 	call check_okay('dStar_atm_load_table',ierr)
 	do i = 1, 20
 		lgTb = (7.0_dp + 1.5_dp*real(i-1.0,dp)/19.0_dp)
@@ -22,8 +32,8 @@ program test_atm
 	end do
 	
 	call dStar_atm_free_table
-	Plight = 1.0e28_dp
-	call dStar_atm_load_table('pcy97',g,Plight,ierr)
+	Plight = 2.43e23_dp
+	call dStar_atm_load_table('pcy97',g,Plight,Pb,ierr)
 	call check_okay('dStar_atm_load_table',ierr)
 	do i = 1, 20
 		lgTb = (7.0_dp + 1.5_dp*real(i-1.0,dp)/19.0_dp)
@@ -33,6 +43,9 @@ program test_atm
 	end do
 	
 	call dStar_atm_shutdown
+    call dStar_eos_shutdown
+    call nucchem_shutdown
+    
 contains
 	subroutine check_okay(msg,ierr)
 		use iso_fortran_env, only : error_unit

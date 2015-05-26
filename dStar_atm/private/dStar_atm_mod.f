@@ -30,16 +30,17 @@ contains
         
         ! if we don't have the table, or could not load it, then generate a 
         ! new one and write to cache
+        write (error_unit, '(a)') 'generating table '//table_name//'...'
         tab% nv = atm_default_number_table_points
         tab% lgTb_min = atm_default_lgTbmin
         tab% lgTb_max = atm_default_lgTbmax
         call do_generate_atm_table(prefix,grav,Plight,Pb,tab)
         tab% is_loaded = .TRUE.
+        write (error_unit,'(a)') 'done'
         
         if (.not.have_cache) then
             call do_write_atm_cache(cache_filename,tab,ierr)
         end if
-        
     end subroutine do_load_atm_table
     
     subroutine do_generate_atm_table(prefix,grav,Plight,Pb,tab)
