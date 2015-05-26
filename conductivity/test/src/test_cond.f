@@ -22,9 +22,6 @@ program test_cond
     call nucchem_init('../../data',ierr)
     call dStar_eos_startup('../../data')
     eos_handle = alloc_dStar_eos_handle(ierr)
-    ! components = .FALSE.
-    ! components(icrust_eos_ion) = .TRUE.
-    ! call crust_eos_set_components(eos_handle,components,ierr)
     
     write (output_unit, '(5a6,8a14,/,5("======"),8("=============="))') &
         & 'lg(r)','lg(T)','<Z>','<A>','Y_n', &
