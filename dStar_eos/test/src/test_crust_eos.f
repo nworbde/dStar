@@ -14,7 +14,8 @@ program test_crust_eos
 	integer :: i, ncharged
 	real(dp) :: Xsum
 	type(crust_eos_component), dimension(num_crust_eos_components) :: eos_components
-	
+    logical, parameter :: dbg = .FALSE.
+    
 	! n/o16/fe56 composition
 	Z = [0.0,8.0,26.0]; A = [1.0,16.0,56.0]
 	N = A-Z
@@ -100,11 +101,13 @@ program test_crust_eos
 				& res(i_chiRho),res(i_chiT),res(i_Gamma1),res(i_Gamma3),  &
 				& res(i_grad_ad), res(i_mu_e),res(i_mu_n)
 			
-			write (*,'(a11,7a12)') 'component: ','pressure','energy','entropy','free energy','Cv','chi_rho','chi_T'
-			write (*,'(a11,7es12.4)') 'electron: ',eos_components(icrust_eos_ep)
-			write (*,'(a11,7es12.4)') 'ion: ',eos_components(icrust_eos_ion)
-			write (*,'(a11,7es12.4)') 'neutron: ',eos_components(icrust_eos_neutron)
-			write (*,'(a11,7es12.4)') 'radiation: ',eos_components(icrust_eos_radiation)
+                if (dbg) then
+                    write (*,'(a11,7a12)') 'component: ','pressure','energy','entropy','free energy','Cv','chi_rho','chi_T'
+                    write (*,'(a11,7es12.4)') 'electron: ',eos_components(icrust_eos_ep)
+                    write (*,'(a11,7es12.4)') 'ion: ',eos_components(icrust_eos_ion)
+                    write (*,'(a11,7es12.4)') 'neutron: ',eos_components(icrust_eos_neutron)
+                    write (*,'(a11,7es12.4)') 'radiation: ',eos_components(icrust_eos_radiation)
+                end if
 		end do
 	end subroutine do_one
 
