@@ -342,7 +342,7 @@ contains
                 if (itemp == 1) delP(iz) = abs(1.0 - exp(eos_results(i_lnP))/s% P_bar(iz))
                                 
                 call get_thermal_conductivity(s% rho_bar(iz), Ttab, chi, eos_results(i_Gamma),  &
-                &   eos_results(i_Theta), s% ionic_bar(iz), &
+                &   eos_results(i_Theta), eos_results(i_mu_e), s% ionic_bar(iz), &
                 &   Kcomponents, use_pcy=s% use_pcy_for_ee_scattering, use_page=s% use_page_for_eQ_scattering, &
                 &   which_components=cond_channels)
                 lnKcond_val(1,itemp) = log(Kcomponents% total)
