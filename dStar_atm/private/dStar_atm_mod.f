@@ -59,7 +59,7 @@ contains
 
         N = tab% nv
         allocate(lgTeff(N),lgflux(N),lgTb(N))
-        select case (prefix)
+        select case (trim(prefix))
             
             case('pcy97')
             lgTbmin = tab% lgTb_min

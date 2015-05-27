@@ -53,6 +53,7 @@ module NScool_ctrls_io
         use_ei_conductivity, &
         use_eQ_conductivity, &
         use_sf_conductivity, &
+        use_rad_opacity, &
         eos_gamma_melt_pt, &
         eos_rsi_melt_pt, &
         eos_nuclide_abundance_threshold, &
@@ -71,6 +72,7 @@ module NScool_ctrls_io
         shell_Urca_luminosity_coeff, &
         lgP_shell_Urca, &
         lg_atm_light_element_column, &
+        atm_model, &
         fix_Qimp, &
         Qimp
         
@@ -199,6 +201,7 @@ contains
        s% use_ei_conductivity = use_ei_conductivity
        s% use_eQ_conductivity = use_eQ_conductivity
        s% use_sf_conductivity = use_sf_conductivity
+       s% use_rad_opacity = use_rad_opacity
     
        s% eos_gamma_melt_pt = eos_gamma_melt_pt
        s% eos_rsi_melt_pt = eos_rsi_melt_pt
@@ -221,6 +224,7 @@ contains
        s% lgP_shell_Urca = lgP_shell_Urca
        
        s% lg_atm_light_element_column = lg_atm_light_element_column
+       s% atm_model = atm_model
        s% fix_Qimp = fix_Qimp
        s% Qimp = Qimp
 

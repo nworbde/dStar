@@ -39,12 +39,11 @@ contains
 		real(dp), intent(in) :: grav,Plight,Pb
 		integer, intent(out) :: ierr
 		
-        write (error_unit,'(a)') 'loading atmosphere table '//prefix
+        write (error_unit,'(a)') 'loading atmosphere model '//prefix
 		call do_load_atm_table(prefix, grav, Plight, Pb, ierr)
 		if (ierr /= 0) then
 			write(error_unit,'(a,i3)') 'dStar_atm_load_one: ierr = ',ierr
 		end if
-        write (error_unit,'(a)') 'done'
 	end subroutine dStar_atm_load_table
     
 	subroutine dStar_atm_get_results(lgTb,lgTeff,dlgTeff,lgflux,dlgflux,ierr)

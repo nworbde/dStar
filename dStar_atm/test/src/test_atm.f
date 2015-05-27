@@ -18,35 +18,45 @@ program test_atm
 	call dStar_atm_startup('../../data',ierr)
 	call check_okay('dStar_atm_startup',ierr)
 	
+	write (*,'(5(a9,tr2),/,5("=========",tr2))') 'lgTb','lgTeff','dlgTeff','lgflux','dlgflux'
+    
 	g = 2.43e14_dp
-	Plight = 2.43e19_dp
     Pb = 4.3e13_dp*g
     
-	call dStar_atm_load_table('bc09',g,Plight,Pb,ierr)
-	call check_okay('dStar_atm_load_table',ierr)
-	do i = 1, 20
-		lgTb = (7.0_dp + 1.5_dp*real(i-1.0,dp)/19.0_dp)
-		call dStar_atm_get_results(lgTb,lgTeff,dlgTeff,lgflux,dlgflux, ierr)
-		call check_okay('dStar_atm_get_results',ierr)
-		write (*,'(5(f9.5,tr2))') lgTb,lgTeff,dlgTeff,lgflux,dlgflux
-	end do
-	
-	call dStar_atm_free_table
+	Plight = 2.43e19_dp    
+    call do_one('bc09')
+    call do_one('pcy97')
+    
 	Plight = 2.43e23_dp
-	call dStar_atm_load_table('bc09',g,Plight,Pb,ierr)
-	call check_okay('dStar_atm_load_table',ierr)
-	do i = 1, 20
-		lgTb = (7.0_dp + 1.5_dp*real(i-1.0,dp)/19.0_dp)
-		call dStar_atm_get_results(lgTb,lgTeff,dlgTeff,lgflux,dlgflux, ierr)
-		call check_okay('dStar_atm_get_results',ierr)
-		write (*,'(5(f9.5,tr2))') lgTb,lgTeff,dlgTeff,lgflux,dlgflux
-	end do
-	
+    call do_one('bc09')
+    call do_one('pcy97')    
+    
 	call dStar_atm_shutdown
     call dStar_eos_shutdown
     call nucchem_shutdown
     
 contains
+    
+    subroutine do_one(prefix)
+        character(len=*), intent(in) :: prefix
+        integer :: i
+
+        write (*,'(/,a)') trim(prefix)
+        write (*,'(a,f6.2)') 'Plight = ',log10(Plight)
+        
+    	call dStar_atm_load_table(trim(prefix),g,Plight,Pb,ierr)
+    	call check_okay('dStar_atm_load_table',ierr)
+        
+    	do i = 1, 20
+    		lgTb = (7.0_dp + 1.5_dp*real(i-1.0,dp)/19.0_dp)
+    		call dStar_atm_get_results(lgTb,lgTeff,dlgTeff,lgflux,dlgflux,ierr)
+    		call check_okay('dStar_atm_get_results',ierr)
+    		write (*,'(5(f9.5,tr2))') lgTb,lgTeff,dlgTeff,lgflux,dlgflux
+    	end do
+    	call dStar_atm_free_table
+        
+    end subroutine do_one
+    
 	subroutine check_okay(msg,ierr)
 		use iso_fortran_env, only : error_unit
 		character(len=*), intent(in) :: msg

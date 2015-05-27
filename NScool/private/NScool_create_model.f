@@ -163,7 +163,8 @@ contains
         &   (stov% radius(stov% nzs)*length_g + s% Rcore*1.0e5)**2 * s% eLambda_bar(1)
 
         Plight = s% grav * 10.0_dp**s% lg_atm_light_element_column
-    	call dStar_atm_load_table('pcy97',s% grav, Plight,ierr)
+        
+    	call dStar_atm_load_table(s% atm_model, s% grav, Plight, s% Psurf, ierr)
         if (failure('dStar_atm_load_table')) return
 
     contains
@@ -262,7 +263,7 @@ contains
         & s% use_crust_nu_bremsstrahlung, s% use_crust_nu_pbf ]
         
         cond_channels = [ s% use_ee_conductivity, &
-        & s% use_ei_conductivity, s% use_eQ_conductivity, s% use_sf_conductivity ]
+        & s% use_ei_conductivity, s% use_eQ_conductivity, s% use_sf_conductivity, s% use_rad_opacity ]
         
         s% tab_lnT(1:s% n_tab) = [(lgT_tab_min*ln10 + (lgT_tab_max-lgT_tab_min)*ln10*real(itemp-1,dp)/real(s% n_tab-1,dp), &
         &   itemp = 1, s% n_tab)]
