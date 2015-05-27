@@ -2,6 +2,10 @@
 
 A collection of modules for computing neutron star structure and evolution.
 
+##What's new
+
+  There is a new atmosphere model, which computes the thermal structure for a He-Fe layer.  To select this model, set `atm_model = 'bc09'` in the inlist.  
+
 ##Dependencies
   * [MESA](http://mesa.sourceforge.net): `dStar` makes use of the `MESA` numerical, utility, and equation of state libraries.
   * [MESA SDK](http://www.astro.wisc.edu/~townsend/static.php?ref=mesasdk): the compilation of both `MESA` and `dStar` has been tested using a specific build environment.
