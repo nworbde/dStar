@@ -183,8 +183,11 @@ contains
         lnP = log(P)
         lnT4(1) = 0.0   ! 4.0*ln(T/Teff)
         
-        ! first layer
-        lnPend = ln10*(lgy_light + log10(grav))
+        ! first layer; we shall integrate over a minimum of 1 decade in pressure
+        lnPend = max(ln10*(lgy_light + log10(grav)), lnP+ln10)
+        ! but the light element layer cannot exceed the total thickness
+        lnPend = min(lnPend, ln10*(lgyb + log10(grav)))
+        
         h = 0.001_dp
         max_step_size = 0.0_dp
         max_steps = 10000
@@ -233,19 +236,23 @@ contains
         rpar(number_base_rpar + 1:number_base_rpar+ncharged) = Yion(:)        
         ipar(number_base_ipar+1:number_base_ipar+ncharged) = charged_ids(:)
  
-        ! reset end point, h
+        ! reset end point
         lnPend = ln10*(lgyb + log10(grav))
-        h = 0.001_dp
-        iwork(:) = 0
-        work(:) = 0.0_dp
-        call dop853(1,deriv,lnP,lnT4,lnPend,h,max_step_size,max_steps, &
-        &   rtol, atol, itol, null_solout, iout, work, lwork, iwork, liwork, &
-        &   lrpar, rpar, lipar, ipar, lout, idid)
         
-        if (idid < 0) then
-            write (error_unit,*) 'error in integration'
-            ierr = idid
-            return
+        if (lnP < lnPend) then  ! integrate over the layer
+            ! reset the step size since we have a new composition
+            h = 0.001_dp
+            iwork(:) = 0
+            work(:) = 0.0_dp
+            call dop853(1,deriv,lnP,lnT4,lnPend,h,max_step_size,max_steps, &
+            &   rtol, atol, itol, null_solout, iout, work, lwork, iwork, liwork, &
+            &   lrpar, rpar, lipar, ipar, lout, idid)
+        
+            if (idid < 0) then
+                write (error_unit,*) 'error in integration'
+                ierr = idid
+                return
+            end if
         end if
         lgTb = 0.25_dp*lnT4(1)/ln10 + lgTeff
                 
