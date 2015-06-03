@@ -37,6 +37,7 @@
     real(dp) :: core_mass
     real(dp) :: core_radius
     
+    ! lgPcrust_top is also used for the bottom of the atmosphere with the bc09 model
     real(dp) :: lgPcrust_bot
     real(dp) :: lgPcrust_top
     
@@ -67,6 +68,7 @@
     logical :: use_ei_conductivity
     logical :: use_eQ_conductivity
     logical :: use_sf_conductivity
+    logical :: use_rad_opacity
     
     ! EOS controls: set to < 0 to use defaults
     real(dp) :: eos_gamma_melt_pt
@@ -92,7 +94,8 @@
     real(dp) :: lgP_shell_Urca
     
     ! controls for the atmosphere
-    real(dp) :: lg_atm_light_element_column  ! lg(cgs), for the PCY atmosphere fit
+    real(dp) :: lg_atm_light_element_column  ! lg(cgs), for the atmosphere fit
+    character(len=8) :: atm_model
     
     ! controls for the composition
     logical :: fix_Qimp

@@ -1,7 +1,7 @@
 include $(MESA_DIR)/utils/makefile_header
 
 LIB = libdstar_atm.a
-LIB_OBJS = dStar_atm_def.o pcy97.o dStar_atm_mod.o  dStar_atm_lib.o
+LIB_OBJS = dStar_atm_def.o pcy97.o bc09.o dStar_atm_mod.o  dStar_atm_lib.o
 DSTAR_LIB = ../../lib
 DSTAR_INC = ../../include
 

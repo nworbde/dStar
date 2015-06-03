@@ -108,7 +108,7 @@ subroutine LM_corrections(rs,Gamma_e,ionic,f,u,p,s,cv,dpr,dpt)
 	D = ionic%Z2/ionic%Z**2
 	
 	f = 0.0; u = 0.0; p = 0.0; s = 0.0; cv = 0.0; dpr = 0.0; dpt = 0.0
-	if (abs(d-1.0) < threshold) return	! no correction necessary
+	if (abs(D-1.0) < threshold) return	! no correction necessary
 	p3 = D**(-0.2)
 	d0 = (2.6*difR + 14.0*difR**3)/(1.0-p3)
 	gp = d0*Gamma**p3

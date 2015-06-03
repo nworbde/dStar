@@ -2,9 +2,15 @@
 
 A collection of modules for computing neutron star structure and evolution.
 
+##What's new
+
+  There is a new atmosphere model, which computes the thermal structure for a He-Fe layer.  To select this model, set `atm_model = 'bc09'` in the inlist.  
+
 ##Dependencies
-  * [MESA](http://mesa.sourceforge.net): `dStar` makes use of the `MESA` numerical, utility, and equation of state libraries
+  * [MESA](http://mesa.sourceforge.net): `dStar` makes use of the `MESA` numerical, utility, and equation of state libraries.
   * [MESA SDK](http://www.astro.wisc.edu/~townsend/static.php?ref=mesasdk): the compilation of both `MESA` and `dStar` has been tested using a specific build environment.
+
+This version of `dStar` has been tested with `MESA` version 7503 and the 2014 December 12 (or later) version of the `MESA SDK`.
 
 ##How to install
   1. Follow the instructions on the MESA website to build a working version of `MESA`, and ensure that the environment variable `MESA_DIR` points to that directory.
@@ -20,8 +26,9 @@ For each module, the install script
 
 ##How to use
 **Under construction**
-For each module, look in the `test` directory for an example of how to run the module.
+For each module, look in the `test` directory for an example of how to run the module. The primary module is `NScool`.
 
 ##Upcoming improvements
   1. add load/save options for models
+  2. ability to generate an atmosphere model with an arbitraty composition.
   
