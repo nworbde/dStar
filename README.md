@@ -30,5 +30,5 @@ For each module, look in the `test` directory for an example of how to run the m
 
 ##Upcoming improvements
   1. add load/save options for models
-  2. ability to generate an atmosphere model with an arbitraty composition.
+  2. ability to generate an atmosphere model with an arbitrary composition.
   
