@@ -9,6 +9,7 @@ class dStarRun:
     def __init__(self,dStar_dir=''):
         self._controls = {}
         self._defaults = {}
+        self._names = []
         if dStar_dir == '':
             try:
                 dStar_dir = environ['DSTAR_DIR']
@@ -26,16 +27,29 @@ class dStarRun:
                 # now smash toks back together and split on '='
                 toks = ''.join(toks).split('=')
                 # extra care needed for arrays
-                if '(:)' not in toks[0]:
-                    k, v = toks[0],toks[1]
+                k, v = toks[0],toks[1]
+                if '(:)' not in k:
                     self._defaults[k] = v
+                    self._names.append(k)
                 else:
-                    v = toks[1]
+                    self._names.append(k)
+                    self._defaults[k] = str(dStarRun._num_arr_controls)+'*'+v
                     for i in range(1,dStarRun._num_arr_controls+1):
-                        k = toks[0].replace('(:)','('+str(i)+')')
-                        self._defaults[k] = v
+                        arr_k = k.replace('(:)','('+str(i)+')')
+                        self._defaults[arr_k] = v
 
-    def print_namelist(self,filename=None):
+    def control_setting(self,key):
+        v = None
+        try:
+            v = self._controls[key]
+        except:
+            try:
+                v = self._defaults[key]
+            except:
+                print('no control named '+key)
+        return v
+
+    def print_namelist(self,filename=None,defaults=False):
         if filename is None:
             f = stdout
         else:
@@ -45,8 +59,12 @@ class dStarRun:
                 print('unable to open '+filename)
                 f = stdout
         f.write('&controls\n')
-        for control,value in self._controls.iteritems():
-            f.write('    {0} = {1}\n'.format(control,value))
+        if defaults:
+            for control in self._names:
+                f.write('    {0} = {1}\n'.format(control,self._defaults[control]))
+        else:
+            for control,value in self._controls.iteritems():
+                f.write('    {0} = {1}\n'.format(control,value))
         f.write('/\n')
 
     def set_control(self,control,value):
@@ -55,3 +73,5 @@ class dStarRun:
         else:
             print('bad control value {0}'.format(control))
             raise KeyError(control)
+        return self
+
