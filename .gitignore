@@ -4,6 +4,7 @@ data
 *.a
 *.o
 *.mod
+*.pyc
 test_output.data
 test_output
 test_log
