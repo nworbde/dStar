@@ -2,7 +2,7 @@ module NScool_profile
    use NScool_def
    
    character(len=*), parameter :: scival = 'es15.6', intval = 'i15', fltval = 'f15.6'
-   character(len=*), parameter :: filename_fmt = '(a,i4.4)'
+   character(len=*), parameter :: filename_fmt = '(a,i0)'
    integer, parameter :: num_header_cols = 7, header_col_width=15
    integer, parameter :: num_profile_cols = 20, profile_col_width=15
 
