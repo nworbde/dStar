@@ -152,6 +152,7 @@ contains
        
        s% base_profile_filename = trim(s% output_directory)//'/profile'
        s% history_filename = trim(s% output_directory)//'/history.data'
+       s% profile_manifest_filename = trim(s% output_directory)//'/profiles'
        
        s% maximum_number_of_models = maximum_number_of_models
        s% maximum_timestep = maximum_timestep

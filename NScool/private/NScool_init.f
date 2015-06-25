@@ -67,7 +67,8 @@ contains
      
         s% base_profile_filename = ''
         s% history_filename = ''
-      
+        s% profile_manifest_filename = ''
+        
         ! zonal information
         s% target_resolution_lnP = 0.0               ! target (d lnP) of a zone
         s% nz = -1

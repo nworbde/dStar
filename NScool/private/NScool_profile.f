@@ -21,6 +21,8 @@ module NScool_profile
       & 'zbar','abar','Xn','Qimp', &
       & 'Gamma','cp','eps_nu','eps_nuc','K' ]
    
+   logical, save :: profile_first_call = .TRUE.
+   
    contains
    subroutine do_write_profile(id,ierr)
        use constants_def
@@ -36,6 +38,20 @@ module NScool_profile
       call get_NScool_info_ptr(id,s,ierr)
       if (ierr /= 0) return
 
+      if (profile_first_call) then
+          ! write header for profiles manifest
+          open(newunit=iounit,file=trim(s% profile_manifest_filename), &
+              & iostat=ierr)
+          if (ierr /= 0) then
+              write(*,*) 'failed to open profiles manifest ', &
+                  & trim(s% profile_manifest_filename)
+          else
+              write(iounit,'(a15,a15,tr4,a)') 'model','time [s]','profile data'
+              close(iounit)
+          end if
+          profile_first_call = .FALSE.
+      end if
+      
       write(filename,filename_fmt) trim(s% base_profile_filename), s% model
       
       iounit = alloc_iounit(ierr)
@@ -68,6 +84,17 @@ module NScool_profile
          &  s% Gamma(iz), s% Cp(iz), s% enu(iz), s% enuc(iz), s% Kcond(iz)
       end do
       
+      close(iounit)
+      
+      ! now write the manifest
+      open(unit=iounit,file=trim(s% profile_manifest_filename), &
+          & position='append',iostat=ierr)
+      if (ierr /= 0) then
+          write (*,*) 'unable to open profile manifest ', &
+              & trim(s% profile_manifest_filename)
+          return
+      end if
+      write (iounit,'(i15,es15.6,tr4,a)') s% model, s% tsec, trim(filename)
       close(iounit)
       call free_iounit(iounit)
    end subroutine do_write_profile

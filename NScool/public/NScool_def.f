@@ -48,7 +48,8 @@ module NScool_def
      
         character(len=256) :: base_profile_filename
         character(len=256) :: history_filename
-      
+        character(len=256) :: profile_manifest_filename
+        
         ! zonal information
         integer :: nz     ! number of zones
         real(dp), pointer, dimension(:) :: dm      ! mass differences
