@@ -46,7 +46,8 @@ module NScool_profile
               write(*,*) 'failed to open profiles manifest ', &
                   & trim(s% profile_manifest_filename)
           else
-              write(iounit,'(a15,a15,tr4,a)') 'model','time [s]','profile data'
+              write(iounit,'(a15,a15,tr4,a)') 'model','time [s]', &
+                  & 'base profile filename = '//trim(s% base_profile_filename)
               close(iounit)
           end if
           profile_first_call = .FALSE.
@@ -86,7 +87,7 @@ module NScool_profile
       
       close(iounit)
       
-      ! now write the manifest
+      ! now append to the manifest
       open(unit=iounit,file=trim(s% profile_manifest_filename), &
           & position='append',iostat=ierr)
       if (ierr /= 0) then
@@ -94,7 +95,7 @@ module NScool_profile
               & trim(s% profile_manifest_filename)
           return
       end if
-      write (iounit,'(i15,es15.6,tr4,a)') s% model, s% tsec, trim(filename)
+      write (iounit,'(i15,es15.6)') s% model, s% tsec
       close(iounit)
       call free_iounit(iounit)
    end subroutine do_write_profile
