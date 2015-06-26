@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 import numpy as np
 
 class dStarReader:
@@ -66,3 +67,41 @@ class dStarReader:
     
     def list_columns(self):
         return self._arr.dtype.fields.keys()
+        
+    def num_lines(self):
+        return self._arr.shape[0]
+
+class dStarCrustReader:
+    
+    def __init__(self,directory,**kwargs):
+        # read the list of profiles
+        profiles_list = directory+'/profiles'
+        self._profiles = np.genfromtxt(profiles_list,skip_header=1,dtype=[('model','i8'), ('time','f8')])
+        self._models = self._profiles['model']
+        self._times = self._profiles['time']
+        
+        # read the first profile to get layout
+        nmodels = self._models.shape[0]
+        d = dStarReader(directory+'/profile'+str(self._models[0]))
+        nzones = d.num_lines()
+        self._crust = {}
+        for col in d.list_columns():
+            self._crust[col] = np.zeros((nmodels,nzones))
+            self._crust[col][0,:] = d.get_column(col)
+        
+        for model in range(1,nmodels):
+            d = dStarReader(directory+'/profile'+str(self._models[model]),**kwargs)
+            for col in d.list_columns():
+                self._crust[col][model,:] = d.get_column(col)
+
+    def parameters(self):
+        return self._crust.keys()
+    
+    def times(self):
+        return self._times
+    
+    def models(self):
+        return self._models
+    
+    def get_crust_parameter(self,name):
+        return self._crust[name]
