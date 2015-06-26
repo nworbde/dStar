@@ -349,7 +349,7 @@ function electron_scattering(eta_e,theta,Ye) result(kTh)
     t3	= -3.249 + 0.1678*xi - 0.04706*xi2
   
     Gbar	=  t1 + t2*theta + t3*theta2
-    kTh = (8.0*onethird*pi*(electroncharge**2/Melectron/clight2)**2)*Ye/Gbar
+    kTh = 8.0*onethird*pi*avogadro*(electroncharge**2/Melectron/clight2)**2*Ye/Gbar
 end function electron_scattering
 
 ! Calculates the free-free Gaunt factor using a fitting
@@ -416,7 +416,7 @@ function Rosseland_kappa(rho,T,mu_e,ionic) result(kap)
 
     eta_e = mu_e*mev_to_ergs/boltzmann/T
     theta = T*boltzmann/Melectron/clight2
-    kap_th = electron_scattering(eta_e,T,ionic% Ye)
+    kap_th = electron_scattering(eta_e,theta,ionic% Ye)
     kap_ff = freefree(rho,T,eta_e,ionic)
     
     T6 = T*1.0e-6_dp
