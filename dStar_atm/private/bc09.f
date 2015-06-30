@@ -295,7 +295,7 @@ contains
         eps_ph = default_tolerance_photosphere_condition
         fallback_Pphoto = 2.0_dp*onethird*arad*Teff**4
 
-        ! scale tolerance to a thomson scaterring atmosphere
+        ! scale tolerance to a thomson scattering atmosphere
         sigma_Th = 8.0_dp*onethird*pi*(electroncharge**2/Melectron/clight2)**2
         kappa_Th = sigma_Th*avogadro*rpar(icomp_Ye)
         eps_ph = default_tolerance_photosphere_condition*tau*grav/kappa_Th
