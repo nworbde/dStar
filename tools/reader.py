@@ -80,6 +80,18 @@ class dStarCrustReader:
         self._models = self._profiles['model']
         self._times = self._profiles['time']
         
+        dt = 0.0
+        if 'dt' in kwargs:
+            dt = kwargs.pop('dt')
+
+        # only keep modes where t[i] - t[i-1] > dt
+        kept_models = [0]
+        for i in range(1,self._models.shape[0]):
+            if self._times[i] > self._times[kept_models[-1]] + dt:
+                kept_models.append(i)
+
+        self._models = self._models[kept_models]
+        self._times = self._times[kept_models]
         # read the first profile to get layout
         nmodels = self._models.shape[0]
         d = dStarReader(directory+'/profile'+str(self._models[0]))
@@ -89,7 +101,7 @@ class dStarCrustReader:
             self._crust[col] = np.zeros((nmodels,nzones))
             self._crust[col][0,:] = d.get_column(col)
         
-        for model in range(1,nmodels):
+        for model in range(1,self._models.shape[0]):
             d = dStarReader(directory+'/profile'+str(self._models[model]),**kwargs)
             for col in d.list_columns():
                 self._crust[col][model,:] = d.get_column(col)
