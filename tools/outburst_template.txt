@@ -1,0 +1,13 @@
+version                       <some id so we can refer to this data set>
+source_id                     <name of the source>
+earliest_outburst_end         <estimate of earliest time when outburst could have ended>
+outburst_end                  <best guess for end of outburst>
+latest_outburst_end           <estimate of latest time when outburst could have ended>
+minimum_distance              <estimate of minimum distance>
+distance                      <best value for distance>
+maximum_distance              <estimate of maximum distance>
+number_obs                    <number of data points>
+
+# data starts at line 12
+<MJD>       <daily_avg_bolometric_flux>         <delta_minus>           <delta_plus>
+...         ...                                 ...                     ...
