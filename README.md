@@ -25,10 +25,14 @@ For each module, the install script
   4. Installs the library and module files into the top-level `install` and `lib` direcories.
 
 ##How to use
-**Under construction**
 For each module, look in the `test` directory for an example of how to run the module. The primary module is `NScool`.
+
+For a basic example of how to run a neutron star model over an accretion/quiescent cycle, copy `examples/basic_run` and follow the instruction in the `README.md` file in that directory.
 
 ##Upcoming improvements
   1. add load/save options for models
   2. ability to generate an atmosphere model with an arbitrary composition.
+  3. Add environment variable pointer to root directory and allow cache directories to be in a user-specified location.
+  4. Make the accretion paramters arrays so that the code can model more complex accretion/quiescent cycles.
+
   
