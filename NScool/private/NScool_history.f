@@ -14,13 +14,14 @@ module NScool_history
    character(len=header_col_width), dimension(num_header_cols) :: header_cols = [character(len=header_col_width) ::  &
       & 'gravity', 'core_mass', 'core_radius', 'core_temp.' ]
    character(len=history_col_width),dimension(num_history_cols) :: history_cols = [character(len=history_col_width) ::  &
-      & 'model','time/s','lg(Mdot)','lg(Teff)','lg(Lsurf)','lg(Lnu)','lg(Lnuc)' ]
+      & 'model','time','lg(Mdot)','lg(Teff)','lg(Lsurf)','lg(Lnu)','lg(Lnuc)' ]
    
    logical, save :: history_first_call = .TRUE.
    
    contains
    subroutine do_write_history(id,ierr)
       use utils_lib, only: alloc_iounit, free_iounit, append_line
+      use constants_def, only: julian_day
       integer, intent(in) :: id
       integer, intent(out) :: ierr
       type(NScool_info), pointer :: s
@@ -72,7 +73,7 @@ module NScool_history
          call free_iounit(iounit)
          return
       end if
-      write(iounit,history_val_fmt) s% model, s% tsec, safelog10(s% Mdot), log10(s% Teff), log10(s% Lsurf),  &
+      write(iounit,history_val_fmt) s% model, s% tsec/julian_day, safelog10(s% Mdot), log10(s% Teff), log10(s% Lsurf),  &
       & log10(Lnu), safelog10(Lnuc)
       close(iounit)
       call free_iounit(iounit)

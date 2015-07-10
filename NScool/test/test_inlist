@@ -17,8 +17,8 @@
     maximum_number_of_models = 10000
     maximum_timestep = 0.0
         ! implies that max = tend-t
-    maximum_end_time = 1.0d9
-        ! seconds
+    maximum_end_time = 11566.0
+        ! days
     integration_tolerance = 1.0d-4
     ! limits on temperature: if a zone goes outside these bounds, reduce stepsize
     min_lg_temperature_integration = 7.0

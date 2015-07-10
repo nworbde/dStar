@@ -47,6 +47,7 @@ module NScool_ctrls_io
         which_proton_1S0_gap, &
         which_neutron_1S0_gap, &
         which_neutron_3P2_gap, &
+        scale_sf_critical_temperatures, &
         use_pcy_for_ee_scattering, &
         use_page_for_eQ_scattering, &
         use_ee_conductivity, &
@@ -129,7 +130,7 @@ contains
     end subroutine set_default_controls
 
     subroutine store_controls(s,ierr)
-        use constants_def, only : Msun, secyer
+        use constants_def, only : Msun, julian_day
        use num_lib, only : solver_option
        type(NScool_info), pointer :: s
        integer, intent(out) :: ierr
@@ -155,8 +156,8 @@ contains
        s% profile_manifest_filename = trim(s% output_directory)//'/profiles'
        
        s% maximum_number_of_models = maximum_number_of_models
-       s% maximum_timestep = maximum_timestep
-       s% maximum_end_time = maximum_end_time
+       s% maximum_timestep = maximum_timestep*julian_day
+       s% maximum_end_time = maximum_end_time*julian_day
        s% integration_tolerance = integration_tolerance
        s% min_lg_temperature_integration = min_lg_temperature_integration
        s% max_lg_temperature_integration = max_lg_temperature_integration
@@ -172,7 +173,7 @@ contains
        s% fix_atmosphere_temperature_when_accreting = fix_atmosphere_temperature_when_accreting
        s% atmosphere_temperature_when_accreting = atmosphere_temperature_when_accreting
        s% Mdot = Mdot
-       s% start_time = start_time
+       s% start_time = start_time*julian_day
        
        s% Mcore = core_mass
        s% Rcore = core_radius

@@ -72,7 +72,7 @@ module NScool_profile
       write (iounit,'(a,"/",2a,/)') trim(profile_date),trim(profile_time),trim(profile_zone)
       write (iounit,header_count_fmt) (ih, ih=1,num_header_cols)
       write (iounit,header_title_fmt) adjustr(header_cols)
-      write (iounit,header_val_fmt) s% model, s% tsec, s% Mcore, s% Rcore, s% Mdot, Lnuc, Lnu
+      write (iounit,header_val_fmt) s% model, s% tsec/julian_day, s% Mcore, s% Rcore, s% Mdot, Lnuc, Lnu
       write (iounit,*)
       write (iounit,*)
       write(iounit,profile_count_fmt) (ih, ih=1,num_profile_cols)

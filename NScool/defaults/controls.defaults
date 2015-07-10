@@ -15,9 +15,9 @@
     which_solver = 'rodasp_solver'
     maximum_number_of_models = 10000
     maximum_timestep = 0.0
-        ! implies that max = tend-t
-    maximum_end_time = 3.0d7
-        ! seconds
+        ! in days; 0 implies that max = tend-t
+    maximum_end_time = 365.0
+        ! days
     integration_tolerance = 1.0d-4
     ! limits on temperature: if a zone goes outside these bounds, reduce stepsize
     min_lg_temperature_integration = 7.0
@@ -33,7 +33,7 @@
     atmosphere_temperature_when_accreting = 1.0d8
     Mdot = 1.0d18 ! g/s
     
-    start_time = 0.0    ! s
+    start_time = 0.0    ! yr
     
     ! other routines
     use_other_set_Qimp = .FALSE.
