@@ -100,6 +100,12 @@
     which_neutron_1S0_gap = 'gc'
     which_neutron_3P2_gap = 't72'
     
+    ! you can multiply the critical temperatures by a scale factor; elements of the array are for
+    !   1 = p1S0
+    !   2 = n1S0
+    !   3 = n3P2
+    scale_sf_critical_temperatures(:) = 1.0
+    
     ! controls for the conductivity: setting these = .TRUE. means don't use the defaults
     use_pcy_for_ee_scattering = .FALSE.
     use_page_for_eQ_scattering = .FALSE.

@@ -59,6 +59,7 @@
     character(len=32) :: which_proton_1S0_gap
     character(len=32) :: which_neutron_1S0_gap
     character(len=32) :: which_neutron_3P2_gap
+    real(dp), dimension(3) :: scale_sf_critical_temperatures
     
     ! controls for the conductivity: setting these = .TRUE. means don't use the defaults
     logical :: use_pcy_for_ee_scattering

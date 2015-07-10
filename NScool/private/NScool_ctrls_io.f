@@ -194,6 +194,7 @@ contains
        s% which_proton_1S0_gap = which_proton_1S0_gap
        s% which_neutron_1S0_gap = which_neutron_1S0_gap
        s% which_neutron_3P2_gap = which_neutron_3P2_gap
+       s% scale_sf_critical_temperatures = scale_sf_critical_temperatures
 
        s% use_pcy_for_ee_scattering = use_pcy_for_ee_scattering
        s% use_page_for_eQ_scattering = use_page_for_eQ_scattering
