@@ -95,7 +95,7 @@ module NScool_profile
               & trim(s% profile_manifest_filename)
           return
       end if
-      write (iounit,'(i15,es15.6)') s% model, s% tsec
+      write (iounit,'(i15,es15.6)') s% model, s% tsec/julian_day
       close(iounit)
       call free_iounit(iounit)
    end subroutine do_write_profile
