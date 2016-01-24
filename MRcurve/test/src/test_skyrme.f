@@ -4,37 +4,24 @@ program test_skyrme
 	use dStar_core_def, only: rho_saturation
 	use brown_skyrme
 
+	integer, parameter :: Ntab = 20
 	integer :: i, ierr
-	real(dp) :: rrs(3) = [ 1.0, 3.0, 5.0 ]
-	real(dp) :: rho, x, eps, P, muhat, cs2
+	real(dp), dimension(Ntab) :: rho, x, eps, P, muhat, mue, cs2
+	
 	call constants_init('',ierr)
 	call check_okay('constants_init',ierr)
 	call initialize_brown_skyrme(ierr)
 	call check_okay('initialize_brown_skyrme',ierr)
-! 	do i = skyrme_matter,skyrme_sym
-! 		print *,'model: ',skyrme_eos(i)% model
-! 		print *,'gamma = ',skyrme_eos(i)% gamma
-! 		print *,'    a = ',skyrme_eos(i)% a
-! 		print *,'    b = ',skyrme_eos(i)% b
-! 		print *,'    c = ',skyrme_eos(i)% c
-! 		print *,'    d = ',skyrme_eos(i)% d
-! 		print *,'    e = ',skyrme_eos(i)% e
-! 		print *,''
-! 	end do
 	
-	x = 0.0
-	call do_one
-	x = 0.5
-	call do_one
+	rho = [(0.5 + 6.0*real(i-1,dp)/real(Ntab-1,dp), i=1,Ntab)]
+	rho = rho*rho_saturation
+	call find_beta_eq(rho,x,eps,P,muhat,mue,cs2,ierr)
+	call check_okay('find_beta_eq',ierr)
+
+	do i = 1,Ntab
+		write(*,*) rho(i), x(i), eps(i), P(i), cs2(i), muhat(i)-mue(i)
+	end do
 contains
-	subroutine do_one()
-		do i = 1, 3
-			rho = rrs(i)*rho_saturation
-			call get_skyrme_eos(rho,x,eps,P,muhat,cs2,ierr)
-			call check_okay('get_skyrme_eos',ierr)
-			print *, rrs(i),eps,P,muhat,cs2
-		end do
-	end subroutine do_one
 			
 	subroutine check_okay(msg,ierr)
 		use iso_fortran_env, only : error_unit

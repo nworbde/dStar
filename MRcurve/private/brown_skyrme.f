@@ -75,14 +75,18 @@ contains
 		
 		do i = 1, Ntab
 			rpar(1) = rho(i)
+			x3 = 0.5_dp
+			y3 = muhat_mue(x3,dfdx,lrpar,rpar,lipar,ipar,ierr)
 			x1 = 0.0_dp
 			y1 = muhat_mue(x1,dfdx,lrpar,rpar,lipar,ipar,ierr)
-			x3 = 0.5_dp
-			y3 = muhat_mue(x1,dfdx,lrpar,rpar,lipar,ipar,ierr)
-			x(i) = safe_root(muhat_mue,x1,x3,y1,y3,imax,epsx,epsy,lrpar,rpar,lipar,ipar,ierr)
-			if (ierr /= 0) then
-				write (*,*) 'unable to converge', rho(i),x1,x3,y1,y3
-				cycle
+			! check: if muhat < 0, then ground state is pure neutron matter
+			if (y1 < 0.0_dp .and. y3 < 0.0_dp) then
+				x(i) = 0.0_dp
+			else
+				x(i) = safe_root(muhat_mue,x1,x3,y1,y3,imax,epsx,epsy,lrpar,rpar,lipar,ipar,ierr)
+				if (ierr /= 0) then
+					write (*,*) 'unable to converge', rho(i),x1,x3,y1,y3
+				end if
 			end if
 			eps(i) = rpar(2)
 			P(i) = rpar(3)
@@ -114,7 +118,7 @@ contains
 			muhat_mue = 0.0_dp
 			return
 		end if
-		muhat_mue = max(muhat-mue,0.0_dp)
+		muhat_mue = muhat-mue
 		rpar(2) = eps
 		rpar(3) = P
 		rpar(4) = muhat
