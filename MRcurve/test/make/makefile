@@ -6,7 +6,7 @@ LOAD_OTHER = -L$(DSTAR_LIB_DIR) -ldstar_crust -lconductivity -lneutrino -ldstar_
 DSTAR_INC = ../../../include
 
 TEST = tester
-TEST_OBJS = test_MRcurve.o #
+TEST_OBJS = test_skyrme.o #
 
 default: install
 
