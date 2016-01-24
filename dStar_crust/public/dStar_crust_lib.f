@@ -9,7 +9,7 @@ contains
 		if (crust_is_initialized) then
             ierr = 1
 			write(error_unit,*) 'dStar_crust_startup: ', &
-			&    'package alreading initialized'
+			&    'package already initialized'
 			return
 		end if
 		crust_datadir = trim(datadir)//'/crust_data'
