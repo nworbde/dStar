@@ -1,7 +1,7 @@
 include $(MESA_DIR)/utils/makefile_header
 
 LIB = libmrcurve.a
-LIB_OBJS = dStar_core_def.o brown_skyrme.o
+LIB_OBJS = dStar_core_def.o brown_skyrme.o load_skyrme_parameters.o dStar_core_lib.o
 
 VPATH = $(MOD_PUBLIC_DIR):$(MOD_PRIVATE_DIR)
 DSTAR_INC=../../include

@@ -1,49 +1,7 @@
 module brown_skyrme
 	use constants_def
-	integer, parameter :: skyrme_matter = 1, skyrme_neutron = 2, skyrme_sym = 3
-
-	type skyrme
-		integer :: model
-		real(dp) :: gamma
-		real(dp) :: a, b, c, d, e
-	end type skyrme
-
-	type(skyrme), target :: skyrme_eos(3)
-	
+	use dStar_core_def
 contains
-	
-	subroutine initialize_brown_skyrme(ierr)
-		integer, intent(out) :: ierr
-		type(skyrme), pointer :: s
-		s => skyrme_eos(skyrme_matter)
-		s% model = skyrme_matter
-		s% gamma = 1.25000
-		s% a = -807.32
-		s% b = 914.73
-		s% c = 75.01
-		s% d = -58.95
-		s% e = 312.50
-
-		s => skyrme_eos(skyrme_neutron)
-		s% model = skyrme_sym
-		s% gamma = 1.25000
-		s% a = -377.46
-		s% b = 406.07
-		s% c = 118.98
-		s% d = -5.37
-		s% e = 138.73
-
-		s => skyrme_eos(skyrme_sym)
-		s% model = skyrme_sym
-		s% gamma = 1.25000
-		s% a = 429.86
-		s% b = -508.66
-		s% c = 43.98
-		s% d = 53.59 
-		s% e = -173.77		
-		
-		ierr = 0
-	end subroutine initialize_brown_skyrme
 	
 	subroutine find_beta_eq(rho,x,eps,P,muhat,mue,cs2,ierr)
 		use constants_def

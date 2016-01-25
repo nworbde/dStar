@@ -1,7 +1,9 @@
 program test_skyrme
 	use constants_def, only: dp
 	use constants_lib
-	use dStar_core_def, only: rho_saturation
+	use dStar_core_def
+	use dStar_core_lib
+	use load_skyrme_parameters
 	use brown_skyrme
 
 	integer, parameter :: Ntab = 20
@@ -10,8 +12,10 @@ program test_skyrme
 	
 	call constants_init('',ierr)
 	call check_okay('constants_init',ierr)
-	call initialize_brown_skyrme(ierr)
-	call check_okay('initialize_brown_skyrme',ierr)
+	call dstar_core_startup('../../data',ierr)
+	call check_okay('dstar_core_startup',ierr)
+	call load_skyrme_table('s7d',ierr)
+	call check_okay('load_skyrme_table',ierr)
 	
 	rho = [(0.5 + 6.0*real(i-1,dp)/real(Ntab-1,dp), i=1,Ntab)]
 	rho = rho*rho_saturation
