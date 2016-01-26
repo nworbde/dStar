@@ -13,12 +13,15 @@ default: install
 $(TEST) : $(TEST_OBJS)
 	$(LOADER) $(FCopenmp) -o $@ $(TEST_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
 
+compareEOS: compare_EOS.o
+	$(LOADER) $(FCopenmp) -o $@ compare_EOS.o $(LOAD_LOCAL) $(LOAD_OTHER)
+
 %.o: $(TEST_SRC_DIR)/%.f
 	$(TEST_COMPILE) $(FCfree) $(FCimpno) -I$(DSTAR_INC) $<
 
-install: $(TEST)
-	cp $(TEST) ..
+install: $(TEST) compareEOS
+	cp $(TEST) compareEOS ..
 	mkdir -p ../LOGS
 
 clean:
-	-@rm -f *.o *.mod $(TEST)
+	-@rm -f *.o *.mod $(TEST) compareEOS

@@ -12,7 +12,7 @@ contains
 			&	'package already initialized'
 			return
 		end if
-		core_datadir = trim(datadir)//'/skyrme_data'
+		core_datadir = trim(datadir)//'/core_data'
 		dStar_core_is_initialized = .TRUE.
 		ierr = 0
 	end subroutine dStar_core_startup

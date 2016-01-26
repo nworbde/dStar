@@ -12,6 +12,8 @@ function check_okay {
 }
 
 this_module=${PWD##*/}
+mkdir -p ../data/core_data/cache
+cp data/skyrme_data/*.data ../data/core_data/
 ./build_and_test
 check_okay
 cd make

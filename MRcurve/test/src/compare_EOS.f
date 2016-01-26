@@ -13,6 +13,7 @@ program compare_EOS
 	real(dp), parameter :: lgP_blend_max = 0.35
 	real(dp), parameter :: lgP_blend_min = -0.80
 
+	character(len=*), parameter :: datadir='../../data'
 	integer, parameter :: Ntrial = 20
 	integer :: i, ierr
 	real(dp), dimension(Ntrial) :: lgP,lgRho,lgEps,Xprot,dlgRho,dlgEps,dXprot,Xneut
@@ -27,19 +28,19 @@ program compare_EOS
 	call constants_init('',ierr)
 	call check_okay('constants_init',ierr)
 
-	call dstar_core_startup('../data',ierr)
+	call dstar_core_startup(datadir,ierr)
 	call check_okay('dstar_core_startup',ierr)
     
-    call nucchem_init('../../data',ierr)
+    call nucchem_init(datadir,ierr)
     call check_okay('nucchem_init',ierr)
 	
-    call sf_startup('../../data',ierr)
+    call sf_startup(datadir,ierr)
     call check_okay('sf_startup',ierr)
 	
     call sf_load_gaps('ns','gc','t72',ierr)
     call check_okay('sf_load_gaps',ierr)
 	
-    call dStar_eos_startup('../../data')
+    call dStar_eos_startup(datadir)
     call check_okay('dStar_eos_startup',ierr)
 	
     eos_handle = alloc_dStar_eos_handle(ierr)
@@ -48,7 +49,7 @@ program compare_EOS
     ! switch off the warnings about quantum effects
     call dStar_eos_set_controls(eos_handle,suppress_warnings=.TRUE.)
     
-    call dStar_crust_startup('../../data',ierr)
+    call dStar_crust_startup(datadir,ierr)
     call check_okay('dStar_atm_startup',ierr)
     
     Tref = 1.0d8
