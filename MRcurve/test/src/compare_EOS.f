@@ -17,7 +17,7 @@ program compare_EOS
 	integer, parameter :: Ntrial = 20
 	integer :: i, ierr
 	real(dp), dimension(Ntrial) :: lgP,lgRho,lgEps,Xprot,dlgRho,dlgEps,dXprot,Xneut
-	real(dp), dimension(Ntrial) :: lgPc,lgRhoc,lgEpsc,dlgRhoc,dlgEpsc, fac
+	real(dp), dimension(Ntrial) :: lgPc,lgRhoc,lgEpsc,dlgRhoc,dlgEpsc,Zfac,fac,dfac
     real(dp), dimension(:,:), allocatable :: Yion
     integer, dimension(:), allocatable :: charged_ids
     integer :: ncharged
@@ -86,12 +86,17 @@ program compare_EOS
 	where (lgP <= lgP_blend_min)
 		lgRho = lgRhoc-log10(amu*density_n)
 		lgEps = lgEpsc-log10(mass_n*density_n)
+		dlgRho = dlgRhoc
+		dlgEps = dlgEpsc
 	end where
 	where(lgP < lgP_blend_max .and. lgP > lgP_blend_min)
-		fac = (lgP-lgP_blend_min)/(lgP_blend_max-lgP_blend_min)
-		fac = 0.5_dp*(1.0_dp-cos(pi*fac))
+		Zfac = (lgP-lgP_blend_min)/(lgP_blend_max-lgP_blend_min)
+		fac = 0.5_dp*(1.0_dp-cos(pi*Zfac))
+		dfac = 0.5_dp*pi/(lgP_blend_max-lgP_blend_min)*sin(pi*Zfac)
 		lgRho = fac*lgRho + (1.0-fac)*(lgRhoc-log10(amu*density_n))
+		dlgRho = fac*dlgRho + (1.0-fac)*dlgRhoc + dfac*(lgRho-lgRhoc+log10(amu*density_n))
 		lgEps = fac*lgEps + (1.0-fac)*(lgEpsc-log10(mass_n*density_n))
+		dlgEps = fac*dlgEps + (1.0-fac)*dlgEpsc + dfac*(lgEps-lgEpsc+log10(mass_n*density_n))
 	end where
 
     write (*,'("#",a)') 'blend'
