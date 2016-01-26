@@ -103,8 +103,8 @@ contains
 		sym => skyrme_eos(skyrme_sym)
 		xfac = (1.0-2.0*x)**2
 		Eint = Eskyrme(matter,rho) + xfac*Eskyrme(sym,rho)
-		eps = rho*(Eint+ x*Mp_n + (1.0-x)*Mn_n)
-		P = Pskyrme(matter,rho)+xfac*Pskyrme(sym,rho)
+		eps = rho*(Eint+ x*Mp_n + (1.0-x)*Mn_n) + eps_e(rho,x)
+		P = Pskyrme(matter,rho)+xfac*Pskyrme(sym,rho) + P_e(rho,x)
 		muhat = 4.0*(1.0-2.0*x)*Eskyrme(sym,rho)+Mhat
 		mue = mu_e(rho,x)
 		dEdlnrho = rhodEdrho(matter,rho)+xfac*rhodEdrho(sym,rho)
@@ -151,6 +151,18 @@ contains
 			real(dp) :: mu_e
 			mu_e = (threepisquare*x*rho)**onethird*hbarc_n
 		end function mu_e
+		
+		function P_e(rho,x)
+			real(dp), intent(in) :: rho,x
+			real(dp) :: P_e
+			P_e = 0.25*(x*rho)*(threepisquare*x*rho)**onethird*hbarc_n
+		end function P_e
+		
+		function eps_e(rho,x)
+			real(dp), intent(in) :: rho,x
+			real(dp) :: eps_e
+			eps_e = 0.75*(x*rho)*(threepisquare*x*rho)**onethird*hbarc_n
+		end function eps_e
 		
 	end subroutine get_skyrme_eos
 	
