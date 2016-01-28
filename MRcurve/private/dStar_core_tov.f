@@ -143,26 +143,31 @@ contains
 		if (ierr /= 0) return
 		
     	eps = 10.0**(lgEps)	  ! mass-energy density, in MeV fm**-3
-        rho = 10.0**(lgRho)               ! fm**-3
+        rho = 10.0**(lgRho)   ! fm**-3
+		
+		write(*,'(a,2(e11.4))') 'integrating with central densities',rho*amu*density_n,eps*mass_n*density_n
 
     	! scale to gravitational units
     	rho_g = rho * amu*density_n/density_g
-    	eps_g = eps * mass_n/density_n/density_g
+    	eps_g = eps * mass_n*density_n/density_g
 		
-		y(core_radius)      = 1.0e3_dp/length_g
+		y(core_radius)      = 5.0e3_dp/length_g
 		y(core_baryon)      = onethird*fourpi*rho_g*y(core_radius)**3
 		y(core_mass)        = y(core_baryon)*eps_g/rho_g
 		y(core_potential)   = 0.0
 
         n = num_core_variables
-        lnP = lgPstart * ln10 - log(pressure_g)
-        lnPend = lgPend * ln10 - log(pressure_g)
+        lnP = lgPstart * ln10 + log(pressure_n/pressure_g)
+        lnPend = lgPend * ln10 + log(pressure_n/pressure_g)
         h = -0.1
         rpar(core_output_step_crust) = lnP_rez
         rpar(core_last_recorded_step) = lnP + rpar(core_output_step_crust)
 
         npts = ceiling(lnP - lnPend)/rpar(core_output_step_crust) + 1
         
+		if (allocated(s% pressure)) then
+			call free_core_model(s, ierr)
+		end if
         call alloc_core_model(npts, s, ierr)
         s% nzs = 0
         
@@ -185,6 +190,7 @@ contains
     
 	subroutine core_get_EOS(lgP,lgRho,lgEps,ierr)
     	use dStar_crust_lib
+		use dStar_core_lib, only : dStar_core_get_results
 		use dStar_core_mod
 		real(dp), intent(in) :: lgP	! MeV fm**-3
 		real(dp), intent(out) :: lgRho, lgEps	! fm**-3, MeV fm**-3
@@ -343,7 +349,7 @@ contains
 			
             if (ierr /= 0) return
             write (*,'(5(f14.10,tr2),3(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi,  &
-            &   10.0**lgP, 10.0**lgRho, 10.0**lgEps
+            &   10.0**lgP * pressure_n, 10.0**lgRho * amu*density_n, 10.0**lgEps * mass_n*density_n
         end do
     end subroutine core_write_crust
 
