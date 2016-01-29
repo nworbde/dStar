@@ -11,12 +11,14 @@ program test_TOV
 	use dStar_core_lib
 	use dStar_core_tov
 
+	integer, parameter :: NMR = 20
 	character(len=*), parameter :: datadir='../../data'
 	integer :: ierr, i
     integer :: eos_handle
     real(dp) :: Tref, lgPstart, lgPend, lnP_rez
 	real(dp), dimension(:), pointer :: y
-	real(dp), dimension(:), allocatable :: M, R
+	real(dp), dimension(:), allocatable :: M, R, P_c, rho_c, eps_c
+	real(dp) :: lgP, lgRho, lgEps
 	
 	call constants_init('',ierr)
 	call check_okay('constants_init',ierr)
@@ -49,27 +51,34 @@ program test_TOV
     call dStar_crust_load_table('hz90',eos_handle, Tref,ierr)
     call check_okay('dStar_crust_load_table',ierr)
 	
-	call dStar_core_load_table('s7d',ierr)
+	call dStar_core_load_table('s7r',ierr)
 	call check_okay('dStar_core_load_table',ierr)
 	
 	lgPend = -7.0
 	lnP_rez = 0.2
 	allocate(y(num_core_variables))
-	allocate(M(20),R(20))
-	do i = 1,20
-		lgPstart = 1.1 + 2.2*real(i-1,dp)/19.0
+	allocate(M(NMR),R(NMR),P_c(NMR),rho_c(NMR),eps_c(NMR))
+	do i = 1,NMR
+		lgPstart = 1.1 + 2.2*real(i-1,dp)/real(NMR-1,dp)
 		call core_integrate(lgPstart, lgPend, lnP_rez, y, ierr)
 		call check_okay('core_integrate',ierr)
 		M(i) = y(core_mass)
 		R(i) = y(core_radius)*length_g*1.0e-5
-		Pc(i) = core_structure% P(core_structure% nzs)
+		P_c(i) = core_structure% pressure(1) * pressure_g/pressure_n
+		lgP = log10(P_c(i))
+		call core_get_EOS(lgP,lgRho,lgEps,ierr)
+		rho_c(i) = 10.0_dp**lgRho
+		eps_c(i) = 10.0_dp**lgEps
 		call core_write_crust
 	end do
 
 	write (*,*)
 	do i = 1, 20
-		write (*,'(2f6.2)') M(i), R(i)
+		write (*,'(5f10.4)') M(i), R(i), P_c(i), rho_c(i)/0.16, eps_c(i)
 	end do
+
+	deallocate(y)
+	deallocate(M,R,P_c,rho_c,eps_c)
 
 	call dStar_core_shutdown
     call dStar_crust_shutdown

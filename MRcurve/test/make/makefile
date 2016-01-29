@@ -19,8 +19,8 @@ compareEOS: compare_EOS.o
 %.o: $(TEST_SRC_DIR)/%.f
 	$(TEST_COMPILE) $(FCfree) $(FCimpno) -I$(DSTAR_INC) $<
 
-install: $(TEST) compareEOS
-	cp $(TEST) compareEOS ..
+install: $(TEST)
+	cp $(TEST) ..
 	mkdir -p ../LOGS
 
 clean:
