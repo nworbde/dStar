@@ -11,14 +11,26 @@ program test_TOV
 	use dStar_core_lib
 	use dStar_core_tov
 
-	integer, parameter :: NMR = 20
+	integer :: NMR
 	character(len=*), parameter :: datadir='../../data'
-	integer :: ierr, i
+	character(len=16) :: model
+	integer :: ierr, i, unitno
     integer :: eos_handle
     real(dp) :: Tref, lgPstart, lgPend, lnP_rez
 	real(dp), dimension(:), pointer :: y
 	real(dp), dimension(:), allocatable :: M, R, P_c, rho_c, eps_c
-	real(dp) :: lgP, lgRho, lgEps
+	real(dp) :: lgP, lgRho, lgEps, lgPmin, lgPmax
+	
+	namelist /MRcontrols/ model, NMR, lgPmin, lgPmax
+	
+	open(newunit=unitno,file='inlist',status='old',action='read') 
+	read(unitno,nml=MRcontrols,iostat=ierr)
+	close(unitno)
+	
+	if (ierr /= 0) then
+		write(*,*) 'unable to read controls'
+		stop
+	end if
 	
 	call constants_init('',ierr)
 	call check_okay('constants_init',ierr)
@@ -51,15 +63,16 @@ program test_TOV
     call dStar_crust_load_table('hz90',eos_handle, Tref,ierr)
     call check_okay('dStar_crust_load_table',ierr)
 	
-	call dStar_core_load_table('s7r',ierr)
+	call dStar_core_load_table(model,ierr)
 	call check_okay('dStar_core_load_table',ierr)
 	
-	lgPend = -7.0
+	lgPend = -9.0
 	lnP_rez = 0.2
 	allocate(y(num_core_variables))
 	allocate(M(NMR),R(NMR),P_c(NMR),rho_c(NMR),eps_c(NMR))
+	
 	do i = 1,NMR
-		lgPstart = 1.1 + 2.2*real(i-1,dp)/real(NMR-1,dp)
+		lgPstart = lgPmin + (lgPmax-lgPmin)*real(i-1,dp)/real(NMR-1,dp)
 		call core_integrate(lgPstart, lgPend, lnP_rez, y, ierr)
 		call check_okay('core_integrate',ierr)
 		M(i) = y(core_mass)
@@ -69,14 +82,16 @@ program test_TOV
 		call core_get_EOS(lgP,lgRho,lgEps,ierr)
 		rho_c(i) = 10.0_dp**lgRho
 		eps_c(i) = 10.0_dp**lgEps
-		call core_write_crust
+		call core_write_crust('LOGS',model)
 	end do
 
-	write (*,*)
-	do i = 1, 20
-		write (*,'(5f10.4)') M(i), R(i), P_c(i), rho_c(i)/0.16, eps_c(i)
+	open(newunit=unitno,file='MRcurve_'//trim(model),action='write')
+	write(unitno,'(5a10)') 'M (Msun)','R (km)','P_c','n/n0','eps_c'
+	do i = 1, NMR
+		write (unitno,'(5f10.4)') M(i), R(i), P_c(i), rho_c(i)/0.16, eps_c(i)
 	end do
-
+	close(unitno)
+	
 	deallocate(y)
 	deallocate(M,R,P_c,rho_c,eps_c)
 

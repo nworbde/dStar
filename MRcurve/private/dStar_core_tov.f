@@ -131,7 +131,7 @@ contains
         work = 0.0
         
         itol = 0
-        rtol = 1.0e-4
+        rtol = 1.0e-5
         atol = 1.0e-5
         iout = 2    ! want dense output.. eventually turn off?
         lout = error_unit
@@ -145,13 +145,13 @@ contains
     	eps = 10.0**(lgEps)	  ! mass-energy density, in MeV fm**-3
         rho = 10.0**(lgRho)   ! fm**-3
 		
-		write(*,'(a,2(e11.4))') 'integrating with central densities',rho*amu*density_n,eps*mass_n*density_n
+		write(error_unit,'(a,2(e11.4))') 'integrating with central densities',rho*amu*density_n,eps*mass_n*density_n
 
     	! scale to gravitational units
     	rho_g = rho * amu*density_n/density_g
     	eps_g = eps * mass_n*density_n/density_g
 		
-		y(core_radius)      = 5.0e3_dp/length_g
+		y(core_radius)      = 3.0e3_dp/length_g
 		y(core_baryon)      = onethird*fourpi*rho_g*y(core_radius)**3
 		y(core_mass)        = y(core_baryon)*eps_g/rho_g
 		y(core_potential)   = 0.0
@@ -159,7 +159,8 @@ contains
         n = num_core_variables
         lnP = lgPstart * ln10 + log(pressure_n/pressure_g)
         lnPend = lgPend * ln10 + log(pressure_n/pressure_g)
-        h = -0.1
+		! make the initial stepsize very small because dP/dr is small at center.
+        h = -1.0e-4
         rpar(core_output_step_crust) = lnP_rez
         rpar(core_last_recorded_step) = lnP + rpar(core_output_step_crust)
 
@@ -329,14 +330,24 @@ contains
         if (ierr /= 0) irtrn = -1
     end subroutine core_solout_crust
     
-    subroutine core_write_crust()
+    subroutine core_write_crust(prefix,eos)
+		character(len=*), intent(in) :: prefix,eos
     	real(dp) ::  lnP, lgP, xwant, lgx, r, a, m, phi, p, vol
     	real(dp) :: rho, eps, lgRho, lgEps
 	    type(core_structure_type), pointer :: s
-        integer :: i, ierr
-
+        integer :: i, ierr, unitno
+		integer :: M_id
+		character(len=256) :: outfile
+		
         s => core_structure
         
+		M_id = int(s% mass(s% nzs)*1000)
+		write(outfile,'(a,"/",a,a,"_",i4.4)') trim(prefix),'profile_',trim(eos),M_id
+	
+		open(newunit=unitno,file=trim(outfile),status='unknown',action='write')
+		write (unitno,'(5(a14,tr2),3(a15,tr1))') 'baryon (Msun)','mass (Msun)', &
+		& 'radius (km)','Lambda','Phi','pressure','rho','epsilon'
+		
         do i = 1, s% nzs
             r = s% radius(i)
             a = s% baryon(i)
@@ -348,9 +359,10 @@ contains
 			call core_get_EOS(lgP,lgRho,lgEps,ierr)
 			
             if (ierr /= 0) return
-            write (*,'(5(f14.10,tr2),3(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi,  &
+            write (unitno,'(5(f14.10,tr2),3(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi,  &
             &   10.0**lgP * pressure_n, 10.0**lgRho * amu*density_n, 10.0**lgEps * mass_n*density_n
         end do
+		close(unitno)
     end subroutine core_write_crust
 
 end module dStar_core_tov

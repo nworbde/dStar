@@ -2,7 +2,7 @@ module dStar_core_def
     use constants_def
 	real(dp), parameter :: rho_saturation = 0.16	! fm
     integer, parameter :: core_default_number_table_points = 2048
-    real(dp), parameter :: core_default_Rhomin = 0.25*rho_saturation
+    real(dp), parameter :: core_default_Rhomin = 0.1*rho_saturation
     real(dp), parameter :: core_default_Rhomax = 12.0*rho_saturation
     
     type core_table_type
