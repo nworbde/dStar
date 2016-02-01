@@ -1,6 +1,21 @@
 &MRcontrols
+
+	! available models are
+	!
+	! s15h
+	! s17h
+	! s7a
+	! s7r
+	! s7d
+	! s7z
+	
 	model = 's7d'
+	
+	! number of points in M-R curve
 	NMR = 20
+	
+	! the table spans a logarithmic range of central pressures (in MeV fm**-3)
+	! limited by the following.
 	lgPmin = 1.0
 	lgPmax = 3.3
 /

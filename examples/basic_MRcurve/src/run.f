@@ -11,8 +11,10 @@ program run_MRcurve
 	use dStar_core_lib
 	use dStar_core_tov
 
+	character(len=*), parameter :: my_dStar_dir = '/path/to/local/dStar'
+	character(len=*), parameter :: inlist = 'inlist'
 	integer :: NMR
-	character(len=*), parameter :: datadir='../../data'
+	character(len=256) :: datadir
 	character(len=16) :: model
 	integer :: ierr, i, unitno
     integer :: eos_handle
@@ -23,7 +25,7 @@ program run_MRcurve
 	
 	namelist /MRcontrols/ model, NMR, lgPmin, lgPmax
 	
-	open(newunit=unitno,file='inlist',status='old',action='read') 
+	open(newunit=unitno,file=inlist,status='old',action='read') 
 	read(unitno,nml=MRcontrols,iostat=ierr)
 	close(unitno)
 	
@@ -32,22 +34,24 @@ program run_MRcurve
 		stop
 	end if
 	
+	datadir = my_dStar_dir//'/data'
+	
 	call constants_init('',ierr)
 	call check_okay('constants_init',ierr)
 
-	call dstar_core_startup(datadir,ierr)
+	call dstar_core_startup(trim(datadir),ierr)
 	call check_okay('dstar_core_startup',ierr)
     
-    call nucchem_init(datadir,ierr)
+    call nucchem_init(trim(datadir),ierr)
     call check_okay('nucchem_init',ierr)
 	
-    call sf_startup(datadir,ierr)
+    call sf_startup(trim(datadir),ierr)
     call check_okay('sf_startup',ierr)
 	
     call sf_load_gaps('ns','gc','t72',ierr)
     call check_okay('sf_load_gaps',ierr)
 	
-    call dStar_eos_startup(datadir)
+    call dStar_eos_startup(trim(datadir))
     call check_okay('dStar_eos_startup',ierr)
 	
     eos_handle = alloc_dStar_eos_handle(ierr)
