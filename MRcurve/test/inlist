@@ -1,6 +1,0 @@
-&MRcontrols
-	model = 's7r'
-	NMR = 70
-	lgPmin = 1.0
-	lgPmax = 3.3
-/
