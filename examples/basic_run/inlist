@@ -14,8 +14,8 @@
     maximum_number_of_models = 10000
     maximum_timestep = 0.0
         ! implies that max = tend-t
-    maximum_end_time = 4320000.0
-        ! seconds  (this is a 50-day outburst)
+    maximum_end_time = 50.0
+        ! days  (this is a 50-day outburst)
     integration_tolerance = 1.0d-4
     ! limits on temperature: if a zone goes outside these bounds, reduce stepsize
     min_lg_temperature_integration = 7.0

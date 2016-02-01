@@ -16,8 +16,8 @@ This directory contains an example run of an accretion outburst/quiescent coolin
 
 4. Change the parameters as desired in the `inlist`.  Note that 
 
-        maximum_end_time = 4320000.0
-            ! seconds  (this is a 50-day outburst)
+        maximum_end_time = 50.0
+            ! days  (this is a 50-day outburst)
 
     and
             
