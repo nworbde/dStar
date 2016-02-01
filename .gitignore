@@ -11,7 +11,4 @@ test_log
 tester
 LOGS
 .ipynb_checkpoints
-MRcurves.ipynb
-MRcurve_*
-MRcurve.pdf
 
