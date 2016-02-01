@@ -12,10 +12,10 @@ contains
 		character(len=32) :: pset
 		real(dp) :: gamma, a, b, c, d, e, E16, L, K, E10
 		
-		model_file = trim(core_datadir)//'/'//model//'.data'
+		model_file = trim(core_datadir)//'/'//trim(model)//'.data'
 		open (newunit=funit,file=trim(model_file),status='old',action='read',iostat=ierr)
 		if (ierr /= 0) then
-			write(error_unit,*) 'unable to open '//trim(model)//' for reading'
+			write(error_unit,*) 'unable to open '//trim(model_file)//' for reading'
 			return
 		end if
 		
