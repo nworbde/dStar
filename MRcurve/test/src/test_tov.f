@@ -23,7 +23,7 @@ program test_TOV
 	
 	namelist /MRcontrols/ model, NMR, lgPmin, lgPmax
 	
-	open(newunit=unitno,file='inlist',status='old',action='read') 
+	open(newunit=unitno,file='test_inlist',status='old',action='read') 
 	read(unitno,nml=MRcontrols,iostat=ierr)
 	close(unitno)
 	
@@ -85,7 +85,8 @@ program test_TOV
 		call core_write_crust('LOGS',model)
 	end do
 
-	open(newunit=unitno,file='MRcurve_'//trim(model),action='write')
+!	open(newunit=unitno,file='MRcurve_'//trim(model),action='write')
+	open(newunit=unitno,file='test_output.data',action='write')
 	write(unitno,'(5a10)') 'M (Msun)','R (km)','P_c','n/n0','eps_c'
 	do i = 1, NMR
 		write (unitno,'(5f10.4)') M(i), R(i), P_c(i), rho_c(i)/0.16, eps_c(i)
@@ -95,10 +96,11 @@ program test_TOV
 	deallocate(y)
 	deallocate(M,R,P_c,rho_c,eps_c)
 
-	call dStar_core_shutdown
     call dStar_crust_shutdown
+	call dStar_eos_shutdown
     call sf_shutdown
     call nucchem_shutdown
+	call dStar_core_shutdown
 	
 contains
 	subroutine check_okay(msg,ierr)
