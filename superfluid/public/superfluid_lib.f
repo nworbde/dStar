@@ -12,7 +12,7 @@ contains
 			&   'sf_startup called on already initialized module'
 			return
 		end if
-		sf_datadir = trim(datadir)//'/skyrme_data'
+		sf_datadir = trim(datadir)//'/Tc_data'
 		sf_scale = 1.0
 		sf_is_initialized = .true.
 		ierr = 0
