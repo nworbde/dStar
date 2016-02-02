@@ -9,7 +9,7 @@ contains
 		if (atm_is_initialized) then
             ierr = 1
 			write(error_unit,*) 'dStar_atm_startup: ', &
-			&    'package alreading initialized'
+			&    'package already initialized'
 			return
 		end if
 		atm_datadir = trim(datadir)//'/atm_data'

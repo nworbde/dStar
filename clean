@@ -47,6 +47,7 @@ do_one conductivity
 do_one dStar_atm
 do_one dStar_crust
 do_one NScool
+do_one MRcurve
 
 echo "cleaning include, lib, data directories..."
 clean_directory include
@@ -58,5 +59,6 @@ clean_data_caches nucchem
 clean_data_caches eos
 clean_data_caches atm_data
 clean_data_caches crust_data
+clean_data_caches core_data
 
 echo
