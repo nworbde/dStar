@@ -16,6 +16,7 @@ this_module=${PWD##*/}
 check_okay
 mkdir -p ../data/eos/cache
 cp data/helm_table.dat ../data/eos/
+cp data/Skyrme_data/s*.data ../data/eos
 ./build_and_test
 check_okay
 cd make
