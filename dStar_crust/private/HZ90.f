@@ -173,7 +173,7 @@ contains
         deallocate(X)
     end subroutine do_make_crust
     
-    subroutine find_densities(eos_handle,lgP,lgRho,lgEps,Yion,ncharged,charged_ids,ionic)
+    subroutine find_densities(eos_handle,lgP,lgRho,lgEps,Yion,ncharged,charged_ids,ionic,Tref)
         use constants_def
         use nucchem_def
         use num_lib
@@ -186,6 +186,7 @@ contains
         real(dp), dimension(:,:), intent(in) :: Yion
         integer, intent(in) :: ncharged
         integer, dimension(:), intent(in) :: charged_ids
+		real(dp), intent(in) :: Tref
         type(composition_info_type), dimension(:), intent(in) :: ionic
         real(dp), dimension(:), pointer :: rpar=>null()
         integer, dimension(:), pointer :: ipar=>null()
@@ -207,7 +208,7 @@ contains
         ipar(2) = ncharged
         ipar(3:ncharged+2) = charged_ids(1:ncharged)
         
-        lrpar = ncharged + 11 + 3
+        lrpar = ncharged + 11 + 4
         allocate(rpar(lrpar))
         
         ! last value of rpar is a guess for the density; if 0, will be calculated for relativistic electron gas
@@ -227,6 +228,7 @@ contains
             rpar(ncharged+10) = ionic(i)% Yn
             rpar(ncharged+11) = ionic(i)% Q
             rpar(ncharged+12) = lgP(i)
+			rpar(ncharged+13) = Tref
             
             if (i > 1 .and. rpar(lrpar) /= 0.0) then
                 lgRho_guess = lgRho(i-1) + (lgP(i)-lgP(i-1))/rpar(lrpar)
@@ -247,7 +249,7 @@ contains
                 write(*,*) 'unable to converge', lgP(i), x1, x3, y1, y3
                 cycle
             end if
-            lgEps(i) = rpar(ncharged+13)
+            lgEps(i) = rpar(ncharged+14)
         end do
     end subroutine find_densities
     
@@ -294,14 +296,14 @@ contains
        
        chi = use_default_nuclear_size
        rho = 10.0**lgRho
-       T = 1.0d8
+       T = rpar(ncharged+13)
        call eval_crust_eos(eos_handle,rho,T,ionic,ncharged,charged_ids,Yion,res,phase,chi)
        Eint = res(i_lnE)
        
        lgPwant = rpar(ncharged+12)
        lgP = res(i_lnP)/ln10
 
-       rpar(ncharged+13) = log10(rho*(1.0+dot_product(Yion(:),nuclib%mass_excess(charged_ids))/amu_n + Eint/clight2))
+       rpar(ncharged+14) = log10(rho*(1.0+dot_product(Yion(:),nuclib%mass_excess(charged_ids))/amu_n + Eint/clight2))
        rpar(lrpar) = res(i_chiRho)
        ierr = 0
        match_density = lgP - lgPwant
