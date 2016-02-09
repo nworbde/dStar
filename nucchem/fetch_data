@@ -38,11 +38,11 @@ function fetch_and_verify {
 }
 
 function get_datafile {
-    zip='.bz2'
+    zip='.xz'
     db=$1
     tmpfile="tmp_$db"
     url=$2
-    unzip=`which bunzip2`
+    unzip=`which xzcat`
     curl -fS $url | $unzip > $tmpfile
     check_okay
     mv -i $tmpfile $db
@@ -81,7 +81,7 @@ NLIB=nuclib_db
 MD5_NLIB=f9690eb559428a95d4357bd2101f08bb
 
 #locations
-NLIB_URL=https://dl.dropboxusercontent.com/u/52649885/dStar/crust_isotopes.data.bz2
+NLIB_URL=https://dl.dropboxusercontent.com/u/52649885/dStar/crust_isotopes.data.xz
 
 echo
 echo "Installing Nuclib Datafiles"

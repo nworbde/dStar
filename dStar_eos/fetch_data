@@ -16,9 +16,10 @@ function fetch_and_verify {
     lib=$1
     chks=$2
     url=$3
+	chkr=$4
     if [ -f $lib ]; then
         echo "$lib exists...verifying"
-        verify_datafile $lib $chks
+        verify_datafile $lib $chks $chkr
         if [ $? -ne 0 ]; then
             echo "verification failed"
             need_to_fetch=1
@@ -32,17 +33,17 @@ function fetch_and_verify {
         echo "fetching $lib from $url..."
         get_datafile $lib $url
         echo "verifying $lib..."
-        verify_datafile $lib $chks
+        verify_datafile $lib $chks $chkr
         check_okay
     fi
 }
 
 function get_datafile {
-    zip='.bz2'
+    zip='.xz'
     db=$1
     tmpfile="tmp_$db"
     url=$2
-    unzip=`which bunzip2`
+    unzip=`which xzcat`
     curl -fS $url | $unzip > $tmpfile
     check_okay
     mv -i $tmpfile $db
@@ -52,31 +53,74 @@ function get_datafile {
 function verify_datafile {
     db=$1
     key_cksm=$2
-    chk=""
-    if [ `which md5sum` ]; then
-        chk=`which md5sum`
-        echo "using $chk"
-        this_cksm=( `$chk $db` )
-    elif [ `which md5` ]; then
-        chk=`which md5`
-        echo "using $chk"
+    chk=$3
+    if [ ${chk##*/} = "md5" ]; then
         this_cksm=( `$chk -q $db` )
     else
-        echo "no md5 or md5sum available, skipping verification"
-        return 0
+        this_cksm=( `$chk $db` )
     fi
-    echo "checksum is  ${this_cksm[0]}"
-    echo "compare with $key_cksm"
     if [ ${this_cksm[0]} !=  $key_cksm ]; then
         echo "FAILED"
+        echo "checksum is  ${this_cksm[0]}"
+        echo "compare with $key_cksm"
         return 1
     fi
     return 0
 }
 
-LIB=helm_table.dat
-MD5=29f10f751dfd9a184235cfecf6114bc7
-URL=https://dl.dropboxusercontent.com/u/52649885/dStar/helm_table.dat.bz2
+HELM_DB=helm_table.dat
+HELM_MD5=29f10f751dfd9a184235cfecf6114bc7
+HELM_URL=https://dl.dropboxusercontent.com/u/52649885/dStar/helm_table.dat.xz
+
+SKYRME_datafiles=(	s10q.data \
+                    s10r.data \
+                    s11q.data \
+                    s11r.data \
+                    s12q.data \
+                    s12r.data \
+                    s15h.data \
+                    s15q.data \
+                    s16q.data \
+                    s16r.data \
+                    s17h.data \
+                    s17q.data \
+                    s18q.data \
+                    s3q.data  \
+                    s6q.data  \
+                    s7a.data  \
+                    s7d.data  \
+                    s7q.data  \
+                    s7r.data  \
+                    s7z.data  \
+                    s8q.data  \
+                    s8r.data  \
+                    s9q.data  )
+
+SKYRME_chksums=(	8366ee11c64dc2b57ae0f75146c63792 \
+                    f6c45c88f883d8b99dd00152197b18fd \
+                    33e06ef4fe4fab2b5e8f363c8fffc737 \
+                    690ebed35d18481d2144972f47ffa725 \
+                    f54aa51c8d37b90bd8bb6cc666ef219e \
+                    5360765a116370da1d1518289174baac \
+                    bd60c236fde4d35605d66ba8f0bb3435 \
+                    9ee2628a27c58d8e62d25c59b06b04c0 \
+                    bfdf894dc59f490c09719001bb52d945 \
+                    61736a6dba70df09643f3d1a9263b7d1 \
+                    c46201534109b130152073ba09c4fc4e \
+                    4989dc06a57ab33f6777e15b021da144 \
+                    b00b5f5876e9ae39abe3faf567eddd0d \
+                    c328664ad21ed0703cb801128c77ccaa \
+                    ccb122616681a8dc94cffa6369df1479 \
+                    223d8a1d5bb56e61a89cb0b247c7ad8f \
+                    d68cc5a7035573c30f206bc388fc84b3 \
+                    c41d22e99b17da5996ed7f80d573d1ac \
+                    b2b3c2e31d89c0eb93653269510008c2 \
+                    3ace9508805193491b4323d3866334bb \
+                    41c5162e294b03b54604479d15cf16f0 \
+                    7f9dffc67b2167f2251d0467308878c1 \
+                    c6f08f25c2812ae4ee97a2a73c5b32b0 )
+
+SKYRME_URL=https://dl.dropboxusercontent.com/u/52649885/dStar/Skyrme_data.txz
 
 echo
 echo "Installing Helm EOS table"
@@ -86,8 +130,70 @@ echo "establishing data directory..."
 mkdir -p data
 check_okay
 cd data
-fetch_and_verify $LIB $MD5 $URL
+
+chkr=""
+if [ `which md5sum` ]; then
+    chkr=`which md5sum`
+    echo "using $chkr"
+elif [ `which md5` ]; then
+    chkr=`which md5`
+    echo "using $chkr"
+else
+    echo "no md5 or md5sum available, skipping verification"
+fi
+
+fetch_and_verify $HELM_DB $HELM_MD5 $HELM_URL $chkr
 check_okay
+
+echo "done"
+echo
+
+echo "Installing tables of Skyrme parameter sets"
+echo "-------------------------------------------------"
+
+need_to_fetch=0
+for i in `seq 23`; do
+    indx=$((i-1))
+    df="Skyrme_data/${SKYRME_datafiles[$indx]}"
+    if [ -f $df ]; then
+        printf "   $df exists...verifying: "
+        if [ $chkr ]; then
+            verify_datafile $df ${SKYRME_chksums[$indx]} $chkr
+            if [ $? -ne 0 ]; then
+                echo "failed"
+                need_to_fetch=1
+            else
+                echo "passed"
+            fi
+        else
+            echo "skipped"
+        fi
+    else
+        need_to_fetch=1
+    fi
+done
+
+if [ $need_to_fetch -eq 1 ]; then
+    echo "fetching SKYRME_data from $SKYRME_URL..."
+    curl -fS $SKYRME_URL > SKYRME_data.txz
+    check_okay
+    tar -xf SKYRME_data.txz
+    check_okay
+    cd SKYRME_data
+    check_okay
+    echo "verifying datafiles..."
+    for i in `seq 23`; do
+        indx=$((i-1))
+        printf "   ${SKYRME_datafiles[$indx]}: "
+        if [ $chkr ]; then
+            verify_datafile ${SKYRME_datafiles[$indx]} ${SKYRME_chksums[$indx]} $chkr
+            check_okay
+            echo "passed"
+        else
+            echo "skipped"
+        fi
+    done
+fi
 
 echo "done"
 echo

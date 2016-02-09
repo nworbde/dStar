@@ -70,7 +70,7 @@ chksums=(   749634fe8af4e9717c9265fd9d5933cf \
             a197991ea1c060f61a909b49bc2ef231 \
             fd432bb9821ab2d4e951c33a3a7e52ae )
 
-URL=https://dl.dropboxusercontent.com/u/52649885/dStar/Tc_data.tar.bz2
+URL=https://dl.dropboxusercontent.com/u/52649885/dStar/Tc_data.txz
 
 echo
 echo "Installing tables of superfluid critical temperatures"
@@ -116,9 +116,9 @@ done
 
 if [ $need_to_fetch -eq 1 ]; then
     echo "fetching Tc_data from $URL..."
-    curl -fS $URL > Tc_data.tar.bz2
+    curl -fS $URL > Tc_data.txz
     check_okay
-    tar -xf Tc_data.tar.bz2
+    tar -xf Tc_data.txz
     check_okay
     cd Tc_data
     check_okay
