@@ -5,10 +5,10 @@ module dStar_eos_lib
 	subroutine dStar_eos_startup(datadir)
         use dStar_eos_private_def
 		use helm_alloc
+		use skyrme
 		character(len=*), intent(in) :: datadir
 		integer, parameter :: imax = 261, jmax = 101  ! dimensions of our version of helm table
 		integer :: ierr
-        character(len=128) :: eos_datadir
         
 		call dStar_eos_def_init
 		call alloc_helm_table(eos_ht, imax, jmax, ierr)
@@ -21,6 +21,11 @@ module dStar_eos_lib
 		call read_helm_table(eos_ht,eos_datadir,ierr)
 		if (ierr /=0) then
 			write (*,*) 'unable to read helm table'
+			return
+		end if
+		call load_skyrme_table(default_skyrme_parameter_set,eos_datadir,ierr)
+		if (ierr /= 0) then
+			write(*,*) 'unable to load default skyrme table'
 			return
 		end if
 	end subroutine dStar_eos_startup
@@ -55,13 +60,21 @@ module dStar_eos_lib
         if (ierr /= 0) write(error_unit,*) trim(dstar_eos_private_def_errors(ierr))
 	end subroutine dStar_eos_ptr
 	
-    subroutine dStar_eos_set_controls(handle,gamma_melt_pt,rsi_melt_pt,nuclide_abundance_threshold, &
-        &       pasta_transition_in_fm3,cluster_transition_in_fm3,suppress_warnings)
+    subroutine dStar_eos_set_controls(handle,gamma_melt_pt,rsi_melt_pt, &
+    	&	nuclide_abundance_threshold, pasta_transition_in_fm3, &
+    	&	cluster_transition_in_fm3,use_skyrme,skyrme_parameter_set, &
+    	&	suppress_warnings)
         use, intrinsic :: iso_fortran_env, only: error_unit
         use dStar_eos_private_def, only : dStar_eos_general_info
+		use skyrme
         integer, intent(in) :: handle
-        real(dp), intent(in), optional :: gamma_melt_pt, rsi_melt_pt, nuclide_abundance_threshold
-        real(dp), intent(in), optional :: pasta_transition_in_fm3, cluster_transition_in_fm3
+        real(dp), intent(in), optional :: gamma_melt_pt, rsi_melt_pt, &
+        &	 nuclide_abundance_threshold
+        real(dp), intent(in), optional :: pasta_transition_in_fm3, &
+		&	cluster_transition_in_fm3
+		logical, intent(in), optional :: use_skyrme
+		character(len=*), intent(in), optional :: &
+		&	skyrme_parameter_set
         logical, intent(in), optional :: suppress_warnings
         type(dStar_eos_general_info), pointer :: rq
         integer :: ierr
@@ -69,7 +82,8 @@ module dStar_eos_lib
         call dStar_eos_ptr(handle,rq,ierr)
         if (ierr /= 0) return
         if (.not. rq% in_use) then
-            write(error_unit,*) 'unallocated handle passed to dStar_eos_set_controls'
+            write(error_unit,*)  &
+            	& 'unallocated handle passed to dStar_eos_set_controls'
             return
         end if
         if (present(gamma_melt_pt)) rq% Gamma_melt = gamma_melt_pt
@@ -77,7 +91,16 @@ module dStar_eos_lib
         if (present(nuclide_abundance_threshold)) rq% Ythresh = nuclide_abundance_threshold
         if (present(pasta_transition_in_fm3)) rq% pasta_transition = pasta_transition_in_fm3
         if (present(cluster_transition_in_fm3)) rq% cluster_transition = cluster_transition_in_fm3
+		if (present(use_skyrme)) rq% use_skyrme_for_neutrons = use_skyrme
         if (present(suppress_warnings)) rq% suppress_warnings = suppress_warnings
+		if (present(skyrme_parameter_set)) then
+			rq% skyrme_parameter_set = skyrme_parameter_set
+			call load_skyrme_table(skyrme_parameter_set,eos_datadir,ierr)
+			if (ierr /= 0) then
+				write(error_unit,'(a)')  &
+					& 'unable to load skyrme table'//trim(skyrme_parameter_set)
+			end if
+		end if
     end subroutine dStar_eos_set_controls
 	
 	subroutine eval_crust_eos( &
@@ -167,9 +190,7 @@ module dStar_eos_lib
 		! neutrons
 		nn = rho*ionic%Yn/amu/(1.0-chi)
 			! local density of neutrons
-		! kn = (0.5*threepisquare*nn)**onethird / cm_to_fm
-		! call sf_get_results(0.0,kn,Tc)
-		call MB77(nn,T,f_n,u_n,p_n,s_n,cv_n,dpr_n,dpt_n)
+		call get_neutron_eos(rq,nn,T,f_n,u_n,p_n,s_n,cv_n,dpr_n,dpt_n)
 		unfac = avogadro*ionic% Yn
 		pnfac = 1.0
 		snfac = unfac

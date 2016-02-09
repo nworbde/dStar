@@ -4,7 +4,7 @@ module dStar_eos_private_def
     ! error codes
     character(len=80), dimension(-3:-1), parameter :: dstar_eos_private_def_errors =  &
     &   [character(len=80):: &
-    &   'invalid dStar_eos_handle', &
+	&   'invalid dStar_eos_handle', &
     &   'broken handle for dStar_eos_id', &
     &   'no available crust eos handle']
 
@@ -14,6 +14,8 @@ module dStar_eos_private_def
         real(dp) :: Ythresh
         real(dp) :: pasta_transition
         real(dp) :: cluster_transition
+		logical :: use_skyrme_for_neutrons
+		character(len=skyrme_id_length) :: skyrme_parameter_set
         logical :: suppress_warnings
         integer :: handle
         logical :: in_use
@@ -31,9 +33,22 @@ contains
 			dStar_eos_handles(i)% Ythresh = default_Y_threshold
             dStar_eos_handles(i)% pasta_transition = default_pasta_transition
             dStar_eos_handles(i)% cluster_transition = default_cluster_transition
+			dStar_eos_handles(i)% use_skyrme_for_neutrons = default_use_skyrme_for_neutrons
+			dStar_eos_handles(i)% skyrme_parameter_set = default_skyrme_parameter_set
             dStar_eos_handles(i)% suppress_warnings = default_suppress_eos_warnings
 			dStar_eos_handles(i)% handle = i
 			dStar_eos_handles(i)% in_use = .FALSE.
+		end do
+		
+		do i = 1, 3
+			skyrme_eos(i)% is_loaded = .FALSE.
+			skyrme_eos(i)% skyrme_type = i
+			skyrme_eos(i)% gamma = 0.0_dp
+			skyrme_eos(i)% a = 0.0_dp
+			skyrme_eos(i)% b = 0.0_dp
+			skyrme_eos(i)% c = 0.0_dp
+			skyrme_eos(i)% d = 0.0_dp
+			skyrme_eos(i)% e = 0.0_dp
 		end do
 	end subroutine dStar_eos_def_init
 

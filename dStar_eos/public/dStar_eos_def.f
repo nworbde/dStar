@@ -55,12 +55,16 @@ module dStar_eos_def
         real(dp) :: dPdlnT
     end type crust_eos_component
 
+	integer, parameter :: skyrme_id_length = 8
+
     real(dp), parameter :: default_Gamma_melt = 175.0
     real(dp), parameter :: default_rsi_melt = 140.0
     real(dp), parameter :: default_Y_threshold = 1.0e-9
     real(dp), parameter :: default_pasta_transition = 0.01      ! fm**-3
     real(dp), parameter :: default_cluster_transition = 0.08    ! fm**-3
     ! warning codes
+	logical, parameter :: default_use_skyrme_for_neutrons = .TRUE.
+	character(len=skyrme_id_length) :: default_skyrme_parameter_set = 's18q'
     real(dp), parameter :: Q2_threshold = 18.0
     integer, parameter :: strong_quantum_effects = 1
     logical, parameter :: default_suppress_eos_warnings = .FALSE.
@@ -149,4 +153,18 @@ module dStar_eos_def
     type (Helm_Table), pointer :: crust_eos_ht
     type (Helm_Table), pointer :: eos_ht
     
+	! for storing the Skyrme parameter sets
+    
+	integer, parameter :: skyrme_matter = 1, skyrme_neutron = 2, skyrme_sym = 3
+
+	type skyrme_parameter_set_type
+		logical :: is_loaded
+		integer :: skyrme_type
+		real(dp) :: gamma
+		real(dp) :: a, b, c, d, e
+	end type skyrme_parameter_set_type
+
+	type(skyrme_parameter_set_type), target :: skyrme_eos(3)
+		
+	character(len=256), save :: eos_datadir
 end module dStar_eos_def

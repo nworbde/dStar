@@ -2,7 +2,7 @@ include $(MESA_DIR)/utils/makefile_header
 
 LIB = libdstar_eos.a
 LIB_OBJS = 	dStar_eos_def.o dStar_eos_private_def.o funct_fermi1.o \
-			neutron.o radiation.o helm_alloc.o helm_core.o electron.o \
+			skyrme.o neutron.o radiation.o helm_alloc.o helm_core.o electron.o \
 			ion.o dStar_eos_lib.o
 
 VPATH = $(MOD_PUBLIC_DIR):$(MOD_PRIVATE_DIR)
