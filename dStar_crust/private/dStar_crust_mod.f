@@ -5,6 +5,9 @@ contains
     
     subroutine do_load_crust_table(prefix,eos_handle,Tref,ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit
+		use superfluid_def, only: sf_tables, neutron_1S0, superfluid_id_length
+		use dStar_eos_def, only: skyrme_id_length
+		use dStar_eos_lib, only: dStar_crust_neutron_eos
         character(len=*), intent(in) :: prefix
         integer, intent(in) :: eos_handle
         real(dp), intent(in) :: Tref
@@ -13,6 +16,8 @@ contains
 		type(crust_table_type), pointer :: tab
         real(dp), pointer, dimension(:,:) :: lgRho_val    
         character(len=crust_filename_length) :: table_name, cache_filename
+		character(len=skyrme_id_length) :: neutron_ref
+		character(len=superfluid_id_length) :: n1S0_ref
         logical :: have_cache
         integer :: unitno
         
@@ -23,7 +28,10 @@ contains
 			call do_free_crust_table(tab)
 		end if
 
-        call generate_crust_filename(prefix,Tref,table_name)
+		n1S0_ref = trim(sf_tables(neutron_1S0)% ref)
+		call dStar_crust_neutron_eos(eos_handle,neutron_ref,ierr)
+        call generate_crust_filename(prefix,neutron_ref,n1S0_ref,Tref, &
+        	&	table_name)
         cache_filename = trim(crust_datadir)//'/cache/'//trim(table_name)//'.bin'
         inquire(file=cache_filename,exist=have_cache)
         if (have_cache) then
@@ -159,14 +167,18 @@ contains
         tab% nv = n
     end subroutine do_allocate_crust_table
     
-	subroutine generate_crust_filename(prefix,Tref,filename)
-		! naming convention for flies is prefix_ttt
-		! where ttt = 100*log10(Tref), to 3 significant digits
-		character(len=*), intent(in) :: prefix
+	subroutine generate_crust_filename(prefix,neutron,n1S0,Tref,filename)
+		! naming convention for flies is prefix_neutron_n1S0_ttt
+		! where neutron is a reference for the particular parameterization 
+		! (MB77 or one of the Skyrme sets), n1S0 is a reference for the neutron 
+		! singlet critical temperature, and ttt = 100*log10(Tref), to 
+		! 3 significant digits
+		character(len=*), intent(in) :: prefix,neutron,n1S0
 		real(dp), intent(in) :: Tref
 		character(len=crust_filename_length), intent(out) :: filename
 		
-		write (filename,'(a,"_",i0.3)') trim(prefix), int(100.0*log10(Tref))
+		write (filename,'(a,"_",a,"_",a,"_",i0.3)')  &
+			& trim(prefix), trim(neutron), trim(n1S0), int(100.0*log10(Tref))
 	end subroutine generate_crust_filename
 
 	subroutine do_free_crust_table(tab)

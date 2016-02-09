@@ -11,9 +11,11 @@ module superfluid_def
     integer, parameter :: neutron_3P2 = 3
     integer, parameter :: max_number_sf_types = 3
     
+	integer, parameter :: superfluid_id_length = 16
+	
     type sf_table_type
         integer :: which_gap
-		character(len=16) :: ref
+		character(len=superfluid_id_length) :: ref
         logical :: is_loaded
         integer :: nv
         real(dp) :: kF_min, kF_max
