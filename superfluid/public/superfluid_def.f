@@ -13,6 +13,7 @@ module superfluid_def
     
     type sf_table_type
         integer :: which_gap
+		character(len=16) :: ref
         logical :: is_loaded
         integer :: nv
         real(dp) :: kF_min, kF_max

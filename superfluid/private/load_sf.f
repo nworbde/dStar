@@ -64,6 +64,7 @@ module load_sf
 		call interp_pm(tab% kF, tab% nv, tab% f, pm_work_size, work, &
 		&    'load_sf_table', ierr)
 		deallocate(work)
+		tab% ref = prefix
 		tab% is_loaded = .TRUE.
 	end subroutine load_sf_table
 
@@ -98,6 +99,7 @@ module load_sf
 	subroutine free_sf_table(tab)
 		type(sf_table_type), pointer :: tab
 		tab% which_gap = undefined_gap
+		tab% ref = ''
 		tab% nv = 0
 		tab% kF_min = 0.0
 		tab% kF_max = 0.0
