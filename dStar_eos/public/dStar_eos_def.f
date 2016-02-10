@@ -42,6 +42,11 @@ module dStar_eos_def
 		&	icrust_eos_neutron = 3, &
 		&	icrust_eos_radiation = 4
 	integer, parameter :: num_crust_eos_components = 4
+	
+	integer, parameter ::  &
+		&	icore_eos_ele = 1, &
+		&	icore_eos_nucleon = 2
+	integer, parameter :: num_core_eos_components = 2
     
     ! it can be interesting to look at the individual components; supply a vector of this to get the individual pieces
     type crust_eos_component
@@ -54,6 +59,17 @@ module dStar_eos_def
         real(dp) :: dPdlnRho
         real(dp) :: dPdlnT
     end type crust_eos_component
+	
+	type core_eos_component
+		real(dp) :: P
+		real(dp) :: E
+		real(dp) :: S
+		real(dp) :: F
+		real(dp) :: Cv
+		real(dp) :: mu	! muhat for nucleons, mu_e for electrons
+		real(dp) :: dPdlnRho
+		real(dp) :: dPdlnT
+	end type core_eos_component
 
 	integer, parameter :: skyrme_id_length = 8
 

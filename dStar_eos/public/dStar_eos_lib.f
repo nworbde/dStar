@@ -288,4 +288,17 @@ module dStar_eos_lib
 		end if
 	end subroutine eval_crust_eos
 
+	subroutine eval_core_eos(dStar_eos_handle,rho,T,x,res,components)
+		integer, intent(in) :: dStar_eos_handle
+		real(dp), intent(in) :: rho,T,x
+		real(dp), dimension(num_dStar_eos_results) :: res
+		type(core_eos_component), intent(out), &
+			& dimension(num_core_eos_components), optional :: components	
+		type(dStar_eos_general_info), pointer :: rq
+		
+		
+		
+		
+	end subroutine eval_core_eos
+
 end module dStar_eos_lib
