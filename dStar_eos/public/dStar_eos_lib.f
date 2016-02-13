@@ -289,11 +289,12 @@ module dStar_eos_lib
 	end subroutine eval_crust_eos
 
 	subroutine eval_core_eos(dStar_eos_handle,rho,T,x,res,components)
-		use constants_def, ssp=>sp
+		use constants_def
 		use fermi
 		use dStar_eos_private_def
 		use superfluid_def
 		use superfluid_lib
+		use skyrme
 		integer, intent(in) :: dStar_eos_handle
 		real(dp), intent(in) :: rho	! density [g cm**-3]
 		real(dp), intent(in) :: T   ! temperature [K]
@@ -303,7 +304,7 @@ module dStar_eos_lib
 			& dimension(num_core_eos_components), optional :: components	
 		type(dStar_eos_general_info), pointer :: rq
 		!
-		real(dp) :: n, p, u, s, cv, cp, dur, dpr, dpt, nn, np, sn, sp, muhat
+		real(dp) :: n, p, u, s, cv, cp, dur, dpr, dpt, nn, np, sneut, sprot, muhat
 		real(dp) :: u_m, p_m, dur_m, dpr_m, meff
 		real(dp) :: u_a, p_a, dur_a, dpr_a, meff_a
 		real(dp) :: kn,kp,lambda3,zetan,zetap,cvn,cvp
@@ -345,12 +346,12 @@ module dStar_eos_lib
 		zetan = ifermi12(nn * lambda3)
 		cvn = 2.5*zfermi32(zetan)/zfermi12(zetan)  &
 			&	- 4.5*zfermi12(zetan)/zfermim12(zetan)
-		sn = fivethird*zfermi32(zetan)/zfermi12(zetan) - zetan
+		sneut = fivethird*zfermi32(zetan)/zfermi12(zetan) - zetan
 		! protons
 		zetap = ifermi12(np * lambda3 *(Mneutron/Mproton)**1.5)
 		cvp = 2.5*zfermi32(zetap)/zfermi12(zetap)  &
 			&	- 4.5*zfermi12(zetap)/zfermim12(zetap)
-		sp = fivethird*zfermi32(zetap)/zfermi12(zetap) - zetap
+		sprot = fivethird*zfermi32(zetap)/zfermi12(zetap) - zetap
 		! electrons (no muons for now)
 		cve = pi**2 / xi
 		se = cve
@@ -379,7 +380,7 @@ module dStar_eos_lib
 		end if
 		Rn = min(Rns,Rnt)
 		cvn = cvn * Rn
-		sn = sn*Rn
+		sneut = sneut*Rn
 		! singlet protons
 		if (T < Tps) then
 			tau = T/Tps
@@ -390,12 +391,12 @@ module dStar_eos_lib
 			Rp = 1.0
 		end if		
 		cvp = cvp * Rp
-		sp = sp*Rp
+		sprot = sprot*Rp
 		
 		! now combine
 		p = pressure_n*(p_n+p_e)
 		u = mev_to_ergs*avogadro * (u_n+u_e)
-		s = boltzmann*avogadro*(sn + sp + se)
+		s = boltzmann*avogadro*(sneut + sprot + se)
 		cv = boltzmann*avogadro*((1.0_dp-x)*cvn + x*(cvp + cve))
 		dpt = 0.0_dp
 		dpr = pressure_n*(dpr_n + dpr_e)
@@ -427,11 +428,11 @@ module dStar_eos_lib
 		if (present(components)) then
 			components(icore_eos_nucleon)% P = p_n
 			components(icore_eos_nucleon)% E = u_n
-			components(icore_eos_nucleon)% S = sn+sp
-			components(icore_eos_nucleon)% F = u_n-boltzmann*T*(sn+sp)*ergs_to_mev
+			components(icore_eos_nucleon)% S = sneut+sprot
+			components(icore_eos_nucleon)% F = u_n-boltzmann*T*(sneut+sprot)*ergs_to_mev
 			components(icore_eos_nucleon)% Cv = (1.0_dp-x)*cvn + x*cvp
 			components(icore_eos_nucleon)% mu =	muhat
-			components(icore_eos_nucleon)% dPdlnRho = dpr_n 
+			components(icore_eos_nucleon)% dPdlnRho = dpr_n/p_n
 			components(icore_eos_nucleon)% dPdlnT = 0.0_dp
 
 			components(icore_eos_ele)% P = p_e
@@ -440,7 +441,7 @@ module dStar_eos_lib
 			components(icore_eos_ele)% F = u_e - boltzmann*T*se*ergs_to_mev
 			components(icore_eos_ele)% Cv = x*cve
 			components(icore_eos_ele)% mu =	mu_e
-			components(icore_eos_ele)% dPdlnRho = dpr_e
+			components(icore_eos_ele)% dPdlnRho = dpr_e/p_e
 			components(icore_eos_ele)% dPdlnT = 0.0_dp
 		end if
 		

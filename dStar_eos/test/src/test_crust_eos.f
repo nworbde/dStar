@@ -14,7 +14,7 @@ program test_crust_eos
 	integer :: i, ncharged
 	real(dp) :: Xsum
 	type(crust_eos_component), dimension(num_crust_eos_components) :: eos_components
-    logical, parameter :: dbg = .TRUE.
+    logical, parameter :: dbg = .FALSE.
     
 	! n/o16/fe56 composition
 	Z = [0.0,8.0,26.0]; A = [1.0,16.0,56.0]
@@ -28,7 +28,7 @@ program test_crust_eos
 	call dStar_eos_startup('../../data')
 	eos_handle = alloc_dStar_eos_handle(ierr)
 	
-	call dStar_eos_set_controls(eos_handle,use_skyrme=.TRUE., &
+	call dStar_eos_set_controls(eos_handle,use_skyrme=.FALSE., &
 	&	skyrme_parameter_set='s7d')
 	
 	! get indices
