@@ -1,6 +1,5 @@
 module dStar_eos_def
     use constants_def, only: dp
-    
 
 	! The results for the overall mixture
 	integer, parameter :: i_lnP = 1
@@ -34,7 +33,7 @@ module dStar_eos_def
 	integer, parameter :: i_Gamma3 = 15
 		! = Gamma3 - 1 = (d lnT/d lnRho)_S
 	integer, parameter :: num_dStar_eos_results = 15
-		
+
 	! The components
 	integer, parameter :: &
 		&	icrust_eos_ep = 1, &
@@ -42,12 +41,12 @@ module dStar_eos_def
 		&	icrust_eos_neutron = 3, &
 		&	icrust_eos_radiation = 4
 	integer, parameter :: num_crust_eos_components = 4
-	
+
 	integer, parameter ::  &
 		&	icore_eos_ele = 1, &
 		&	icore_eos_nucleon = 2
 	integer, parameter :: num_core_eos_components = 2
-    
+
     ! it can be interesting to look at the individual components; supply a vector of this to get the individual pieces
     type crust_eos_component
         real(dp) :: P
@@ -171,7 +170,10 @@ module dStar_eos_def
     
 	! for storing the Skyrme parameter sets
     
-	integer, parameter :: skyrme_matter = 1, skyrme_neutron = 2, skyrme_sym = 3
+	integer, parameter ::	skyrme_matter = 1, &
+					&		skyrme_neutron = 2, &
+					&		skyrme_sym = 3
+	integer, parameter :: number_skyrme_types = 3
 
 	type skyrme_parameter_set_type
 		logical :: is_loaded
@@ -180,7 +182,8 @@ module dStar_eos_def
 		real(dp) :: a, b, c, d, e
 	end type skyrme_parameter_set_type
 
-	type(skyrme_parameter_set_type), target :: skyrme_eos(3)
+	type(skyrme_parameter_set_type), target :: skyrme_eos(number_skyrme_types)
 		
 	character(len=256), save :: eos_datadir
+
 end module dStar_eos_def

@@ -289,16 +289,172 @@ module dStar_eos_lib
 	end subroutine eval_crust_eos
 
 	subroutine eval_core_eos(dStar_eos_handle,rho,T,x,res,components)
+		use constants_def, ssp=>sp
+		use fermi
+		use dStar_eos_private_def
+		use superfluid_def
+		use superfluid_lib
 		integer, intent(in) :: dStar_eos_handle
-		real(dp), intent(in) :: rho,T,x
+		real(dp), intent(in) :: rho	! density [g cm**-3]
+		real(dp), intent(in) :: T   ! temperature [K]
+		real(dp), intent(in) :: x	! proton fraction
 		real(dp), dimension(num_dStar_eos_results) :: res
 		type(core_eos_component), intent(out), &
 			& dimension(num_core_eos_components), optional :: components	
 		type(dStar_eos_general_info), pointer :: rq
+		!
+		real(dp) :: n, p, u, s, cv, cp, dur, dpr, dpt, nn, np, sn, sp, muhat
+		real(dp) :: u_m, p_m, dur_m, dpr_m, meff
+		real(dp) :: u_a, p_a, dur_a, dpr_a, meff_a
+		real(dp) :: kn,kp,lambda3,zetan,zetap,cvn,cvp
+		real(dp) :: p_n, u_n, cv_n, cp_n, s_n, dur_n, dpr_n
+		real(dp) :: xfac, n_e, p_e, u_e, dur_e, dpr_e, mu_e
+		real(dp) :: cve, se, xi
+		real(dp) :: Tc(max_number_sf_types)
+		real(dp) :: tau,vn,vp,Tns,Tps,Tnt,Rn,Rp,Rns,Rnt
+		real(dp) :: grad_ad, gamma3m1, gamma1
 		
+		! densities of nucleons, electrons [fm**-3]
+		n = rho/(amu*density_n)
+		n_e = x*n
+		xfac = (1.0_dp-2.0_dp*x)**2
+
+		! get the basic eos results for nucleons and electrons
+		call eval_skyrme_eos(skyrme_matter,n,u_m,p_m,dur_m,dpr_m,meff)
+		call eval_skyrme_eos(skyrme_sym,n,u_a,p_a,dur_a,dpr_a,meff_a)
+		call core_electron_eos(n_e,T,p_e,u_e,mu_e,dur_e,dpr_e)
+		! electron degeneracy parameter
+		xi = mu_e*mev_to_ergs/boltzmann/T
+
+		! nucleon pressure, energy per nucleon, & derivatives
+		p_n = p_m + xfac*p_a
+		u_n = u_m + xfac*u_a
+		dur_n = dur_m + xfac*dur_a
+		dpr_n = dpr_m + xfac*dpr_a
 		
+		! superfluid: k denotes wavenumber in inverse fm
+		nn = n*(1.0_dp-x)
+		kn = (0.5*threepisquare*nn)**onethird
+		np = n_e
+		kp = (0.5*threepisquare*np)**onethird
+		call sf_get_results(kp,kn,Tc)
 		
+		! thermal terms: nucleons are treated as ideal, non-relativistic gases
+		! neutrons; meff is for symmetric matter, probably need to correct this
+		lambda3 = pi**2 * (hbar**2/(Mneutron*meff*boltzmann*T))**1.5 / sqrt(2.0) * cm_to_fm**3
+		zetan = ifermi12(nn * lambda3)
+		cvn = 2.5*zfermi32(zetan)/zfermi12(zetan)  &
+			&	- 4.5*zfermi12(zetan)/zfermim12(zetan)
+		sn = fivethird*zfermi32(zetan)/zfermi12(zetan) - zetan
+		! protons
+		zetap = ifermi12(np * lambda3 *(Mneutron/Mproton)**1.5)
+		cvp = 2.5*zfermi32(zetap)/zfermi12(zetap)  &
+			&	- 4.5*zfermi12(zetap)/zfermim12(zetap)
+		sp = fivethird*zfermi32(zetap)/zfermi12(zetap) - zetap
+		! electrons (no muons for now)
+		cve = pi**2 / xi
+		se = cve
+
+		! Now set the superfluid reduction factor (Levenfish & Yakovlev 1994)
+		Tns = Tc(neutron_1S0)
+		Tps = Tc(proton_1S0)
+		Tnt = Tc(neutron_3P2)
+		! singlet neutrons
+		if (T < Tns) then
+			tau = T/Tns
+			vn = sqrt(1.0-tau)*(1.456-0.157/sqrt(tau) + 1.764/tau)
+			Rns= (0.4186+sqrt(1.007**2+(0.5010*vn)**2))**2.5 * &
+				 &	exp(1.456-sqrt(1.456**2+vn**2))
+		else
+			Rns = 1.0
+		end if		
+		! triplet neutrons
+		if (T < Tnt) then
+			tau = T/Tnt
+			vn = sqrt(1.0-tau)*(0.7893+1.188/tau)
+			Rnt = (0.6893+sqrt(0.790**2+(0.2824*vn)**2))**2 *  &
+				& exp(1.934-sqrt(1.934**2+vn**2))
+		else
+			Rnt = 1.0
+		end if
+		Rn = min(Rns,Rnt)
+		cvn = cvn * Rn
+		sn = sn*Rn
+		! singlet protons
+		if (T < Tps) then
+			tau = T/Tps
+			vp = sqrt(1.0-tau)*(1.456-0.157/sqrt(tau) + 1.764/tau)
+			Rp = (0.4186+sqrt(1.007**2+(0.5010*vp)**2))**2.5 * &
+				 &	exp(1.456-sqrt(1.456**2+vp**2))
+		else
+			Rp = 1.0
+		end if		
+		cvp = cvp * Rp
+		sp = sp*Rp
 		
+		! now combine
+		p = pressure_n*(p_n+p_e)
+		u = mev_to_ergs*avogadro * (u_n+u_e)
+		s = boltzmann*avogadro*(sn + sp + se)
+		cv = boltzmann*avogadro*((1.0_dp-x)*cvn + x*(cvp + cve))
+		dpt = 0.0_dp
+		dpr = pressure_n*(dpr_n + dpr_e)
+		
+		gamma3m1 = dpt/rho/T/cv
+		gamma1 = (dpr + dpt*gamma3m1)/p
+		grad_ad = gamma3m1/gamma1
+		cp = gamma1*p*cv/dpr
+		muhat = 4.0_dp*(1.0_dp-2.0_dp*x)*u_a + Mn_n - Mp_n
+		
+		! stuff the output array
+		res(i_lnP) = log(p)
+		res(i_lnE) = log(u)
+		res(i_lnS)	= log(s)
+		res(i_grad_ad) = grad_ad
+		res(i_chiRho) = dpr/p
+		res(i_chiT) = dpt/p
+		res(i_Cp) = cp
+		res(i_Cv) = cv
+		res(i_Chi) = 0.0_dp
+		res(i_Gamma) = 0.0_dp
+		res(i_Theta) = -1.0_dp
+		res(i_mu_e) = mu_e
+		res(i_mu_n) = muhat
+		res(i_Gamma1) = gamma1
+		res(i_Gamma3) = gamma3m1
+		
+		! stuff the components
+		if (present(components)) then
+			components(icore_eos_nucleon)% P = p_n
+			components(icore_eos_nucleon)% E = u_n
+			components(icore_eos_nucleon)% S = sn+sp
+			components(icore_eos_nucleon)% F = u_n-boltzmann*T*(sn+sp)*ergs_to_mev
+			components(icore_eos_nucleon)% Cv = (1.0_dp-x)*cvn + x*cvp
+			components(icore_eos_nucleon)% mu =	muhat
+			components(icore_eos_nucleon)% dPdlnRho = dpr_n 
+			components(icore_eos_nucleon)% dPdlnT = 0.0_dp
+
+			components(icore_eos_ele)% P = p_e
+			components(icore_eos_ele)% E = u_e
+			components(icore_eos_ele)% S = se
+			components(icore_eos_ele)% F = u_e - boltzmann*T*se*ergs_to_mev
+			components(icore_eos_ele)% Cv = x*cve
+			components(icore_eos_ele)% mu =	mu_e
+			components(icore_eos_ele)% dPdlnRho = dpr_e
+			components(icore_eos_ele)% dPdlnT = 0.0_dp
+		end if
+		
+	contains
+		subroutine core_electron_eos(n_e,T,p_e,u_e,mu_e,dur_e,dpr_e)
+			real(dp), intent(in) :: n_e, T
+			real(dp), intent(out) :: p_e, u_e, mu_e, dur_e, dpr_e
+			mu_e = (threepisquare*n_e)**onethird*hbarc_n
+			p_e = 0.25_dp*n_e*mu_e
+			u_e = 0.75_dp*mu_e
+			dur_e = onethird*u_e
+			dpr_e = 4.0_dp*onethird*p_e
+		end subroutine core_electron_eos
+	
 	end subroutine eval_core_eos
 
 end module dStar_eos_lib
