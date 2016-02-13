@@ -28,7 +28,7 @@ contains
 		real(dp), intent(out) :: cv	! ergs/K/neutron
 		real(dp), intent(out) :: dpr, dpT ! dp/dlnN, dp/dlnT
         real(dp), parameter :: kF_p = 0.0
-		real(dp) :: k,tau,v,R
+		real(dp) :: k,tau,v,R,meff
 		real(dp) :: lambda3, zeta	! zeta = chem. pot(ideal Fermi gas)/kT
 		real(dp) :: Tns, Tc(max_number_sf_types)
 
@@ -38,15 +38,16 @@ contains
 		! get wavenumber in inverse fm
 		k = (0.5*threepisquare*n)**onethird / cm_to_fm
 		call sf_get_results(kF_p,k,Tc)
-				
+		
+		meff = 1.0_dp
 		if (rq% use_skyrme_for_neutrons) then
-			call get_skyrme(n,T,u,p,dpr,dpT)
+			call get_skyrme(n,T,u,p,dpr,dpT,meff)
 		else
 			call get_MB77(n,T,u,p,dpr,dpT,wavenumber=k)
 		end if
 		
 		! correct (approximately) for non-degeneracy
-		lambda3 = pi**2 * (hbar**2/(Mneutron*boltzmann*T))**1.5 / sqrt(2.0)
+		lambda3 = pi**2 * (hbar**2/(Mneutron*meff*boltzmann*T))**1.5 / sqrt(2.0)
 		zeta = ifermi12(n * lambda3)
 		cv = 2.5*zfermi32(zeta)/zfermi12(zeta)  &
 			&	- 4.5*zfermi12(zeta)/zfermim12(zeta)
@@ -66,13 +67,13 @@ contains
 			R = 1.0
 		end if
 
-		cv = cv * R
-		s = s*R		! ??? makes sense when very degenerate....
+		cv = cv*R
+		s = s*R
 		
 		f = u - T*s		
 	end subroutine get_neutron_eos
 
-	subroutine get_skyrme(n,T,u,p,dpr,dpt)
+	subroutine get_skyrme(n,T,u,p,dpr,dpt,meff)
 		use constants_def
 		use dStar_eos_def
 		use skyrme
@@ -80,7 +81,7 @@ contains
 		real(dp), intent(in) :: T   ! K
 		real(dp), intent(out) :: u	! ergs/neutron
 		real(dp), intent(out) :: p  ! dyn cm**-2
-		real(dp), intent(out) :: dpr,dpt	! dp/dlnN, dp/dlnT
+		real(dp), intent(out) :: dpr,dpt,meff	! dp/dlnN, dp/dlnT, m*/m
 		real(dp) :: n_n,dur
 		
 		u = 0.0; p = 0.0; dpr = 0.0; dpT = 0.0
@@ -88,14 +89,13 @@ contains
 		! convert to nuclear units
 		n_n = n / density_n
 		
-		call eval_skyrme_eos(skyrme_neutron,n_n,u,p,dur,dpr)
+		call eval_skyrme_eos(skyrme_neutron,n_n,u,p,dur,dpr,meff)
 		
 		! convert back to cgs
 		u = u*mev_to_ergs
 		p = p*pressure_n
 		dur = dur*mev_to_ergs
-		dpr = dpr*pressure_n
-		
+		dpr = dpr*pressure_n		
 	end subroutine get_skyrme
 
 	subroutine get_MB77(n,T,u,p,dpr,dpT,wavenumber)

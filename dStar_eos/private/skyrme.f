@@ -6,13 +6,14 @@ module skyrme
 
 contains
 
-	subroutine eval_skyrme_eos(id,n,u,p,dur,dpr)
+	subroutine eval_skyrme_eos(id,n,u,p,dur,dpr,meff)
 		integer, intent(in) :: id
 		real(dp), intent(in) :: n	! density of relevant constituent, fm**-3
 		real(dp), intent(out) :: u	! internal energy, MeV per constituent
 		real(dp), intent(out) :: p	! pressure, MeV fm**-3
 		real(dp), intent(out) :: dur	! du/dlnn
 		real(dp), intent(out) :: dpr	! dp/dlnn
+		real(dp), intent(out) :: meff	! m*/m
 		type(skyrme_parameter_set_type), pointer :: s
 		
 		s => skyrme_eos(id)
@@ -28,6 +29,9 @@ contains
 			& + s% c*twothird*fivethird*n**twothird  &
 			& + s% d*fivethird*seventhird*n**fivethird + 12.0*s% e*n**3
 		dpr = dpr*n
+		
+		! effective mass (Brown 2013)
+		meff = s% c/(s% c + s% d * n)
 	end subroutine eval_skyrme_eos
 
 	subroutine load_skyrme_table(model,eos_datadir,ierr)
