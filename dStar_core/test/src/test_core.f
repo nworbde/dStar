@@ -10,6 +10,7 @@ program test_core
 
 	integer, parameter :: Ntrial = 20
 	integer :: i, ierr
+	real(dp) :: Tref
 	real(dp), dimension(Ntrial) :: lgP,lgRho,lgEps,Xprot,dlgRho,dlgEps,dXprot
 	integer :: eos_handle
 	
@@ -34,11 +35,13 @@ program test_core
     eos_handle = alloc_dStar_eos_handle(ierr)
     call check_okay('alloc_dStar_eos_handle',ierr)
 
-	call dStar_core_load_table(eos_handle,ierr)
+	Tref = 1.0e8_dp
+	call dStar_eos_set_controls(eos_handle,skyrme_parameter_set='s7d')
+	call dStar_core_load_table(eos_handle,Tref,ierr)
 	call check_okay('dStar_core_load_table',ierr)
 
 	lgP = [(-0.5_dp + 3.5_dp*real(i-1.0,dp)/real(Ntrial-1.0,dp),i=1,Ntrial)]
-	
+	lgP = lgP + log10(pressure_n)
 	write (*,'(7(a9,tr2),/,7("=========",tr2))') 'lgP','lgRho','dlgRho', &
 		& 'lgEps','dlgEps','Xprot','dXprot'
 		
@@ -46,7 +49,8 @@ program test_core
     		call dStar_core_get_results(lgP(i),lgRho(i),dlgRho(i), &
 			&	lgEps(i),dlgEps(i),Xprot(i),dXprot(i),ierr)
     		call check_okay('dStar_core_get_results',ierr)
-    		write (*,'(7(f9.5,tr2))') lgP,lgRho,dlgRho,lgEps,dlgEps,Xprot,dXprot
+    		write (*,'(7(f9.5,tr2))') &
+    		& lgP(i),lgRho(i),dlgRho(i),lgEps(i),dlgEps(i),Xprot(i),dXprot(i)
     	end do
     	call dStar_core_free_table
 

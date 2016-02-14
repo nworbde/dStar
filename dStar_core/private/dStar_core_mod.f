@@ -3,11 +3,12 @@ module dStar_core_mod
 	integer, parameter :: core_filename_length=128
 contains
 	
-	subroutine do_load_core_table(eos_handle,ierr)
+	subroutine do_load_core_table(eos_handle,Tref,ierr)
 		use iso_fortran_env, only: error_unit
 		use dStar_eos_def, only: skyrme_id_length
-		use dStar_eos_lib, only: dStar_crust_neutron_eos
+		use dStar_eos_lib, only: dStar_which_skyrme_eos
 		integer, intent(in) :: eos_handle
+		real(dp), intent(in) :: Tref
 		integer, intent(out) :: ierr
 		type(core_table_type), pointer :: tab
 		character(len=skyrme_id_length) :: skyrme_ref
@@ -22,8 +23,8 @@ contains
 			call do_free_core_table(tab)
 		end if
 
-		call dStar_crust_neutron_eos(eos_handle,skyrme_ref,ierr)
-        call generate_core_filename(skyrme_ref,table_name)
+		call dStar_which_skyrme_eos(eos_handle,skyrme_ref,ierr)
+        call generate_core_filename(skyrme_ref,Tref,table_name)
         cache_filename = trim(core_datadir)//'/cache/'//trim(table_name)//'.bin'
         inquire(file=cache_filename,exist=have_cache)
         if (have_cache) then
@@ -35,7 +36,7 @@ contains
         ! new one and write to cache
         write (error_unit, '(a)') 'generating table '//trim(table_name)//'...'
         tab% nv = core_default_number_table_points
-        call do_generate_core_table(skyrme_ref,tab)
+        call do_generate_core_table(eos_handle,skyrme_ref,Tref,tab)
         tab% is_loaded = .TRUE.
         write (error_unit,'(a)') 'done'
         
@@ -44,12 +45,14 @@ contains
         end if		
 	end subroutine do_load_core_table
 	
-	subroutine do_generate_core_table(model,tab)
-		use brown_skyrme
+	subroutine do_generate_core_table(eos_handle,model,Tref,tab)
+		use beta_equilibrium
 		use load_skyrme_parameters
 		use interp_1d_def
 		use interp_1d_lib
+		integer, intent(in) :: eos_handle
 		character(len=*), intent(in) :: model
+		real(dp), intent(in) :: Tref
 		type(core_table_type), pointer :: tab
 		real(dp), dimension(:), pointer :: work=>null()
 		real(dp), dimension(:,:), pointer :: lgRho_val, lgEps_val, Xprot_val
@@ -59,13 +62,12 @@ contains
 		
 		N = tab% nv
 		allocate(rho(N),eps(N),Xprot(N),P(N),muhat(N),mue(N),cs2(N))
-		call load_skyrme_table(model,ierr)
 		lgRhomin = log10(core_default_Rhomin)
 		delta_lgRho = log10(core_default_Rhomax)-lgRhomin
 		rho = [ (lgRhomin + real(i-1,dp)*delta_lgRho/real(N-1,dp), &
 			& i=1,N) ]
-		rho = 10.0_dp**rho
-        call find_beta_eq(rho,Xprot,eps,P,muhat,mue,cs2,ierr)
+		rho = 10.0_dp**rho * amu*density_n
+        call find_beta_eq(eos_handle,rho,Tref,Xprot,eps,P,muhat,mue,ierr)
 		if (failure('fatal error: unable to generate core model',ierr)) stop
 
 		call do_allocate_core_table(tab,N, ierr)
@@ -150,14 +152,19 @@ contains
         tab% nv = n
     end subroutine do_allocate_core_table
   
-	subroutine generate_core_filename(model,filename)
-		! naming convention for files is model_eos
+	subroutine generate_core_filename(model,Tref,filename)
+		! naming convention for files is model_ttt_eos
+		! where model is a reference for the particular parameterization
+		! (MB77 or one of the Skyrme sets), and ttt = 100*log10(Tref) to 3
+		! significant digits
 		character(len=*), intent(in) :: model
+		real(dp), intent(in) :: Tref
 		character(len=core_filename_length), intent(out) :: filename
 		
-		write (filename,'(a,"_eos")') trim(model)
+		write (filename,'(a,"_",i0.3,"_eos")') trim(model), &
+			&	int(100.0*log10(Tref))
 	end subroutine generate_core_filename
-
+	
 	subroutine do_free_core_table(tab)
 		type(core_table_type), pointer :: tab
 		tab% nv = 0

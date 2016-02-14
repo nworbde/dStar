@@ -103,10 +103,10 @@ module dStar_eos_lib
 		end if
     end subroutine dStar_eos_set_controls
 	
-	subroutine dStar_crust_neutron_eos(handle,neutron,ierr)
+	subroutine dStar_which_skyrme_eos(handle,skyrme_set,ierr)
 		use dStar_eos_private_def
 		integer, intent(in) :: handle
-		character(len=skyrme_id_length), intent(out) :: neutron
+		character(len=skyrme_id_length), intent(out) :: skyrme_set
 		integer, intent(out) :: ierr
 		type(dStar_eos_general_info), pointer :: rq
 		
@@ -114,11 +114,11 @@ module dStar_eos_lib
 		call dStar_eos_ptr(handle,rq,ierr)
 		if (ierr /= 0) return
 		if (rq% use_skyrme_for_neutrons) then
-			neutron = trim(rq% skyrme_parameter_set)
+			skyrme_set = trim(rq% skyrme_parameter_set)
 		else
-			neutron = 'mb77'
+			skyrme_set = 'mb77'
 		end if
-	end subroutine dStar_crust_neutron_eos
+	end subroutine dStar_which_skyrme_eos
 	
 	subroutine eval_crust_eos( &
 		&   dStar_eos_handle,rho,T,ionic,ncharged,charged_ids,Yion, &

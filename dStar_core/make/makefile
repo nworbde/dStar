@@ -1,7 +1,7 @@
 include $(MESA_DIR)/utils/makefile_header
 
 LIB = libdstar_core.a
-LIB_OBJS = dStar_core_def.o dStar_core_mod.o dStar_core_lib.o
+LIB_OBJS = dStar_core_def.o beta_equilibrium.o dStar_core_mod.o dStar_core_lib.o
 
 VPATH = $(MOD_PUBLIC_DIR):$(MOD_PRIVATE_DIR)
 DSTAR_INC=../../include

@@ -7,7 +7,7 @@ contains
         use, intrinsic :: iso_fortran_env, only: error_unit
 		use superfluid_def, only: sf_tables, neutron_1S0, superfluid_id_length
 		use dStar_eos_def, only: skyrme_id_length
-		use dStar_eos_lib, only: dStar_crust_neutron_eos
+		use dStar_eos_lib, only: dStar_which_skyrme_eos
         character(len=*), intent(in) :: prefix
         integer, intent(in) :: eos_handle
         real(dp), intent(in) :: Tref
@@ -29,7 +29,7 @@ contains
 		end if
 
 		n1S0_ref = trim(sf_tables(neutron_1S0)% ref)
-		call dStar_crust_neutron_eos(eos_handle,neutron_ref,ierr)
+		call dStar_which_skyrme_eos(eos_handle,neutron_ref,ierr)
         call generate_crust_filename(prefix,neutron_ref,n1S0_ref,Tref, &
         	&	table_name)
         cache_filename = trim(crust_datadir)//'/cache/'//trim(table_name)//'.bin'

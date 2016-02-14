@@ -33,13 +33,14 @@ contains
 		call do_free_core_table(tab)
 	end subroutine dStar_core_free_table
 	
-	subroutine dStar_core_load_table(eos_handle,ierr)
+	subroutine dStar_core_load_table(eos_handle,Tref,ierr)
 		use iso_fortran_env, only : error_unit
 		use dStar_core_mod, only : do_load_core_table
 		integer, intent(in) :: eos_handle
+		real(dp), intent(in) :: Tref
 		integer, intent(out) :: ierr
 		
-		call do_load_core_table(eos_handle,ierr)
+		call do_load_core_table(eos_handle,Tref,ierr)
 		if (ierr /= 0) then
 			write(error_unit,'(a,i3)') 'dStar_core_load_table: ierr = ',ierr
 		end if
