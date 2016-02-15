@@ -10,7 +10,7 @@ program test_core_eos
 	real(dp), dimension(num_dStar_eos_results) :: res
 	integer :: i
 	type(core_eos_component), dimension(num_core_eos_components) :: eos_components
-    logical, parameter :: dbg = .TRUE.
+    logical, parameter :: dbg = .FALSE.
 	real(dp) :: x
     
     call constants_init('',ierr)
@@ -22,9 +22,9 @@ program test_core_eos
 	eos_handle = alloc_dStar_eos_handle(ierr)
 	
 	call dStar_eos_set_controls(eos_handle,use_skyrme=.TRUE., &
-	&	skyrme_parameter_set='s7d')
+	&	skyrme_parameter_set='s16r')
 	
-	x = 0.05_dp
+	x = 0.04_dp
 	call write_headers
 	call do_one(1.0e13_dp)
 	call do_one(1.0e14_dp)

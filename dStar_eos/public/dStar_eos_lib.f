@@ -395,8 +395,8 @@ module dStar_eos_lib
 		
 		! now combine
 		p = pressure_n*(p_n+p_e)
-		u = mev_to_ergs*avogadro * (u_n+u_e)
-		s = boltzmann*avogadro*(sneut + sprot + se)
+		u = mev_to_ergs*avogadro * (u_n+x*u_e)
+		s = boltzmann*avogadro*((1.0_dp-x)*sneut + x*sprot + x*se)
 		cv = boltzmann*avogadro*((1.0_dp-x)*cvn + x*(cvp + cve))
 		dpt = 0.0_dp
 		dpr = pressure_n*(dpr_n + dpr_e)
