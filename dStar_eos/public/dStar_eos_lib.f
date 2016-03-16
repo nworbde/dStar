@@ -151,7 +151,7 @@ module dStar_eos_lib
 		real(dp) :: ne,rs,Gamma_e,nek, nekT,f_e, u_e, p_e, s_e, cv_e, dpr_e, dpt_e, eta_e,mu_e
 		real(dp) :: f_ex, u_ex, p_ex, s_ex, cv_ex, dpr_ex, dpt_ex, uexfac, pexfac, sexfac
 		real(dp) :: n_i,nik,nikT,f_i,u_i,p_i,s_i,cv_i,dpr_i,dpt_i,uifac,pifac,sifac
-		real(dp) :: nn,f_n,u_n,p_n,s_n,cv_n,dpr_n,dpt_n,mu_n,unfac,pnfac,snfac
+		real(dp) :: f_n,u_n,p_n,s_n,cv_n,dpr_n,dpt_n,mu_n,unfac,pnfac,snfac
 		real(dp) :: f_r,u_r,p_r,s_r,cv_r,dpr_r,dpt_r
 		real(dp) :: Gamma,ionQ,p,u,s,cv,dpr,dpt,gamma3m1,gamma1,grad_ad,cp
 		integer :: ierr
@@ -288,17 +288,17 @@ module dStar_eos_lib
 		end if
 	end subroutine eval_crust_eos
 
-	subroutine eval_core_eos(dStar_eos_handle,rho,T,x,res,components)
+	subroutine eval_core_eos(dStar_eos_handle,rho,T,x,Tc,res,components)
 		use constants_def
 		use fermi
 		use dStar_eos_private_def
-		use superfluid_def
-		use superfluid_lib
+		use superfluid_def, only: max_number_sf_types
 		use skyrme
 		integer, intent(in) :: dStar_eos_handle
 		real(dp), intent(in) :: rho	! density [g cm**-3]
 		real(dp), intent(in) :: T   ! temperature [K]
 		real(dp), intent(in) :: x	! proton fraction
+		real(dp), dimension(max_number_sf_types), intent(in) :: Tc
 		real(dp), dimension(num_dStar_eos_results) :: res
 		type(core_eos_component), intent(out), &
 			& dimension(num_core_eos_components), optional :: components	
@@ -307,11 +307,10 @@ module dStar_eos_lib
 		real(dp) :: n, p, u, s, cv, cp, dur, dpr, dpt, nn, np, sneut, sprot, muhat
 		real(dp) :: u_m, p_m, dur_m, dpr_m, meff
 		real(dp) :: u_a, p_a, dur_a, dpr_a, meff_a
-		real(dp) :: kn,kp,lambda3,zetan,zetap,cvn,cvp
+		real(dp) :: lambda3,zetan,zetap,cvn,cvp
 		real(dp) :: p_n, u_n, cv_n, cp_n, s_n, dur_n, dpr_n
 		real(dp) :: xfac, n_e, p_e, u_e, dur_e, dpr_e, mu_e
 		real(dp) :: cve, se, xi
-		real(dp) :: Tc(max_number_sf_types)
 		real(dp) :: tau,vn,vp,Tns,Tps,Tnt,Rn,Rp,Rns,Rnt
 		real(dp) :: grad_ad, gamma3m1, gamma1
 		
@@ -333,12 +332,12 @@ module dStar_eos_lib
 		dur_n = dur_m + xfac*dur_a
 		dpr_n = dpr_m + xfac*dpr_a
 		
-		! superfluid: k denotes wavenumber in inverse fm
-		nn = n*(1.0_dp-x)
-		kn = (0.5*threepisquare*nn)**onethird
-		np = n_e
-		kp = (0.5*threepisquare*np)**onethird
-		call sf_get_results(kp,kn,Tc)
+! 		! superfluid: k denotes wavenumber in inverse fm
+! 		nn = n*(1.0_dp-x)
+! 		kn = (0.5*threepisquare*nn)**onethird
+! 		np = n_e
+! 		kp = (0.5*threepisquare*np)**onethird
+! 		call sf_get_results(kp,kn,Tc)
 		
 		! thermal terms: nucleons are treated as ideal, non-relativistic gases
 		! neutrons; meff is for symmetric matter, probably need to correct this
