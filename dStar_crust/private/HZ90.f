@@ -255,6 +255,8 @@ contains
        ! returns with ierr = 0 if was able to evaluate f and df/dx at x
        ! if df/dx not available, it is okay to set it to 0
        use constants_def
+	   use superfluid_def, only: max_number_sf_types
+	   use superfluid_lib, only: sf_get_results
        use nucchem_def
        use dStar_eos_def
        use dStar_eos_lib
@@ -271,7 +273,7 @@ contains
        real(dp), dimension(:), allocatable :: Yion
        real(dp), dimension(num_dStar_eos_results) :: res
        integer :: phase
-       real(dp) :: chi, lgPwant, lgP
+       real(dp) :: chi, lgPwant, lgP, kFn, kFp, Tcs(max_number_sf_types)
        real(dp) :: rho, T, Eint
        
        eos_handle = ipar(1)
@@ -292,10 +294,14 @@ contains
        ionic% Yn = rpar(ncharged+10)
        ionic% Q = rpar(ncharged+11)
        
-       chi = use_default_nuclear_size
        rho = 10.0**lgRho
        T = 1.0d8
-       call eval_crust_eos(eos_handle,rho,T,ionic,ncharged,charged_ids,Yion,res,phase,chi)
+       chi = nuclear_volume_fraction(rho,ionic,default_nuclear_radius)
+	   kFp = 0.0_dp
+	   kFn = neutron_wavenumber(rho,ionic,chi)
+	   call sf_get_results(kFp,kFn,Tcs)
+       call eval_crust_eos(eos_handle,rho,T,ionic,ncharged, &
+       &	charged_ids,Yion,Tcs,res,phase,chi)
        Eint = res(i_lnE)
        
        lgPwant = rpar(ncharged+12)

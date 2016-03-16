@@ -3,6 +3,7 @@ program test_crust_eos
     use constants_lib
 	use nucchem_def
 	use nucchem_lib
+	use superfluid_def
 	use superfluid_lib
 	use dStar_eos_lib
 
@@ -84,7 +85,8 @@ program test_crust_eos
 		use constants_def, only: ln10,avogadro,boltzmann
 		real(dp), intent(in) :: rho
 		real(dp) :: lgr, lgT, T, Tc(max_number_sf_types)
-		real(dp) :: chi,Gamma,TpT,f,u,p,s,cv,chi_rho,chi_T,chk
+		real(dp) :: Gamma,TpT,f,u,p,s,cv,chi_rho,chi_T,chk
+		real(dp) :: k,Tcs(max_number_sf_types),chi,kFn,kFp
 		integer :: phase
 		integer :: i
 		
@@ -93,8 +95,13 @@ program test_crust_eos
 		do i = 1, 11
 			lgT = 7.5 + (i-1)/10.0
 			T = 10.0**lgT
-			call eval_crust_eos(eos_handle,rho,T,ionic,ncharged,charged_ids,Yion, &
-				& res, phase, chi, eos_components)
+			
+			chi = nuclear_volume_fraction(rho,ionic,default_nuclear_radius)
+			kFn = neutron_wavenumber(rho,ionic,chi)
+			kFp = 0.0_dp
+			call sf_get_results(kFp,kFn,Tcs)
+			call eval_crust_eos(eos_handle,rho,T,ionic,ncharged,charged_ids, &
+			&	Yion, Tcs, res, phase, chi, eos_components)
 			chk = exp(res(i_lnP)-res(i_lnE))/rho
 			write (*,'(2f8.2,3es12.4,10f8.3)')  &
 				& lgr,lgT,res(i_Gamma),res(i_Theta),res(i_Cv)/boltzmann/avogadro,res(i_lnE)/ln10,res(i_lnP)/ln10,res(i_lnS)/ln10, &

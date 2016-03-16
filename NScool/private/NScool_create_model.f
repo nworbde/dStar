@@ -247,7 +247,7 @@ contains
         real(dp), dimension(:), pointer :: work=>null()
         real(dp), dimension(:,:), pointer :: lnEnu_val, lnKcond_val, lnCp_val, lnGamma_val
         real(dp), dimension(:), pointer :: lnEnu_interp, lnKcond_interp, lnCp_interp, lnGamma_interp
-        real(dp) :: nn, kn, Tc(max_number_sf_types)
+        real(dp) :: kn, kp, Tc(max_number_sf_types)
         type(crust_eos_component), dimension(num_crust_eos_components) :: components
         ! for error checking
         real(dp), dimension(:), allocatable :: delP
@@ -275,10 +275,15 @@ contains
             lnEnu_val(1:4,1:s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, iz)
             do itemp = 1, s% n_tab
                 Ttab = exp(s% tab_lnT(itemp))
-                chi = use_default_nuclear_size
+                chi = nuclear_volume_fraction(s% rho(iz),s% ionic(iz), &
+                &	default_nuclear_radius)
+				kn = neutron_wavenumber(s% rho(iz),s% ionic(iz),chi)
+				kp = 0.0_dp
+				call sf_get_results(kp,kn,Tc)
                 call eval_crust_eos( &
-                &   s% eos_handle, s% rho(iz), Ttab, s% ionic(iz), s% ncharged, s% charged_ids, s% Yion(1:s% ncharged,iz), &
-                &   eos_results, eos_phase, chi, components)
+                &   s% eos_handle, s% rho(iz), Ttab, s% ionic(iz),  &
+                &	s% ncharged, s% charged_ids, s% Yion(1:s% ncharged,iz), &
+                &	Tc, eos_results, eos_phase, chi, components)
                 lnCp_val(1,itemp) = log(eos_results(i_Cp))
                 lnGamma_val(1,itemp) = log(eos_results(i_Gamma))
 !                 if (is_bad_num(lnCp_val(1,itemp)) .and. itemp == 40) then
@@ -296,12 +301,9 @@ contains
                 if (iz == 1 .and. itemp == 1) then
                     s% rho_bar(iz) = s% rho(iz)*(s% P_bar(iz)/s% P(iz))**(1.0/eos_results(i_chiRho))
                 end if
-                
-                nn = s% rho(iz)*s% ionic(iz)% Yn/amu/(1.0-chi)
-                kn = (1.5*pi**2*nn)**onethird / cm_to_fm
-                call sf_get_results(0.0_dp,kn,Tc)
-                
-                call get_crust_neutrino_emissivity(s% rho(iz), Ttab, s% ionic(iz), chi, Tc(neutron_1S0),  &
+				                
+                call get_crust_neutrino_emissivity(s% rho(iz), Ttab,  &
+                &	s% ionic(iz), chi, Tc(neutron_1S0),  &
                 &   eps_nu, nu_channels)
                 lnEnu_val(1,itemp) = log(eps_nu% total/s% rho(iz))
                 
@@ -334,17 +336,26 @@ contains
         allocate(delP(s% nz))
         do iz = 1, s% nz
             lnKcond_val(1:4,1:s% n_tab) => s% tab_lnK(1:4*s% n_tab, iz)
-            chi = use_default_nuclear_size
             do itemp = 1, s% n_tab
                 Ttab = exp(s% tab_lnT(itemp))
+				chi = nuclear_volume_fraction(s% rho_bar(iz),s% ionic_bar(iz),&
+				&	default_nuclear_radius)
+				kn = neutron_wavenumber(s% rho_bar(iz), s% ionic_bar(iz),chi)
+				kp = 0.0_dp
+				call sf_get_results(kp,kn,Tc)
                 call eval_crust_eos( &
-                &   s% eos_handle, s% rho_bar(iz), Ttab, s% ionic_bar(iz), s% ncharged, s% charged_ids,  &
-                &   s% Yion_bar(1:s% ncharged,iz), eos_results, eos_phase, chi)
-                if (itemp == 1) delP(iz) = abs(1.0 - exp(eos_results(i_lnP))/s% P_bar(iz))
+                &   s% eos_handle, s% rho_bar(iz), Ttab, s% ionic_bar(iz),  &
+                &	s% ncharged, s% charged_ids, &
+                &	s% Yion_bar(1:s% ncharged,iz), Tc, eos_results,  &
+                &	eos_phase, chi)
+                if (itemp == 1)  &
+                &	delP(iz) = abs(1.0 - exp(eos_results(i_lnP))/s% P_bar(iz))
                                 
-                call get_thermal_conductivity(s% rho_bar(iz), Ttab, chi, eos_results(i_Gamma),  &
-                &   eos_results(i_Theta), eos_results(i_mu_e), s% ionic_bar(iz), &
-                &   Kcomponents, use_pcy=s% use_pcy_for_ee_scattering, use_page=s% use_page_for_eQ_scattering, &
+                call get_thermal_conductivity(s% rho_bar(iz), Ttab, chi, &
+                &	eos_results(i_Gamma), eos_results(i_Theta), &
+                &   eos_results(i_mu_e), s% ionic_bar(iz), &
+                &   Kcomponents, use_pcy=s% use_pcy_for_ee_scattering, &
+                &   use_page=s% use_page_for_eQ_scattering, &
                 &   which_components=cond_channels)
                 lnKcond_val(1,itemp) = log(Kcomponents% total)
 
