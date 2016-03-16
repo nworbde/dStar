@@ -119,11 +119,36 @@ module dStar_eos_lib
 			skyrme_set = 'mb77'
 		end if
 	end subroutine dStar_which_skyrme_eos
+
+	! helper functions for the nuclear eos
+	function nuclear_volume_fraction(rho,ionic,nuclear_radius) result(chi)
+		use nucchem_def, only: composition_info_type
+		use constants_def
+		real(dp), intent(in) :: rho	! gram/cm**3
+		type(composition_info_type), intent(in) :: ionic
+		real(dp), intent(in) :: nuclear_radius	! fm
+		real(dp) :: chi
+		chi = onethird*fourpi*(nuclear_radius*fm_to_cm)**3  &
+			& *(rho*(1.0-ionic%Yn)/amu)
+	end function nuclear_volume_fraction
+	
+	function neutron_wavenumber(rho,ionic,chi) result(k)
+		use nucchem_def, only: composition_info_type
+		use constants_def
+		real(dp), intent(in) :: rho	! g/cm**3
+		type(composition_info_type), intent(in) :: ionic
+		real(dp), intent(in) :: chi
+		real(dp) :: k	! fm
+		real(dp) :: n	! cm**-3
+		n = rho*ionic%Yn/amu/(1.0-chi)
+		k = (0.5*threepisquare*n)**onethird / cm_to_fm
+	end function neutron_wavenumber
 	
 	subroutine eval_crust_eos( &
-		&   dStar_eos_handle,rho,T,ionic,ncharged,charged_ids,Yion, &
+		&   dStar_eos_handle,rho,T,ionic,ncharged,charged_ids,Yion,Tcs, &
 		&   res,phase,chi,components)
 		use nucchem_def, only: composition_info_type
+		use superfluid_def, only: max_number_sf_types, neutron_1S0
         use dStar_eos_private_def
 		use electron_eos
 		use ion_eos
@@ -139,19 +164,21 @@ module dStar_eos_lib
 			! ids of the charged species
 		real(dp), dimension(ncharged), intent(in) :: Yion
 			! renormalized abunances of charged species Yion = Y/(1-Yn)
+		real(dp), dimension(max_number_sf_types), intent(in) :: Tcs
 		real(dp), dimension(num_dStar_eos_results) :: res
 		integer, intent(out) :: phase
 		real(dp), intent(inout) :: chi
-		    ! volume fraction of nucleus; if input with value use_default_nuclear_size, 
-            ! chi is computed and the new value is returned in res.  Otherwise, the value that 
-            ! is input is used by the code and unaltered.
+		    ! volume fraction of nucleus; if input with value 
+			! use_default_nuclear_size, chi is computed and the new value is 
+			! returned in res.  Otherwise, the value that is input is used by 
+			! the code and unaltered.
 		type(crust_eos_component), intent(out), dimension(num_crust_eos_components), optional :: components
 
 		type(dStar_eos_general_info), pointer :: rq		
 		real(dp) :: ne,rs,Gamma_e,nek, nekT,f_e, u_e, p_e, s_e, cv_e, dpr_e, dpt_e, eta_e,mu_e
 		real(dp) :: f_ex, u_ex, p_ex, s_ex, cv_ex, dpr_ex, dpt_ex, uexfac, pexfac, sexfac
 		real(dp) :: n_i,nik,nikT,f_i,u_i,p_i,s_i,cv_i,dpr_i,dpt_i,uifac,pifac,sifac
-		real(dp) :: f_n,u_n,p_n,s_n,cv_n,dpr_n,dpt_n,mu_n,unfac,pnfac,snfac
+		real(dp) :: nn,f_n,u_n,p_n,s_n,cv_n,dpr_n,dpt_n,mu_n,unfac,pnfac,snfac,Tns
 		real(dp) :: f_r,u_r,p_r,s_r,cv_r,dpr_r,dpt_r
 		real(dp) :: Gamma,ionQ,p,u,s,cv,dpr,dpt,gamma3m1,gamma1,grad_ad,cp
 		integer :: ierr
@@ -159,7 +186,8 @@ module dStar_eos_lib
 		call dStar_eos_ptr(dStar_eos_handle, rq, ierr)
 		if (ierr /= 0) return
 		
-		! electrons... some ion quantities are defined in terms of these as well.
+		! electrons...
+		! some ion quantities are defined in terms of these as well.
 		ne = rho*ionic%Ye/amu
 		rs = (3.0/fourpi/ne)**onethird / a_Bohr
 		Gamma_e = 2.0*Rydberg/boltzmann/T/rs
@@ -169,7 +197,7 @@ module dStar_eos_lib
 				
 		! set the nuclear size
 		if (chi == use_default_nuclear_size) then
-			chi = onethird*fourpi*(default_nuclear_radius*fm_to_cm)**3 * (rho*(1.0-ionic%Yn)/amu)
+			chi = nuclear_volume_fraction(rho,ionic,default_nuclear_radius)
 		end if
 		
 		! electrons
@@ -204,10 +232,9 @@ module dStar_eos_lib
             uifac = 0.0; pifac = 0.0; sifac = 0.0
         end if
 		
-		! neutrons
+		! local density of neutrons
 		nn = rho*ionic%Yn/amu/(1.0-chi)
-			! local density of neutrons
-		call get_neutron_eos(rq,nn,T,f_n,u_n,p_n,s_n,cv_n,dpr_n,dpt_n)
+		call get_neutron_eos(rq,nn,T,Tns,f_n,u_n,p_n,s_n,cv_n,dpr_n,dpt_n)
 		unfac = avogadro*ionic% Yn
 		pnfac = 1.0
 		snfac = unfac

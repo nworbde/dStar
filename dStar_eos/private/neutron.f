@@ -14,7 +14,7 @@ module neutron_eos
 
 contains
 		
-	subroutine get_neutron_eos(rq,n,T,f,u,p,s,cv,dpr,dpt)
+	subroutine get_neutron_eos(rq,n,T,Tns,f,u,p,s,cv,dpr,dpt)
 		use constants_def
 		use fermi
 		use superfluid_def, only: max_number_sf_types, neutron_1S0
@@ -23,6 +23,7 @@ contains
 		type(dStar_eos_general_info), pointer :: rq		
 		real(dp), intent(in) :: n		! cm**-3
 		real(dp), intent(in) :: T	! K
+		real(dp), intent(in) :: Tns	! neutron 1S0 critical temp [K]
 		real(dp), intent(out) :: f, u, s	! ergs/neutron
 		real(dp), intent(out) :: p	! dyn cm**-2
 		real(dp), intent(out) :: cv	! ergs/K/neutron
@@ -30,14 +31,12 @@ contains
         real(dp), parameter :: kF_p = 0.0
 		real(dp) :: k,tau,v,R,meff
 		real(dp) :: lambda3, zeta	! zeta = chem. pot(ideal Fermi gas)/kT
-		real(dp) :: Tns, Tc(max_number_sf_types)
 
 		f = 0.0; u = 0.0; p = 0.0; s = 0.0; cv = 0.0; dpr = 0.0; dpT = 0.0
 		if (n == 0.0) return
 		
 		! get wavenumber in inverse fm
 		k = (0.5*threepisquare*n)**onethird / cm_to_fm
-		call sf_get_results(kF_p,k,Tc)
 		
 		meff = 1.0_dp
 		if (rq% use_skyrme_for_neutrons) then
@@ -56,8 +55,6 @@ contains
 		s = fivethird*zfermi32(zeta)/zfermi12(zeta) - zeta
 		s = s*boltzmann
 
-		! Now set the superfluid reduction factor (need ref...)
-		Tns = Tc(neutron_1S0)
 		if (T < Tns) then
 			tau = T/Tns
 			v = sqrt(1.0-tau)*(1.456-0.157/sqrt(tau) + 1.764/tau)

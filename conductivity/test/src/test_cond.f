@@ -44,6 +44,8 @@ program test_cond
 
     contains
     subroutine do_one(rho)
+		use superfluid_def, only: max_number_sf_types
+		use superfluid_lib
         real(dp), intent(in) :: rho
         real(dp) :: Gamma,eta,f,u,p,s,cv,chi_rho,chi_T
         integer :: phase
@@ -51,14 +53,16 @@ program test_cond
         type(conductivity_components) :: kappa
         type(crust_eos_component), dimension(num_crust_eos_components) :: eos_components
         integer :: ii
+		real(dp), dimension(max_number_sf_types) :: Tcs
         
+		Tcs = 0.0_dp
         lgr = log10(rho)
         chi = use_default_nuclear_size
         do ii = 1, 16
             lgT = 7.0_dp + real(ii-1,dp)/10.0_dp
             T = 10.0**lgT
             call eval_crust_eos(eos_handle,rho,T,ionic, &
-                & ncharged, charged_ids, Yion, res, phase, chi, eos_components)
+                & ncharged, charged_ids, Yion, Tcs, res, phase, chi, eos_components)
             eta = res(i_Theta) !1.0/TpT
             Gamma = res(i_Gamma)
             mu_e = res(i_mu_e)
