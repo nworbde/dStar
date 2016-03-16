@@ -42,17 +42,23 @@ program test_core_eos
 	
 	subroutine do_one(rho)
 		use constants_def, only: ln10,avogadro,boltzmann
+        use superfluid_lib
 		real(dp), intent(in) :: rho
 		real(dp) :: lgr, lgT, T, Tc(max_number_sf_types)
-		real(dp) :: chi,Gamma,TpT,f,u,p,s,cv,chi_rho,chi_T
+		real(dp) :: n,kn,kp,f,u,p,s,cv,chi_rho,chi_T
 		integer :: phase
 		integer :: i
 		
 		lgr = log10(rho)
+        ! superfluid: k denotes wavenumber in inverse fm
+        n = rho/amu/density_n
+        kn = (0.5*threepisquare*n*(1.0_dp-x))**onethird
+        kp = (0.5*threepisquare*n*x)**onethird
+        call sf_get_results(kp,kn,Tc)
 		do i = 1, 11
 			lgT = 7.5 + (i-1)/10.0
 			T = 10.0**lgT
-			call eval_core_eos(eos_handle,rho,T,x,res,eos_components)
+			call eval_core_eos(eos_handle,rho,T,x,Tc,res,eos_components)
 			write (*,'(2f8.2,es12.4,10f8.3)') lgr,lgT, &
 				& res(i_Cv)/boltzmann/avogadro, &
 				& res(i_lnE)/ln10,res(i_lnP)/ln10,res(i_lnS)/ln10, &

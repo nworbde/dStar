@@ -319,7 +319,7 @@ module dStar_eos_lib
 		use constants_def
 		use fermi
 		use dStar_eos_private_def
-		use superfluid_def, only: max_number_sf_types
+		use superfluid_def
 		use skyrme
 		integer, intent(in) :: dStar_eos_handle
 		real(dp), intent(in) :: rho	! density [g cm**-3]
@@ -360,9 +360,9 @@ module dStar_eos_lib
 		dpr_n = dpr_m + xfac*dpr_a
 		
 ! 		! superfluid: k denotes wavenumber in inverse fm
-! 		nn = n*(1.0_dp-x)
+        nn = n*(1.0_dp-x)
 ! 		kn = (0.5*threepisquare*nn)**onethird
-! 		np = n_e
+        np = n_e
 ! 		kp = (0.5*threepisquare*np)**onethird
 ! 		call sf_get_results(kp,kn,Tc)
 		
