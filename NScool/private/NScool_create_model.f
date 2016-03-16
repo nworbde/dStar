@@ -279,7 +279,11 @@ contains
                 &	default_nuclear_radius)
 				kn = neutron_wavenumber(s% rho(iz),s% ionic(iz),chi)
 				kp = 0.0_dp
-				call sf_get_results(kp,kn,Tc)
+                if (.not. s% use_other_sf_critical_temperatures) then
+    				call sf_get_results(kp,kn,Tc)
+                else
+                    call s% other_sf_get_results(kp,kn,Tc)
+                end if
                 call eval_crust_eos( &
                 &   s% eos_handle, s% rho(iz), Ttab, s% ionic(iz),  &
                 &	s% ncharged, s% charged_ids, s% Yion(1:s% ncharged,iz), &
@@ -342,7 +346,11 @@ contains
 				&	default_nuclear_radius)
 				kn = neutron_wavenumber(s% rho_bar(iz), s% ionic_bar(iz),chi)
 				kp = 0.0_dp
-				call sf_get_results(kp,kn,Tc)
+                if (.not. s% use_other_sf_critical_temperatures) then
+                    call sf_get_results(kp,kn,Tc)
+                else
+                    call s% other_sf_get_results(kp,kn,Tc)
+                end if
                 call eval_crust_eos( &
                 &   s% eos_handle, s% rho_bar(iz), Ttab, s% ionic_bar(iz),  &
                 &	s% ncharged, s% charged_ids, &

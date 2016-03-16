@@ -37,6 +37,7 @@
     
     ! other routines
     use_other_set_Qimp = .FALSE.
+    use_other_sf_critical_temperatures = .FALSE.
     
     ! extra controls for hook routines
     extra_real_controls(:) = 0.0
