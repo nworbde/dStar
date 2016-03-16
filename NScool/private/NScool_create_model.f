@@ -282,7 +282,7 @@ contains
                 if (.not. s% use_other_sf_critical_temperatures) then
     				call sf_get_results(kp,kn,Tc)
                 else
-                    call s% other_sf_get_results(kp,kn,Tc)
+                    call s% other_sf_get_results(s% id,kp,kn,Tc)
                 end if
                 call eval_crust_eos( &
                 &   s% eos_handle, s% rho(iz), Ttab, s% ionic(iz),  &
@@ -349,7 +349,7 @@ contains
                 if (.not. s% use_other_sf_critical_temperatures) then
                     call sf_get_results(kp,kn,Tc)
                 else
-                    call s% other_sf_get_results(kp,kn,Tc)
+                    call s% other_sf_get_results(s% id,kp,kn,Tc)
                 end if
                 call eval_crust_eos( &
                 &   s% eos_handle, s% rho_bar(iz), Ttab, s% ionic_bar(iz),  &

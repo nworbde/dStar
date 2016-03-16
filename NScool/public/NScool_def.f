@@ -13,12 +13,13 @@ module NScool_def
         integer, intent(in) :: id
         integer, intent(out) :: ierr
     end subroutine set_Qimp_interface
-    subroutine set_sf_interface(kp,kn,Tc)
+    subroutine set_sf_interface(id,kp,kn,Tc)
         use constants_def
         use superfluid_def
         use superfluid_lib
-        real(dp), intent(in) :: kp, kn
-        real(dp), dimension(max_number_sf_types), intent(out) :: Tc
+        integer, intent(in) :: id   ! for accessing parameters
+        real(dp), intent(in) :: kp, kn  ! proton, neutron wavevectors (fm**-1)
+        real(dp), dimension(max_number_sf_types), intent(out) :: Tc (K)
     end subroutine set_sf_interface
     end interface
 
