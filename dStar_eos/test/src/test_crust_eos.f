@@ -29,8 +29,8 @@ program test_crust_eos
 	call dStar_eos_startup('../../data')
 	eos_handle = alloc_dStar_eos_handle(ierr)
 	
-	call dStar_eos_set_controls(eos_handle,use_skyrme=.FALSE., &
-	&	skyrme_parameter_set='s7d')
+    call dStar_eos_set_controls(eos_handle,use_skyrme=.FALSE., &
+    &    skyrme_parameter_set='s7d')
 	
 	! get indices
 	chem_ids = [(get_nuclide_index_from_ZN(Z(i),N(i)),i=1,3)]
