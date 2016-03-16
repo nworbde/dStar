@@ -35,9 +35,8 @@ contains
 		f = 0.0; u = 0.0; p = 0.0; s = 0.0; cv = 0.0; dpr = 0.0; dpT = 0.0
 		if (n == 0.0) return
 		
-		! get wavenumber in inverse fm
-		k = (0.5*threepisquare*n)**onethird / cm_to_fm
-		
+        ! get wavenumber in inverse fm
+        k = (0.5*threepisquare*n)**onethird / cm_to_fm
 		meff = 1.0_dp
 		if (rq% use_skyrme_for_neutrons) then
 			call get_skyrme(n,T,u,p,dpr,dpT,meff)

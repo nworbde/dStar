@@ -234,6 +234,7 @@ module dStar_eos_lib
 		
 		! local density of neutrons
 		nn = rho*ionic%Yn/amu/(1.0-chi)
+        Tns = Tcs(neutron_1S0)
 		call get_neutron_eos(rq,nn,T,Tns,f_n,u_n,p_n,s_n,cv_n,dpr_n,dpt_n)
 		unfac = avogadro*ionic% Yn
 		pnfac = 1.0
