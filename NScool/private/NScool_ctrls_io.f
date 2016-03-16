@@ -19,6 +19,7 @@ module NScool_ctrls_io
         min_lg_temperature_integration, &
         max_lg_temperature_integration, &
         use_other_set_Qimp, &
+        use_other_sf_critical_temperatures, &
         extra_real_controls, & 
         extra_integer_controls, & 
         extra_logical_controls, & 
@@ -163,6 +164,7 @@ contains
        s% max_lg_temperature_integration = max_lg_temperature_integration
        
        s% use_other_set_Qimp = use_other_set_Qimp
+       s% use_other_sf_critical_temperatures = use_other_sf_critical_temperatures
        s% extra_real_controls = extra_real_controls
        s% extra_integer_controls = extra_integer_controls
        s% extra_logical_controls = extra_logical_controls

@@ -346,6 +346,7 @@ contains
        ! returns with ierr = 0 if was able to evaluate f and df/dx at x
        ! if df/dx not available, it is okay to set it to 0
        use constants_def
+	   use superfluid_def, only: max_number_sf_types
        use nucchem_def
        use nucchem_lib
        use dStar_eos_lib
@@ -364,9 +365,9 @@ contains
        real(dp), dimension(num_dStar_eos_results) :: res
 	   integer, pointer, dimension(:) :: charged_ids=>null()
        real(dp), pointer, dimension(:) :: Yion=>null()
-       
+	   real(dp), dimension(max_number_sf_types) :: Tcs
+	       
        ierr = 0
-       
        ! unpack the arguments       
        rho = exp(lnrho)
        
@@ -392,8 +393,9 @@ contains
        Yion(1:ncharged)=>rpar(number_base_rpar+1:number_base_rpar+ncharged)
        chi = use_default_nuclear_size
 
-       call eval_crust_eos(eos_handle,rho,Teff,ionic,ncharged,charged_ids,Yion, &
-       		&   res,phase,chi)
+	   Tcs = 0.0_dp
+       call eval_crust_eos(eos_handle,rho,Teff,ionic,ncharged,charged_ids, &
+       	&	Yion, Tcs, res,phase,chi)
        
        P = exp(res(i_lnP))
        rpar(ipres) = P
@@ -451,6 +453,7 @@ contains
 
     subroutine get_coefficients(P,T,rho,lrpar,rpar,lipar,ipar,kappa,del_ad,ierr)
         use constants_def
+		use superfluid_def, only: max_number_sf_types
         use nucchem_def, only: composition_info_type
         use dStar_eos_lib
         use conductivity_lib
@@ -468,6 +471,7 @@ contains
         integer, dimension(:), pointer :: charged_ids=>null()
         real(dp), dimension(:), pointer :: Yion=>null()
         real(dp) :: lnrho,lnrho_guess, Gamma, eta, mu_e, chi
+		real(dp), dimension(max_number_sf_types) :: Tcs
         real(dp), dimension(num_dStar_eos_results) :: res
         integer :: phase
         type(conductivity_components) :: K
@@ -496,8 +500,9 @@ contains
         ncharged = ipar(iNcharged)
         charged_ids(1:ncharged) => ipar(number_base_ipar+1:number_base_ipar+ncharged)
         Yion(1:ncharged) => rpar(number_base_rpar+1:number_base_rpar+ncharged)
+		Tcs = 0.0_dp
         call eval_crust_eos(eos_handle,rho,T,ionic,ncharged,charged_ids,Yion, &
-                &   res,phase,chi)
+                &   Tcs, res,phase,chi)
                 
         ! check for good eos
         if (abs(exp(res(i_lnP))-P) > 1.0e-3_dp*P) then
@@ -578,6 +583,7 @@ contains
     real(dp) function eval_pressure(lnrho, dlnPdlnrho, lrpar, rpar, lipar, ipar, ierr)
        ! returns with ierr = 0 if was able to evaluate lnP and dlnP/dlnrho at rho
        use constants_def
+	   use superfluid_def, only: max_number_sf_types
        use nucchem_def
        use nucchem_lib
        use dStar_eos_lib
@@ -592,6 +598,7 @@ contains
        real(dp) :: rho, T, chi, Pwant
        integer :: eos_handle, ncharged, phase
        type(composition_info_type) :: ionic
+	   real(dp), dimension(max_number_sf_types) :: Tcs
        real(dp), dimension(num_dStar_eos_results) :: res
        integer, pointer, dimension(:) :: charged_ids=>null()
        real(dp), pointer, dimension(:) :: Yion=>null()
@@ -622,8 +629,9 @@ contains
            stop
        end if
        
+	   Tcs = 0.0_dp
        call eval_crust_eos(eos_handle,rho,T,ionic,ncharged,charged_ids,Yion, &
-               &   res,phase,chi)
+               &   Tcs, res,phase,chi)
        if (is_bad_num(res(i_lnP))) then
            ierr = -9
            return
