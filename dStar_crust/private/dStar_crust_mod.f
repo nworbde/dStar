@@ -83,7 +83,8 @@ contains
         lgP = [ (lgPmin + real(i-1,dp)*(delta_lgP)/real(N-1,dp), i = 1, N)]
         
         call do_make_crust(lgP,Yion,Xneut,charged_ids,ncharged,ion_info)        
-        call find_densities(eos_handle,lgP,lgRho,lgEps,Yion,ncharged,charged_ids,ion_info)
+        call find_densities(eos_handle,lgP,lgRho,lgEps, &
+        	& Yion,ncharged,charged_ids,ion_info,Tref)
         
         call do_allocate_crust_table(tab, N, ierr)
         lgRho_val(1:4,1:N) => tab% lgRho(1:4*N)
