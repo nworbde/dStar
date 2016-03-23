@@ -7,6 +7,9 @@ module NScool_def
     integer, parameter :: num_extra_integer_controls = 32
     integer, parameter :: num_extra_logical_controls = 32
 
+    ! maximum number of sub-intervals
+    integer, parameter :: max_number_epochs = 64
+
     ! interfaces for customizable routines
     abstract interface
     subroutine set_Qimp_interface(id,ierr)
@@ -110,6 +113,10 @@ module NScool_def
         real(dp), pointer, dimension(:,:) :: tab_lnCp   ! (4*n_tab, nz) coefficients for ln(Cp)
         real(dp), pointer, dimension(:,:) :: tab_lnK    ! (4*n_tab, nz) coefficients for ln(Kcond)
         real(dp), pointer, dimension(:,:) :: tab_lnGamma  ! (4*n_tab, nz) coefficients for ln(plasma Gamma)
+
+        ! storage for the lightcurve at selected points
+        real(dp), pointer, dimension(:) :: t_monitor    ! (d, number_epochs)
+        real(dp), pointer, dimension(:) :: Teff_monitor ! (K, number_epochs)
 
         logical :: in_use
         

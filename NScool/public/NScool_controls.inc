@@ -24,9 +24,11 @@
     
     logical :: fix_atmosphere_temperature_when_accreting
     real(dp) :: atmosphere_temperature_when_accreting
-    real(dp) :: Mdot
     
     real(dp) :: start_time
+    integer :: number_epochs
+    real(dp), dimension(max_number_epochs) :: Mdot
+    real(dp), dimension(max_number_epochs) :: epoch_end_times
     
     real(dp) :: core_mass
     real(dp) :: core_radius

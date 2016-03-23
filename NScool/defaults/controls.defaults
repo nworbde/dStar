@@ -23,7 +23,6 @@
     min_lg_temperature_integration = 7.0
     max_lg_temperature_integration = 9.5
     
-
     ! macroscopic NS parameters
     fix_core_temperature = .TRUE.
     core_temperature = 1.0d8
@@ -31,9 +30,11 @@
     
     fix_atmosphere_temperature_when_accreting = .TRUE.
     atmosphere_temperature_when_accreting = 1.0d8
-    Mdot = 1.0d18 ! g/s
     
-    start_time = 0.0    ! yr
+    start_time = 0.0    ! days
+    number_epochs = 1
+    Mdot = 1.0d18 ! g/s
+    epoch_end_times = 365.0   ! days
     
     ! other routines
     use_other_set_Qimp = .FALSE.
