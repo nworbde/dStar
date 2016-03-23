@@ -30,7 +30,7 @@ For each module, look in the `test` directory for an example of how to run the m
 For a basic example of how to run a neutron star model over an accretion/quiescent cycle, copy `examples/basic_run` and follow the instruction in the `README.md` file in that directory.
 
 ##How to cite
-If you do use `dStar`, we'd appreciate a citation! `dStar` is listed in the Astrophysics Source Code Library [ascl:1010.083](http://ascl.net/1505.034) and can be cited as, e.g., 
+If you do use `dStar`, we'd appreciate a citation! `dStar` is listed in the Astrophysics Source Code Library [ascl:1505.034](http://ascl.net/1505.034) and can be cited as, e.g., 
     
     Brown, E. F. 2015, Astrophysics Source Code Library, ascl:1505.034
 
