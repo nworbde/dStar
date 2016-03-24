@@ -33,7 +33,7 @@ module NScool_def
         
         ! global information (NB. core here means interior to model)
         real(dp) :: Lsurf     ! emergent luminosity
-        real(dp) :: dlnLsdlnT ! change surface luminosity with temperature out outer zone
+        real(dp) :: dlnLsdlnT ! derivative of surface luminosity wrt temperature at outer zone
         real(dp) :: Teff      ! surface effective temperature
         real(dp) :: Lcore     ! core luminosity
         real(dp) :: Tcore     ! core temperature
