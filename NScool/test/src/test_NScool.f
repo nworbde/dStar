@@ -24,6 +24,9 @@ program test_NScool
     call NScool_evolve_model(NScool_id,ierr)    
     call get_NScool_info_ptr(NScool_id,s,ierr)
 
+    write(*,*) '1+z = ',s% eLambda(1)
+    write(*,*) '1.0/exp(Phi) = ',1.0/s% ePhi(1)
+    
     do i = 1, s% number_epochs
         write(*,*) s% t_monitor(i), s% Teff_monitor(i)
     end do
