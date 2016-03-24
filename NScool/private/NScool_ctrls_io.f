@@ -28,8 +28,10 @@ module NScool_ctrls_io
         make_inner_boundary_insulating, &
         fix_atmosphere_temperature_when_accreting, & 
         atmosphere_temperature_when_accreting, &
-        Mdot, &
         start_time, &
+        Mdot, &
+        number_epochs, &
+        epoch_end_times, &
         core_mass, &
         core_radius, &
         lgPcrust_bot, &
@@ -174,7 +176,9 @@ contains
        s% make_inner_boundary_insulating = make_inner_boundary_insulating
        s% fix_atmosphere_temperature_when_accreting = fix_atmosphere_temperature_when_accreting
        s% atmosphere_temperature_when_accreting = atmosphere_temperature_when_accreting
+       s% number_epochs = number_epochs
        s% Mdot = Mdot
+       s% epoch_end_times = epoch_end_times*julian_day
        s% start_time = start_time*julian_day
        
        s% Mcore = core_mass
