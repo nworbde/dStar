@@ -29,7 +29,7 @@ module NScool_ctrls_io
         fix_atmosphere_temperature_when_accreting, & 
         atmosphere_temperature_when_accreting, &
         start_time, &
-        Mdot, &
+        epoch_Mdots, &
         number_epochs, &
         epoch_end_times, &
         core_mass, &

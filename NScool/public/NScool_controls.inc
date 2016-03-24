@@ -27,7 +27,7 @@
     
     real(dp) :: start_time
     integer :: number_epochs
-    real(dp), dimension(max_number_epochs) :: Mdot
+    real(dp), dimension(max_number_epochs) :: epoch_Mdots
     real(dp), dimension(max_number_epochs) :: epoch_end_times
     
     real(dp) :: core_mass

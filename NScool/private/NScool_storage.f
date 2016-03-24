@@ -185,15 +185,19 @@ contains
             if (failed('lnK')) exit
             call do1(s% dlnK_dlnT)
             if (failed('dlnK_dlnT')) exit
-            call do1(s% t_monitor)
+            call do1epoch(s% t_monitor)
             if (failed('t_monitor')) exit
-            call do1(s% Teff_monitor)
+            call do1epoch(s% Teff_monitor)
             if (failed('Teff_monitor')) exit
             return
         end do
         ierr = -1
         
     contains
+        subroutine do1epoch(ptr)
+            real(dp), dimension(:), pointer :: ptr
+            call do1D(ptr, nepochs, action, ierr)
+        end subroutine do1epoch
         subroutine do1(ptr)
             real(dp), dimension(:), pointer :: ptr
             call do1D(ptr, nz, action, ierr)

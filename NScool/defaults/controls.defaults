@@ -33,7 +33,7 @@
     
     start_time = 0.0    ! days
     number_epochs = 1
-    Mdot = 1.0d18 ! g/s
+    epoch_Mdots = 0.0_dp ! g/s
     epoch_end_times = 365.0   ! days
     
     ! other routines
