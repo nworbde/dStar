@@ -17,10 +17,10 @@ contains
     end subroutine NScool_shutdown
     
     function alloc_NScool(ierr)
-        use NScool_private_def, only: NScool_private_alloc
+        use init, only: alloc_NScool_data
         integer, intent(out) :: ierr
         integer :: alloc_NScool
-        alloc_NScool = NScool_private_alloc(ierr)
+        alloc_NScool = alloc_NScool_data(ierr)
     end function alloc_NScool
     
     subroutine dealloc_NScool(id,ierr)
