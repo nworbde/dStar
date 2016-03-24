@@ -6,7 +6,7 @@ program test_NScool
     character(len=*), parameter :: my_dStar_dir = '../../'
     character(len=*), parameter :: inlist = 'test_inlist'
     type(NScool_info), pointer :: s
-    integer :: ierr, NScool_id
+    integer :: ierr, NScool_id, i
     
     call NScool_init(my_dStar_dir, ierr)
     call check_okay('NScool_init',ierr)
@@ -24,12 +24,15 @@ program test_NScool
     call NScool_evolve_model(NScool_id,ierr)    
     call get_NScool_info_ptr(NScool_id,s,ierr)
 
+    do i = 1, s% number_epochs
+        write(*,*) s% t_monitor(i), s% Teff_monitor(i)
+    end do
     ! now start the cooling
-    s% Mdot = 0.0_dp
-    s% starting_number_for_profile = s% model + 1
-    s% start_time = s% tsec
-    
-    call NScool_evolve_model(NScool_id,ierr)
+!     s% Mdot = 0.0_dp
+!     s% starting_number_for_profile = s% model + 1
+!     s% start_time = s% tsec
+!
+!     call NScool_evolve_model(NScool_id,ierr)
     
     call NScool_shutdown
     

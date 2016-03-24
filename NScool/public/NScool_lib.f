@@ -48,6 +48,7 @@ contains
     end subroutine NScool_create_model
 
     subroutine NScool_evolve_model(id, ierr)
+        use constants_def, only : julian_day
         use NScool_def, only : NScool_info, get_NScool_info_ptr
         use NScool_evolve, only: do_integrate_crust
         integer, intent(in) :: id
@@ -66,8 +67,9 @@ contains
             end if
             s% Mdot = s% epoch_Mdots(i_epoch)
             s% maximum_end_time = s% epoch_end_times(i_epoch)
-            
             call do_integrate_crust(id,ierr)
+            s% t_monitor(i_epoch) = s% tsec / julian_day
+            s% Teff_monitor(i_epoch) = s% Teff
         end do
     end subroutine NScool_evolve_model
 
