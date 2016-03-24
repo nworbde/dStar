@@ -48,12 +48,27 @@ contains
     end subroutine NScool_create_model
 
     subroutine NScool_evolve_model(id, ierr)
+        use NScool_def, only : NScool_info, get_NScool_info_ptr
         use NScool_evolve, only: do_integrate_crust
         integer, intent(in) :: id
         integer, intent(out) :: ierr
-        
+        type(NScool_info), pointer :: s
+        integer :: i_epoch
+
         ierr = 0
-        call do_integrate_crust(id,ierr)
+        call get_NScool_info_ptr(id,s,ierr)
+        if (ierr /= 0) return
+        
+        do i_epoch = 1, s% number_epochs
+            if (i_epoch > 1) then
+                s% start_time = s% tsec
+                s% starting_number_for_profile = s% model + 1
+            end if
+            s% Mdot = s% epoch_Mdots(i_epoch)
+            s% maximum_end_time = s% epoch_end_times(i_epoch)
+            
+            call do_integrate_crust(id,ierr)
+        end do
     end subroutine NScool_evolve_model
 
 end module NScool_lib
