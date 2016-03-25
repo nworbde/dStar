@@ -26,7 +26,10 @@
     core_temperature = 1.4e8
     fix_atmosphere_temperature_when_accreting = .TRUE.
     atmosphere_temperature_when_accreting = 2.4d8
-    Mdot = 1.0e17
+    
+    number_epochs = 2
+    epoch_Mdots = 1.0e17, 0.0
+    epoch_end_times = 50.0, 1000.0
     start_time = 0.0
     
     ! core properties
