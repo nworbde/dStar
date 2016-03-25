@@ -5,7 +5,7 @@ program test_NScool
 
     character(len=*), parameter :: my_dStar_dir = '../../'
     character(len=*), parameter :: inlist = 'test_inlist'
-    type(NScool_info), pointer :: s
+    type(NScool_info), pointer :: s=>null()
     integer :: ierr, NScool_id, i
     
     call NScool_init(my_dStar_dir, ierr)
@@ -19,26 +19,19 @@ program test_NScool
     ierr = 0
 
     call NScool_create_model(NScool_id,ierr)
+    call check_okay('NScool_create_model',ierr)
     
-    ! run with accretion on; heat the crust
-    call NScool_evolve_model(NScool_id,ierr)    
-    call get_NScool_info_ptr(NScool_id,s,ierr)
+    call NScool_evolve_model(NScool_id,ierr)
+    call check_okay('NScool_evolve_model',ierr)
 
-    write(*,*) '1+z = ',s% eLambda(1)
-    write(*,*) '1.0/exp(Phi) = ',1.0/s% ePhi(1)
-    
+    ! write out the observed effective temperature at monitoring points
+    ! (end of the epochs that were specified in the inlist).
+    call get_NScool_info_ptr(NScool_id,s,ierr)    
     do i = 1, s% number_epochs
-        write(*,*) s% t_monitor(i), s% Teff_monitor(i)
+        write(*,'(2(a," = ",es11.4))') 't/d',s% t_monitor(i),'; obs. Teff/K', s% Teff_monitor(i)
     end do
-    ! now start the cooling
-!     s% Mdot = 0.0_dp
-!     s% starting_number_for_profile = s% model + 1
-!     s% start_time = s% tsec
-!
-!     call NScool_evolve_model(NScool_id,ierr)
     
-    call NScool_shutdown
-    
+    call NScool_shutdown    
     write (output_unit,'(/,/,a,i3)') 'test_NScool exited with ierr = ',ierr
     
 contains

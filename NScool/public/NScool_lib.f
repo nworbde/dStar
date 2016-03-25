@@ -69,7 +69,7 @@ contains
             s% maximum_end_time = s% epoch_end_times(i_epoch)
             call do_integrate_crust(id,ierr)
             s% t_monitor(i_epoch) = s% tsec / julian_day
-            s% Teff_monitor(i_epoch) = s% Teff
+            s% Teff_monitor(i_epoch) = s% Teff * s% ePhi(1)
         end do
     end subroutine NScool_evolve_model
 
