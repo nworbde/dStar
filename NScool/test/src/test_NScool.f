@@ -1,5 +1,5 @@
 program test_NScool
-    use iso_fortran_env, only : output_unit
+    use iso_fortran_env, only : output_unit, error_unit
     use NScool_def
     use NScool_lib
 
@@ -28,7 +28,7 @@ program test_NScool
     ! (end of the epochs that were specified in the inlist).
     call get_NScool_info_ptr(NScool_id,s,ierr)    
     do i = 1, s% number_epochs
-        write(*,'(2(a," = ",es11.4))') 't/d',s% t_monitor(i),'; obs. Teff/K', s% Teff_monitor(i)
+        write(output_unit,'(2(a," = ",es11.4))') 't/d',s% t_monitor(i),'; obs. Teff/K', s% Teff_monitor(i)
     end do
     
     call NScool_shutdown    
@@ -36,7 +36,6 @@ program test_NScool
     
 contains
 	subroutine check_okay(msg,ierr)
-		use iso_fortran_env, only : error_unit
 		character(len=*), intent(in) :: msg
 		integer, intent(inout) :: ierr
 		if (ierr /= 0) then
