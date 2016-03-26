@@ -1,0 +1,59 @@
+&controls
+    
+    ! controls for output
+    write_interval_for_terminal = 1000
+    write_interval_for_terminal_header = 10
+    write_interval_for_history = 1000
+    write_interval_for_profile = 1000
+    starting_number_for_profile = 1
+    
+    output_directory = 'LOGS'
+    
+    ! controls for the solver
+    maximum_number_of_models = 10000
+    maximum_timestep = 0.0
+        ! implies that max = tend-t
+    integration_tolerance = 1.0d-4
+    ! limits on temperature: if a zone goes outside these bounds, reduce stepsize
+    min_lg_temperature_integration = 7.0
+    max_lg_temperature_integration = 9.5
+    ! spatial resolution
+    target_resolution_lnP = 0.05
+
+    ! macroscopic NS parameters
+    fix_core_temperature = .TRUE.
+    core_temperature = 9.2e7
+    fix_atmosphere_temperature_when_accreting = .FALSE.
+    atmosphere_temperature_when_accreting = 2.4d8
+    
+    ! integration epochs
+    number_epochs = 9
+    epoch_Mdots = 1.0e17,8*0.0
+    epoch_boundaries = -4383.0,0.0,65.1,235.7,751.6,929.5,1500.5,1570.4,1595.4,3039.7
+    
+    ! core properties
+    core_mass = 1.6     ! Msun
+    core_radius = 11.0    ! km
+    
+    ! crust boundaries (pressure)
+    lgPcrust_bot = 32.5 ! cgs
+    lgPcrust_top = 27.0 ! cgs
+    
+    ! heating
+    turn_on_extra_heating = .TRUE.
+    Q_heating_shallow = 1.7
+    lgP_min_heating_shallow = 27.0
+    lgP_max_heating_shallow = 28.0
+    
+    ! shell Urca cooling
+    turn_on_shell_Urca = .FALSE.
+    
+    which_neutron_1S0_gap = 'sfb03'
+    
+    ! atmosphere composition
+    lg_atm_light_element_column = 4.0
+    
+    ! impurities
+    fix_Qimp = .TRUE.
+    Qimp = 4.0
+/
