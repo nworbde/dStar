@@ -4,21 +4,28 @@ A collection of modules for computing neutron star structure and evolution.
 
 ##What's new
 
-You can now specify a run with a number of accretion "epochs": distinct periods of time with a different accretion rate.  For example, suppose you wish to accrete at 1.5e17 g/s for 1000 d and then cool for 5000 d.  In the inlist, you would set the following flags.
+###Specify multiple accretion epochs
+You can now specify a run with a number of accretion "epochs": distinct periods of time with a different accretion rate.  For example, suppose you wish to accrete at 1.5e17 g/s for 1000 d (starting at t = 0 d) and then cool for 5000 d (that is, from t = 1000 d to t = 6000 d).  In the inlist, you would set the following flags.
 
-      start_time = 0.0
       number_epochs = 2
-      epoch_Mdots = 1.5e17, 0.0
-      epoch_end_times = 1000.0, 6000.0
+      epoch_Mdots = 1.5e17,0.0
+      epoch_boundaries = 0.0,1000.0,6000.0
 
-You can also use this to specify times at which you want the surface effective temperature recorded.  For example, suppose we want the surface effective temperature 50 d, 100 d, 500 d, 1000 d, 2000 d, and 5000 d after then end of the outburst in the above example.  We would then put the following in the inlist.
+You can also use this to specify times at which you want the surface effective temperature recorded.  For example, suppose we want the surface effective temperature 50 d, 100 d, 500 d, 1000 d, 2000 d, and 5000 d after the end of the outburst in the above example.  We would then put the following in the inlist.
 
-    start_time = 0.0
     number_epochs = 7
     epoch_Mdots = 1.5e17,6*0.0
-    epoch_end_times = 1000.0, 1050.0, 1100.0, 1500.0, 2000.0, 3000.0, 6000.0
+    epoch_boundaries = 0.0,1000.0,1050.0,1100.0,1500.0,2000.0,3000.0,6000.0
 
-The structure pointer now contains arrays `t_monitor` and `Teff_monitor` that contain the epoch end times (in days) and the observer-frame effective temperature (in K) at those times.  This facilitates comparison with observations.
+We can make this even more convenient by setting the end of the outburst at t = 0 d.
+
+    number_epochs = 7
+    epoch_Mdots = 1.5e17,6*0.0
+    epoch_boundaries = -1000.0,0.0,50.0,100.0,500.0,1000.0,2000.0,5000.0
+
+
+###Store time, observed effective temperature
+The structure pointer now contains arrays `t_monitor` and `Teff_monitor` that contain the epoch end times (in days) and the observer-frame effective temperature (in K) at the end of each epoch.  This facilitates comparison with observations.
 
 ##Dependencies
   * [MESA](http://mesa.sourceforge.net): `dStar` makes use of the `MESA` numerical, utility, and equation of state libraries.
