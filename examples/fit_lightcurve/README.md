@@ -1,7 +1,7 @@
 INSTRUCTIONS FOR USING THIS EXAMPLE
 ===================================
 
-This directory contains an example run of an accretion outburst/quiescent cooling. 
+This directory contains an example run of an accretion outburst/quiescent cooling for which we wish to compare to an observed lightcurve (KS 1731-260; parameters are from Brown & Cumming [2009]). 
 
 1. This directory may be copied anywhere on your computer. Note, however, that you need write permission to dStar/data to run as the code caches datafiles there.  I'll change this in the near future to allow you to set the cache location (useful for running on multi-user machines).
 
@@ -21,7 +21,7 @@ This directory contains an example run of an accretion outburst/quiescent coolin
         write_interval_for_profile = 1000
         starting_number_for_profile = 1
 
-    These ensure that none of the logs are written to stdout, and that no profile and history files are made.  We want to monitor the observed effective temperature when there were observations.  The following settings do this; the end of the outburst is at t = 0.0 d.
+    These ensure that none of the logs are written to stdout, and that no profile and history files are made.  We want to monitor the effective temperature when there were observations.  The following settings do this; the end of the outburst is at t = 0.0 d.
     
         ! integration epochs
         number_epochs = 9
