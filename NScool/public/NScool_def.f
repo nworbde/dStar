@@ -47,8 +47,15 @@ module NScool_def
         real(dp) :: tsec      ! current value of time in seconds
         real(dp) :: dt        ! value of timestep just taken, in seconds
         integer :: model      ! counter that is incremented after each successful step
+
+        ! information about the current epoch
+        !   The integration runs from 0 to epoch_duration.  When the step
+        !   is evaluated, epoch_start_time is added to tsec.    
         real(dp) :: Mdot      ! current accretion rate (g/s)
-      
+        real(dp) :: epoch_start_time    ! start time for epoch (s)
+        real(dp) :: epoch_duration      ! (s)
+        integer :: epoch_id
+        
         ! information about the composition
         integer :: nisos  ! number of isotopes
         integer :: ncharged

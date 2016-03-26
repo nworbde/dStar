@@ -59,14 +59,14 @@ contains
         ierr = 0
         call get_NScool_info_ptr(id,s,ierr)
         if (ierr /= 0) return
-        
         do i_epoch = 1, s% number_epochs
+            s% epoch_start_time = s% epoch_boundaries(i_epoch-1)
+            s% epoch_duration = s% epoch_boundaries(i_epoch) - s% epoch_start_time
+            s% epoch_id = i_epoch
+            s% Mdot = s% epoch_Mdots(i_epoch)
             if (i_epoch > 1) then
-                s% start_time = s% tsec
                 s% starting_number_for_profile = s% model + 1
             end if
-            s% Mdot = s% epoch_Mdots(i_epoch)
-            s% maximum_end_time = s% epoch_end_times(i_epoch)
             call do_integrate_crust(id,ierr)
             s% t_monitor(i_epoch) = s% tsec / julian_day
             s% Teff_monitor(i_epoch) = s% Teff * s% ePhi(1)

@@ -46,7 +46,7 @@ contains
         ! set up the equation parameters
         n = s% nz
         t = 0.0      
-        tend = s% maximum_end_time
+        tend = s% epoch_duration
         h = s% dt
         max_step_size = s% maximum_timestep
         max_steps = s% maximum_number_of_models
@@ -184,7 +184,6 @@ contains
            end if
 
            s% model = nr + s% starting_number_for_profile
-           s% tsec = x + s% start_time
            s% dt = x-xold
       
            s% lnT(1:n) = y(1:n)
@@ -204,6 +203,7 @@ contains
               irtrn = -3
               return
            end if
+       s% tsec = x + s% epoch_start_time
 
            ! update terminal information
            if (mod(s% model,s% write_interval_for_terminal) == 0) then

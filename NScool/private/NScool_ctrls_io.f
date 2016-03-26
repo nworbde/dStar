@@ -14,7 +14,6 @@ module NScool_ctrls_io
         which_solver, & 
         maximum_number_of_models, & 
         maximum_timestep, & 
-        maximum_end_time, & 
         integration_tolerance, & 
         min_lg_temperature_integration, &
         max_lg_temperature_integration, &
@@ -28,10 +27,9 @@ module NScool_ctrls_io
         make_inner_boundary_insulating, &
         fix_atmosphere_temperature_when_accreting, & 
         atmosphere_temperature_when_accreting, &
-        start_time, &
-        epoch_Mdots, &
         number_epochs, &
-        epoch_end_times, &
+        epoch_Mdots, &
+        epoch_boundaries, &
         core_mass, &
         core_radius, &
         lgPcrust_bot, &
@@ -148,19 +146,13 @@ contains
         s% write_interval_for_profile = write_interval_for_profile
         s% starting_number_for_profile = starting_number_for_profile
         s% output_directory = output_directory
-        s% which_solver = trim(which_solver) !solver_option(trim(which_solver),ierr)
-        if (ierr /= 0) then
-           write (*,*) 'unable to parse solver option'
-           return
-        end if
-
+        s% which_solver = trim(which_solver)
         s% base_profile_filename = trim(s% output_directory)//'/profile'
         s% history_filename = trim(s% output_directory)//'/history.data'
         s% profile_manifest_filename = trim(s% output_directory)//'/profiles'
 
         s% maximum_number_of_models = maximum_number_of_models
         s% maximum_timestep = maximum_timestep*julian_day
-        s% maximum_end_time = maximum_end_time*julian_day
         s% integration_tolerance = integration_tolerance
         s% min_lg_temperature_integration = min_lg_temperature_integration
         s% max_lg_temperature_integration = max_lg_temperature_integration
@@ -178,8 +170,7 @@ contains
         s% atmosphere_temperature_when_accreting = atmosphere_temperature_when_accreting
         s% number_epochs = number_epochs
         s% epoch_Mdots = epoch_Mdots
-        s% epoch_end_times = epoch_end_times*julian_day
-        s% start_time = start_time*julian_day
+        s% epoch_boundaries = epoch_boundaries*julian_day
 
         s% Mcore = core_mass
         s% Rcore = core_radius

@@ -16,8 +16,6 @@
     maximum_number_of_models = 10000
     maximum_timestep = 0.0
         ! in days; 0 implies that max = tend-t
-    maximum_end_time = 365.0
-        ! days
     integration_tolerance = 1.0d-4
     ! limits on temperature: if a zone goes outside these bounds, reduce stepsize
     min_lg_temperature_integration = 7.0
@@ -31,10 +29,11 @@
     fix_atmosphere_temperature_when_accreting = .TRUE.
     atmosphere_temperature_when_accreting = 1.0d8
     
-    start_time = 0.0    ! days
     number_epochs = 1
     epoch_Mdots = 0.0_dp ! g/s
-    epoch_end_times = 365.0   ! days
+    ! days
+    epoch_boundaries = 0.0_dp
+    epoch_boundaries(1) = 365.0_dp
     
     ! other routines
     use_other_set_Qimp = .FALSE.
