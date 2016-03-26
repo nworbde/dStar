@@ -14,27 +14,7 @@ This directory contains an example run of an accretion outburst/quiescent coolin
 
         character(len=*), parameter :: my_dStar_dir = '/path/to/local/dStar'
 
-4. Change the parameters as desired in the `inlist`.  Note that 
-
-        maximum_end_time = 50.0
-            ! days  (this is a 50-day outburst)
-
-    and
-            
-            Mdot = 1.0e17
-    
-    refer to the accretion outburst.  To set the controls for the quiescent cooling, edit these lines in `run.f`:
-    
-        ! Now set Mdot = 0
-        s% Mdot = 0.0_dp
-        ! set the starting model profile to be one larger than the current model
-        s% starting_number_for_profile = s% model + 1
-        ! We can reset the start time to zero for convenience
-        s% start_time = 0.0
-        ! and we'll have a 1000 day quiescent period
-        s% maximum_end_time = 8.64d8
-        
-    (Yes, I know this should be done better; it is a leftover from some experiments I was trying.  Will fix soon.)
+4. Change the parameters as desired in the `inlist`.
     
 5. Build the code: `./mk`
     

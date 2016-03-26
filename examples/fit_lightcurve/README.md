@@ -14,27 +14,30 @@ This directory contains an example run of an accretion outburst/quiescent coolin
 
         character(len=*), parameter :: my_dStar_dir = '/path/to/local/dStar'
 
-4. Change the parameters as desired in the `inlist`.  Note that 
-
-        maximum_end_time = 50.0
-            ! days  (this is a 50-day outburst)
-
-    and
-            
-            Mdot = 1.0e17
+4. Change the parameters as desired in the `inlist`.  In particular,
     
-    refer to the accretion outburst.  To set the controls for the quiescent cooling, edit these lines in `run.f`:
+        write_interval_for_terminal = 1000
+        write_interval_for_history = 1000
+        write_interval_for_profile = 1000
+        starting_number_for_profile = 1
+
+    These ensure that none of the logs are written to stdout, and that no profile and history files are made.  We want to monitor the observed effective temperature when there were observations.  The following settings do this; the end of the outburst is at t = 0.0 d.
     
-        ! Now set Mdot = 0
-        s% Mdot = 0.0_dp
-        ! set the starting model profile to be one larger than the current model
-        s% starting_number_for_profile = s% model + 1
-        ! We can reset the start time to zero for convenience
-        s% start_time = 0.0
-        ! and we'll have a 1000 day quiescent period
-        s% maximum_end_time = 8.64d8
+        ! integration epochs
+        number_epochs = 9
+        epoch_Mdots = 1.0e17,8*0.0
+        epoch_boundaries = -4383.0,0.0,65.1,235.7,751.6,929.5,1500.5,1570.4,1595.4,3039.7
         
-    (Yes, I know this should be done better; it is a leftover from some experiments I was trying.  Will fix soon.)
+    We modify `run.f` to compute a metric for how well the model fits the observed lightcurve.
+    
+        pred_Teff = s% Teff_monitor(2:)/1.0e6
+        eV_to_MK = 1.602176565e-12_dp/boltzmann/1.0e6
+        ! observed effective temperatures (eV) and uncertainties
+        obs_Teff = [103.2,88.9,75.5,73.3,71.0,66.0,70.3,63.1] * eV_to_MK
+        obs_Teff_sig = [1.7,1.3,2.2,2.3,1.8,4.5,2.1,2.1] * eV_to_MK
+        chi2 = sum((pred_Teff-obs_Teff)**2 / obs_Teff_sig**2 )
+        
+    Look at the code for more details.
     
 5. Build the code: `./mk`
     

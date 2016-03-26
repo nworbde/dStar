@@ -28,6 +28,8 @@
     ! integration epochs
     number_epochs = 2
     epoch_Mdots = 1.0e17, 0.0
+    ! epoch 1: 0 d <= t <= 50 d, Mdot = 1.0e17
+    ! epoch 2: 50 d <= t <= 1050 d, Mdot = 0.0e17
     epoch_boundaries = 0.0,50.0,1050.0
     
     ! core properties

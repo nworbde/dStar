@@ -6,11 +6,10 @@ program run_dStar
     
     character(len=*), parameter :: my_dStar_dir = '/path/to/local/dStar'
     character(len=*), parameter :: inlist = 'inlist'
-    real(dp) :: eV_to_K
+    real(dp) :: eV_to_MK
     type(NScool_info), pointer :: s=>null()
     integer :: ierr, NScool_id, i
-    real(dp), dimension(8) :: obs_Teff, obs_Teff_sig
-    real(dp), dimension(2,8) :: obs_Teff_unc
+    real(dp), dimension(8) :: pred_Teff, obs_Teff, obs_Teff_sig
     real(dp) :: chi2
     
     ierr = 0
@@ -32,12 +31,14 @@ program run_dStar
     call get_NScool_info_ptr(NScool_id,s,ierr)
     call check_okay('get_NScool_info_ptr',ierr)
     
-    eV_to_K = 1.602176565e-12_dp/boltzmann
-    obs_Teff = [103.2,88.9,75.5,73.3,71.0,66.0,70.3,63.1] * eV_to_K
-    obs_Teff_unc(1,:) = [1.7,1.3,2.2,2.3,1.8,4.5,2.1,2.1] * eV_to_K
-    obs_Teff_unc(2,:) = [1.7,1.3,2.2,2.3,1.8,4.5,2.1,2.1] * eV_to_K
-    obs_Teff_sig = 0.5*(obs_Teff_unc(1,:)+obs_Teff_unc(2,:))
-    chi2 = sum((s% Teff_monitor(2:)-obs_Teff)**2 / obs_Teff_sig**2 )
+    ! we don't want to compare the effective temp. at t = 0, the end of the 
+    ! outburst
+    pred_Teff = s% Teff_monitor(2:)/1.0e6
+    eV_to_MK = 1.602176565e-12_dp/boltzmann/1.0e6
+    ! observed effective temperatures (eV) and uncertainties
+    obs_Teff = [103.2,88.9,75.5,73.3,71.0,66.0,70.3,63.1] * eV_to_MK
+    obs_Teff_sig = [1.7,1.3,2.2,2.3,1.8,4.5,2.1,2.1] * eV_to_MK
+    chi2 = sum((pred_Teff-obs_Teff)**2 / obs_Teff_sig**2 )
     
     write(output_unit,*)
     write(output_unit,'(a7,a6,tr3,a12)') 'time','Teff','obs. range'
@@ -46,8 +47,8 @@ program run_dStar
     do i = 1, 8
         write(output_unit,'(f7.1,f6.3,tr3,f6.3,f6.3)')  &
         & s% t_monitor(i+1), &
-        & s% Teff_monitor(i+1)*1.0e-6,(obs_Teff(i)-obs_Teff_unc(1,i))*1.0e-6, &
-        & (obs_Teff(i)+obs_Teff_unc(2,i))*1.0e-6
+        & pred_Teff(i),(obs_Teff(i)-obs_Teff_sig(i)), &
+        & (obs_Teff(i)+obs_Teff_sig(i))
     end do
     write(output_unit,*)
     write(output_unit,'(a,f6.2)') 'chi2 = ',chi2
