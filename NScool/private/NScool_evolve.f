@@ -181,6 +181,8 @@ contains
           irtrn = -2
           return
        end if
+       
+       if (s% suppress_first_step_output .and. x == xold) return
 
        s% model = nr + s% starting_number_for_profile
        s% tsec = x + s% epoch_start_time

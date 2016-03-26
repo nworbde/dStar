@@ -6,6 +6,7 @@
     integer :: write_interval_for_history
     integer :: write_interval_for_profile
     integer :: starting_number_for_profile
+    logical :: suppress_first_step_output
     
     character(len=256) :: output_directory
    

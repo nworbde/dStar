@@ -10,6 +10,7 @@ module NScool_ctrls_io
         write_interval_for_history, & 
         write_interval_for_profile, & 
         starting_number_for_profile, &
+        suppress_first_step_output, &
         output_directory, & 
         which_solver, & 
         maximum_number_of_models, & 
@@ -145,6 +146,7 @@ contains
         s% write_interval_for_history = write_interval_for_history
         s% write_interval_for_profile = write_interval_for_profile
         s% starting_number_for_profile = starting_number_for_profile
+        s% suppress_first_step_output = suppress_first_step_output
         s% output_directory = output_directory
         s% which_solver = trim(which_solver)
         s% base_profile_filename = trim(s% output_directory)//'/profile'

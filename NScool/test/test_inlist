@@ -9,7 +9,7 @@
     write_interval_for_history = 1
     write_interval_for_profile = 1
     starting_number_for_profile = 0
-    
+    suppress_first_step_output = .FALSE.
     output_directory = 'LOGS'
     
     ! controls for the solver

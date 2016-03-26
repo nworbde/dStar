@@ -65,7 +65,11 @@ contains
             s% epoch_id = i_epoch
             s% Mdot = s% epoch_Mdots(i_epoch)
             if (i_epoch > 1) then
-                s% starting_number_for_profile = s% model + 1
+                if (s% suppress_first_step_output) then
+                    s% starting_number_for_profile = s% model
+                else
+                    s% starting_number_for_profile = s% model + 1
+                end if
             end if
             call do_integrate_crust(id,ierr)
             s% t_monitor(i_epoch) = s% tsec / julian_day
