@@ -159,7 +159,7 @@ contains
         &   s% dm_bar(2:s% nz)
         
         ! now set the surface gravity and load the atmosphere
-        s% grav = stov% mass(stov% nzs) + s% Mcore * mass_g * Gnewton /  &
+        s% grav = (stov% mass(stov% nzs) + s% Mcore) * mass_g * Gnewton /  &
         &   (stov% radius(stov% nzs)*length_g + s% Rcore*1.0e5)**2 * s% eLambda_bar(1)
 
         Plight = s% grav * 10.0_dp**s% lg_atm_light_element_column

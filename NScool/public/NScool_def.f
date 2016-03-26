@@ -7,6 +7,9 @@ module NScool_def
     integer, parameter :: num_extra_integer_controls = 32
     integer, parameter :: num_extra_logical_controls = 32
 
+    ! maximum number of sub-intervals
+    integer, parameter :: max_number_epochs = 64
+
     ! interfaces for customizable routines
     abstract interface
     subroutine set_Qimp_interface(id,ierr)
@@ -30,7 +33,7 @@ module NScool_def
         
         ! global information (NB. core here means interior to model)
         real(dp) :: Lsurf     ! emergent luminosity
-        real(dp) :: dlnLsdlnT ! change surface luminosity with temperature out outer zone
+        real(dp) :: dlnLsdlnT ! derivative of surface luminosity wrt temperature at outer zone
         real(dp) :: Teff      ! surface effective temperature
         real(dp) :: Lcore     ! core luminosity
         real(dp) :: Tcore     ! core temperature
@@ -44,7 +47,15 @@ module NScool_def
         real(dp) :: tsec      ! current value of time in seconds
         real(dp) :: dt        ! value of timestep just taken, in seconds
         integer :: model      ! counter that is incremented after each successful step
-      
+
+        ! information about the current epoch
+        !   The integration runs from 0 to epoch_duration.  When the step
+        !   is evaluated, epoch_start_time is added to tsec.    
+        real(dp) :: Mdot      ! current accretion rate (g/s)
+        real(dp) :: epoch_start_time    ! start time for epoch (s)
+        real(dp) :: epoch_duration      ! (s)
+        integer :: epoch_id
+        
         ! information about the composition
         integer :: nisos  ! number of isotopes
         integer :: ncharged
@@ -110,6 +121,10 @@ module NScool_def
         real(dp), pointer, dimension(:,:) :: tab_lnCp   ! (4*n_tab, nz) coefficients for ln(Cp)
         real(dp), pointer, dimension(:,:) :: tab_lnK    ! (4*n_tab, nz) coefficients for ln(Kcond)
         real(dp), pointer, dimension(:,:) :: tab_lnGamma  ! (4*n_tab, nz) coefficients for ln(plasma Gamma)
+
+        ! storage for the lightcurve at selected points
+        real(dp), pointer, dimension(:) :: t_monitor    ! (d, number_epochs)
+        real(dp), pointer, dimension(:) :: Teff_monitor ! (K, number_epochs)
 
         logical :: in_use
         
