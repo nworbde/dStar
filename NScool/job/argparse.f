@@ -40,6 +40,7 @@ contains
         logical, optional :: takes_parameter
         integer :: i
         integer :: current_command_arg
+        logical :: positional
 
         ierr = 0
         current_command_arg = -1
@@ -63,14 +64,15 @@ contains
         command_args(current_command_arg)% argname = argname
         command_args(current_command_arg)% docstring = doc
         command_args(current_command_arg)% value = ''
+        command_args(current_command_arg)% flag = ''
+        command_args(current_command_arg)% takes_parameter = .FALSE.
+
+        if (present(flag))  &
+        & command_args(current_command_arg)% flag = flag
         
-        if (present(flag)) then
-            command_args(current_command_arg)% flag = flag
-            call integer_dict_define(options_dict,flag,current_command_arg,ierr)
-            if (ierr /= 0) return
-            command_args(current_command_arg)% position = -1
-        else
-            command_args(current_command_arg)% flag = ''
+        positional = (len_trim(command_args(current_command_arg)% flag) == 0)
+
+        if (positional) then
             number_positional_args = number_positional_args + 1
             if (number_positional_args > max_command_args) then
                 ierr = -2
@@ -78,17 +80,15 @@ contains
             end if
             command_args(current_command_arg)% position = number_positional_args
             positional_args(number_positional_args) = current_command_arg
-        end if
-
-        if (present(takes_parameter) .and. present(flag)) then
-            command_args(current_command_arg)% takes_parameter = takes_parameter
         else
-            command_args(current_command_arg)% takes_parameter = .FALSE.
-        end if
-        
-        if (.not. command_args(current_command_arg)% takes_parameter .and. &
-            & command_args(current_command_arg)% flag /= '') then
-            command_args(current_command_arg)% value = 'F'
+            command_args(current_command_arg)% flag = flag
+            call integer_dict_define(options_dict,flag,current_command_arg,ierr)
+            if (ierr /= 0) return
+            command_args(current_command_arg)% position = -1
+            if (present(takes_parameter)) &
+            & command_args(current_command_arg)% takes_parameter = takes_parameter
+            if (.not. command_args(current_command_arg)% takes_parameter)  &
+            &  command_args(current_command_arg)% value = 'F'
         end if
         
         call integer_dict_define(arguments_dict, &
