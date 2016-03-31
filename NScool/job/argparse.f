@@ -176,6 +176,7 @@ contains
         end if
         if (ierr /=0 .or. show_help) then
             call write_usage()
+            if (show_help) ierr = 1
         end if
 
     contains
@@ -195,7 +196,7 @@ contains
         use, intrinsic :: iso_fortran_env, only: error_unit
         character(len=doc_len) :: command_name
         character(len=max_command_args*number_command_args) :: command_line
-        integer :: i
+        integer :: i,iptr
         
         call get_command_argument(0,command_name)
         command_line = "Usage: "//trim(command_name)
@@ -205,12 +206,21 @@ contains
                 if (command_args(i)% takes_parameter) then
                     call append_op('<'//trim(command_args(i)% argname)//'>')
                 end if
-            else
-                call append_op('<'//trim(command_args(i)% argname)//'>')
             end if
         end do
+
+        ! help
+        call append_op('[-h]')
+        ! positional args
+        call append_op('[--]')
+        do i = 1, number_positional_args
+            iptr = positional_args(i)
+            call append_op('<'//trim(command_args(iptr)% argname)//'>')
+        end do
+        
         write (error_unit,*)
         write(error_unit,*) trim(command_line)
+
         do i = 1, number_command_args
             if (command_args(i)% flag /= '') then
                 if (command_args(i)% takes_parameter) then
@@ -218,10 +228,17 @@ contains
                 else
                     write (error_unit,'(t4,"-",a,":")') command_args(i)% flag
                 end if
-            else
-                write (error_unit,'(t4,"<",a,">:")') trim(command_args(i)% argname)
+                write (error_unit,'(t8,a)') trim(command_args(i)% docstring)
             end if
-            write (error_unit,'(t8,a)') trim(command_args(i)% docstring)
+        end do
+        
+        write (error_unit,'(t4,"-",a,":")') 'h'
+        write (error_unit,'(t8,a)') "displays this help message and returns err=1"
+        
+        do i=1, number_positional_args
+            iptr = positional_args(i)
+            write (error_unit,'(t4,"<",a,">:")') trim(command_args(iptr)% argname)
+            write (error_unit,'(t8,a)') trim(command_args(iptr)% docstring)
         end do
         
     contains
