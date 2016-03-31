@@ -7,14 +7,14 @@ module argparse
     integer, parameter :: arg_len = 128
     
     type command_arg_type
-        integer :: arg_id
-        character(len=arg_len) :: argname
-        character(len=doc_len) :: docstring
-        character(len=arg_len) :: value
-        integer :: position
-        character(len=1) :: flag
-        logical :: takes_parameter
-        logical :: in_use
+        integer :: arg_id = -1
+        character(len=arg_len) :: argname = ''
+        character(len=doc_len) :: docstring = ''
+        character(len=arg_len) :: value = ''
+        integer :: position = -1
+        character(len=1) :: flag = ''
+        logical :: takes_parameter = .FALSE.
+        logical :: in_use = .FALSE.
     end type command_arg_type
 
     character(len=arg_len), dimension(-3:-1), parameter :: parse_arguments_error_msgs =  &
