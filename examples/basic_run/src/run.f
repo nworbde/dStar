@@ -2,13 +2,35 @@ program run_dStar
 	use iso_fortran_env, only : error_unit
     use NScool_def
     use NScool_lib
+    use argparse
     
-    character(len=*), parameter :: my_dStar_dir = '/path/to/local/dStar'
-    character(len=*), parameter :: inlist = 'inlist'
+    character(len=*), parameter :: default_dStar_dir = '../../dStar'
+    character(len=*), parameter :: default_inlist_file = 'inlist'
+    character(len=64) :: my_dStar_dir
+    character(len=64) :: inlist
     type(NScool_info), pointer :: s=>null()
     integer :: ierr, NScool_id
     
     ierr = 0
+    
+    call command_arg_set( &
+        & 'dStar_directory',"sets the main dStar root directory",ierr, &
+        & flag='D',takes_parameter=.TRUE.)
+    call check_okay('set command argument dStar_directory',ierr)
+    
+    call command_arg_set( &
+        & 'inlist_file','sets the namelist parameter file',ierr, &
+        & flag='I',takes_parameter=.TRUE.)
+    call check_okay('set command argument inlist file',ierr)
+    
+    call parse_arguments(ierr)
+    call check_okay('parse_arguments',ierr)
+
+    my_dStar_dir = trim(get_command_arg('dStar_directory'))
+    if (len_trim(my_dStar_dir)==0) my_dStar_dir = default_dStar_dir
+    inlist = trim(get_command_arg('inlist_file'))
+    if (len_trim(inlist)==0) inlist = default_inlist_file
+    
     call NScool_init(my_dStar_dir, ierr)
     call check_okay('NScool_init',ierr)
     

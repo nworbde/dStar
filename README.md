@@ -27,6 +27,9 @@ We can make this even more convenient by setting the end of the outburst at t = 
 ###Store time, observed effective temperature
 The structure pointer now contains arrays `t_monitor` and `Teff_monitor` that contain the epoch end times (in days) and the observer-frame effective temperature (in K) at the end of each epoch.  This facilitates comparison with observations.
 
+###Command line options
+Check out the examples `basic_run`, `fit_lightcurve`, and `custom_Tc_Qimp` to see how to added command line options to your run.
+
 ##Dependencies
   * [MESA](http://mesa.sourceforge.net): `dStar` makes use of the `MESA` numerical, utility, and equation of state libraries.
   * [MESA SDK](http://www.astro.wisc.edu/~townsend/static.php?ref=mesasdk): the compilation of both `MESA` and `dStar` has been tested using a specific build environment.
@@ -43,7 +46,7 @@ For each module, the install script
   1. Downloads, verifies, and installs to the `data` directory the necessary data files
   2. Compiles each module as a library.
   3. Performs a test of each module and compares the output against a sample.  A deviation from allowed tolerances results in a install failure.
-  4. Installs the library and module files into the top-level `install` and `lib` direcories.
+  4. Installs the library and module files into the top-level `install` and `lib` directories.
 
 ##How to use
 For each module, look in the `test` directory for an example of how to run the module. The primary module is `NScool`.
