@@ -159,7 +159,7 @@ contains
         &   s% dm_bar(2:s% nz)
         
         ! now set the surface gravity and load the atmosphere
-        s% grav = stov% mass(stov% nzs) + s% Mcore * mass_g * Gnewton /  &
+        s% grav = (stov% mass(stov% nzs) + s% Mcore) * mass_g * Gnewton /  &
         &   (stov% radius(stov% nzs)*length_g + s% Rcore*1.0e5)**2 * s% eLambda_bar(1)
 
         Plight = s% grav * 10.0_dp**s% lg_atm_light_element_column
@@ -273,17 +273,17 @@ contains
             lnCp_val(1:4,1:s% n_tab) => s% tab_lnCp(1:4*s% n_tab, iz)
             lnGamma_val(1:4,1:s% n_tab) => s% tab_lnGamma(1:4*s% n_tab, iz)
             lnEnu_val(1:4,1:s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, iz)
+            chi = nuclear_volume_fraction(s% rho(iz),s% ionic(iz), &
+            &	default_nuclear_radius)
+			kn = neutron_wavenumber(s% rho(iz),s% ionic(iz),chi)
+			kp = 0.0_dp
+            if (.not. s% use_other_sf_critical_temperatures) then
+				call sf_get_results(kp,kn,Tc)
+            else
+                call s% other_sf_get_results(s% id,kp,kn,Tc)
+            end if
             do itemp = 1, s% n_tab
                 Ttab = exp(s% tab_lnT(itemp))
-                chi = nuclear_volume_fraction(s% rho(iz),s% ionic(iz), &
-                &	default_nuclear_radius)
-				kn = neutron_wavenumber(s% rho(iz),s% ionic(iz),chi)
-				kp = 0.0_dp
-                if (.not. s% use_other_sf_critical_temperatures) then
-    				call sf_get_results(kp,kn,Tc)
-                else
-                    call s% other_sf_get_results(s% id,kp,kn,Tc)
-                end if
                 call eval_crust_eos( &
                 &   s% eos_handle, s% rho(iz), Ttab, s% ionic(iz),  &
                 &	s% ncharged, s% charged_ids, s% Yion(1:s% ncharged,iz), &

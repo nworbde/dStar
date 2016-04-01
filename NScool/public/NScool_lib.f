@@ -17,10 +17,10 @@ contains
     end subroutine NScool_shutdown
     
     function alloc_NScool(ierr)
-        use NScool_private_def, only: NScool_private_alloc
+        use init, only: alloc_NScool_data
         integer, intent(out) :: ierr
         integer :: alloc_NScool
-        alloc_NScool = NScool_private_alloc(ierr)
+        alloc_NScool = alloc_NScool_data(ierr)
     end function alloc_NScool
     
     subroutine dealloc_NScool(id,ierr)
@@ -48,12 +48,33 @@ contains
     end subroutine NScool_create_model
 
     subroutine NScool_evolve_model(id, ierr)
+        use constants_def, only : julian_day
+        use NScool_def, only : NScool_info, get_NScool_info_ptr
         use NScool_evolve, only: do_integrate_crust
         integer, intent(in) :: id
         integer, intent(out) :: ierr
-        
+        type(NScool_info), pointer :: s
+        integer :: i_epoch
+
         ierr = 0
-        call do_integrate_crust(id,ierr)
+        call get_NScool_info_ptr(id,s,ierr)
+        if (ierr /= 0) return
+        do i_epoch = 1, s% number_epochs
+            s% epoch_start_time = s% epoch_boundaries(i_epoch-1)
+            s% epoch_duration = s% epoch_boundaries(i_epoch) - s% epoch_start_time
+            s% epoch_id = i_epoch
+            s% Mdot = s% epoch_Mdots(i_epoch)
+            if (i_epoch > 1) then
+                if (s% suppress_first_step_output) then
+                    s% starting_number_for_profile = s% model
+                else
+                    s% starting_number_for_profile = s% model + 1
+                end if
+            end if
+            call do_integrate_crust(id,ierr)
+            s% t_monitor(i_epoch) = s% tsec / julian_day
+            s% Teff_monitor(i_epoch) = s% Teff * s% ePhi(1)
+        end do
     end subroutine NScool_evolve_model
 
 end module NScool_lib

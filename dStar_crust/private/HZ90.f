@@ -228,7 +228,7 @@ contains
             rpar(ncharged+10) = ionic(i)% Yn
             rpar(ncharged+11) = ionic(i)% Q
             rpar(ncharged+12) = lgP(i)
-			rpar(ncharged+13) = Tref
+            rpar(ncharged+13) = Tref
             
             if (i > 1 .and. rpar(lrpar) /= 0.0) then
                 lgRho_guess = lgRho(i-1) + (lgP(i)-lgP(i-1))/rpar(lrpar)

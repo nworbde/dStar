@@ -7,7 +7,6 @@ module NScool_evolve
     integer, parameter :: num_deriv_rpar = 0
     
 contains
-
     subroutine do_integrate_crust(NScool_id,ierr)
         use iso_fortran_env, only : error_unit
         use constants_def
@@ -46,7 +45,7 @@ contains
         ! set up the equation parameters
         n = s% nz
         t = 0.0      
-        tend = s% maximum_end_time
+        tend = s% epoch_duration
         h = s% dt
         max_step_size = s% maximum_timestep
         max_steps = s% maximum_number_of_models
@@ -58,7 +57,7 @@ contains
         end if
         
         itol = 0
-        ! use the core temperature as a reference for relative accuracy
+        ! use coldest temperature to set abolute tolerance
         rtol = s% integration_tolerance
         atol = s% integration_tolerance * minval(z)
         
@@ -143,106 +142,108 @@ contains
         nullify(ipar)
         nullify(rpar)
 
-        end subroutine do_integrate_crust
+    end subroutine do_integrate_crust
 
-        subroutine evaluate_timestep(nr, xold, x, n, y, rwork_y, iwork_y, interp_y, lrpar, rpar, lipar, ipar, irtrn)
-           use iso_fortran_env, only : output_unit, error_unit
-           use NScool_terminal, only : do_write_terminal
-           use NScool_history, only : do_write_history
-           use NScool_profile, only : do_write_profile
-           integer, intent(in) :: nr, n, lrpar, lipar
-           real(dp), intent(in) :: xold, x
-           real(dp), intent(inout) :: y(:)
-           ! y can be modified if necessary to keep it in valid range of possible solutions.
-           real(dp), intent(inout), target :: rwork_y(*)
-           integer, intent(inout), target :: iwork_y(*)
-           integer, intent(inout), pointer :: ipar(:) ! (lipar)
-           real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
-           interface
-              include 'num_interp_y.dek'
-           end interface
-           integer, intent(out) :: irtrn ! < 0 causes solver to return to calling program.
-           type(NScool_info), pointer :: s
-           integer :: ierr
-           logical :: print_terminal_header
-           character(len=256) :: filename      
-      
-           irtrn = 0
-           ierr = 0
+    subroutine evaluate_timestep(nr, xold, x, n, y, rwork_y, iwork_y, interp_y, lrpar, rpar, lipar, ipar, irtrn)
+       use iso_fortran_env, only : output_unit, error_unit
+       use NScool_terminal, only : do_write_terminal
+       use NScool_history, only : do_write_history
+       use NScool_profile, only : do_write_profile
+       integer, intent(in) :: nr, n, lrpar, lipar
+       real(dp), intent(in) :: xold, x
+       real(dp), intent(inout) :: y(:)
+       ! y can be modified if necessary to keep it in valid range of possible solutions.
+       real(dp), intent(inout), target :: rwork_y(*)
+       integer, intent(inout), target :: iwork_y(*)
+       integer, intent(inout), pointer :: ipar(:) ! (lipar)
+       real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
+       interface
+          include 'num_interp_y.dek'
+       end interface
+       integer, intent(out) :: irtrn ! < 0 causes solver to return to calling program.
+       type(NScool_info), pointer :: s
+       integer :: ierr
+       logical :: print_terminal_header
+       character(len=256) :: filename      
+  
+       irtrn = 0
+       ierr = 0
 
-           ! get the crust information information
-           call get_NScool_info_ptr(ipar(i_id), s, ierr)
-           if (ierr /= 0) then
-              write (error_unit,*) 'unable to access NScool info in get_derivatives'
-              irtrn = -1
-              return
-           end if
-           if (n /= s% nz) then
-              write (error_unit,*) 'wrong number of equations in solver'
-              irtrn = -2
-              return
-           end if
+       ! get the crust information information
+       call get_NScool_info_ptr(ipar(i_id), s, ierr)
+       if (ierr /= 0) then
+          write (error_unit,*) 'unable to access NScool info in get_derivatives'
+          irtrn = -1
+          return
+       end if
+       if (n /= s% nz) then
+          write (error_unit,*) 'wrong number of equations in solver'
+          irtrn = -2
+          return
+       end if
+       
+       if (s% suppress_first_step_output .and. x == xold) return
 
-           s% model = nr + s% starting_number_for_profile
-           s% tsec = x + s% start_time
-           s% dt = x-xold
-      
-           s% lnT(1:n) = y(1:n)
-           s% T(1:n) = exp(s% lnT(1:n))
-           call interpolate_temps(s)
-      
-           call get_coefficients(s,ierr)
-           if (ierr /= 0) then
-              write (error_unit,*) 'error while interpolating coefficients'
-              irtrn = -3
-              return
-           end if
-      
-           call evaluate_luminosity(s, ierr)
-           if (ierr /= 0) then
-              write (error_unit,*) 'error while evaluating luminosity'
-              irtrn = -3
-              return
-           end if
+       s% model = nr + s% starting_number_for_profile
+       s% tsec = x + s% epoch_start_time
+       s% dt = x-xold
+  
+       s% lnT(1:n) = y(1:n)
+       s% T(1:n) = exp(s% lnT(1:n))
+       call interpolate_temps(s)
+  
+       call get_coefficients(s,ierr)
+       if (ierr /= 0) then
+          write (error_unit,*) 'error while interpolating coefficients'
+          irtrn = -3
+          return
+       end if
+  
+       call evaluate_luminosity(s, ierr)
+       if (ierr /= 0) then
+          write (error_unit,*) 'error while evaluating luminosity'
+          irtrn = -3
+          return
+       end if
 
-           ! update terminal information
-           if (mod(s% model,s% write_interval_for_terminal) == 0) then
-              if (mod(ipar(i_num_terminal_writes),s% write_interval_for_terminal_header) == 0) then
-                 print_terminal_header = .TRUE.
-              else
-                 print_terminal_header = .FALSE.
-              end if
-              call do_write_terminal(ipar(i_id), ierr, print_terminal_header)
-              if (ierr /= 0) then
-                 write(error_unit,*) 'failure writing to terminal'
-                 return
-              end if
-              ipar(i_num_terminal_writes) = ipar(i_num_terminal_writes) + 1
-           end if
-      
-           ! update history log
-           if (mod(s% model, s% write_interval_for_history) == 0) then
-              call do_write_history(ipar(i_id),ierr)
-              if (ierr /= 0) then
-                 write (error_unit,*) 'failure writing history log'
-                 return
-              end if
-              write (error_unit,'(a,i0,a)') 'saving model ',s% model,' to history log'
-           end if
-      
-           ! update profile log
-           if (mod(s% model, s% write_interval_for_profile) == 0) then
-              write(filename,'(a,i4.4)') 'profile',s% model
-              call do_write_profile(ipar(i_id),ierr)
-              if (ierr /= 0) then
-                 write (error_unit,*) 'failure writing profile log'
-                 return
-              end if
-              write (error_unit,'(a,i0,a)') 'saving model ',s% model,' to profile log'
-           end if
-        end subroutine evaluate_timestep
+       ! update terminal information
+       if (mod(s% model,s% write_interval_for_terminal) == 0) then
+          if (mod(ipar(i_num_terminal_writes),s% write_interval_for_terminal_header) == 0) then
+             print_terminal_header = .TRUE.
+          else
+             print_terminal_header = .FALSE.
+          end if
+          call do_write_terminal(ipar(i_id), ierr, print_terminal_header)
+          if (ierr /= 0) then
+             write(error_unit,*) 'failure writing to terminal'
+             return
+          end if
+          ipar(i_num_terminal_writes) = ipar(i_num_terminal_writes) + 1
+       end if
+  
+       ! update history log
+       if (mod(s% model, s% write_interval_for_history) == 0) then
+          call do_write_history(ipar(i_id),ierr)
+          if (ierr /= 0) then
+             write (error_unit,*) 'failure writing history log'
+             return
+          end if
+          write (error_unit,'(a,i0,a)') 'saving model ',s% model,' to history log'
+       end if
+  
+       ! update profile log
+       if (mod(s% model, s% write_interval_for_profile) == 0) then
+          write(filename,'(a,i4.4)') 'profile',s% model
+          call do_write_profile(ipar(i_id),ierr)
+          if (ierr /= 0) then
+             write (error_unit,*) 'failure writing profile log'
+             return
+          end if
+          write (error_unit,'(a,i0,a)') 'saving model ',s% model,' to profile log'
+       end if
+    end subroutine evaluate_timestep
 
-        subroutine get_derivatives(n, x, h, y, f, lrpar, rpar, lipar, ipar, ierr)
+    subroutine get_derivatives(n, x, h, y, f, lrpar, rpar, lipar, ipar, ierr)
         use const_def, only: dp
         integer, intent(in) :: n, lrpar, lipar
         real(dp), intent(in) :: x, h
