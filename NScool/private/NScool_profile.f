@@ -14,7 +14,7 @@ module NScool_profile
    character(len=*), parameter :: profile_val_fmt = &
    & '('//intval//',4'//scival//',2'//fltval//',4'//scival//',5'//fltval//',4'//scival//')'
    character(len=header_col_width), dimension(num_header_cols) :: header_cols = [character(len=header_col_width) ::  &
-      & 'model', 'time', 'core_mass', 'core_radius', 'accretion_rate', 'heating_lum.', 'cooling_lum.']
+      & 'model', 'time', 'core_mass', 'core_radius', 'accretion_rate', 'heating_lum', 'cooling_lum']
    character(len=profile_col_width),dimension(num_profile_cols) :: profile_cols = [character(len=profile_col_width) ::  &
       & 'zone','mass','dm','area','gravity','eLambda','ePhi', &
       & 'temperature','luminosity','pressure','density', &
