@@ -30,6 +30,9 @@ The structure pointer now contains arrays `t_monitor` and `Teff_monitor` that co
 ###Command line options
 Check out the examples `basic_run`, `fit_lightcurve`, and `custom_Tc_Qimp` to see how to added command line options to your run.
 
+###Tools for reading output
+Check out `tools/reader.py`. This contains a python class for reading the output history and profile data files. The quantities are stored as class members for easy access when analyzing results.
+
 ##Dependencies
   * [MESA](http://mesa.sourceforge.net): `dStar` makes use of the `MESA` numerical, utility, and equation of state libraries.
   * [MESA SDK](http://www.astro.wisc.edu/~townsend/static.php?ref=mesasdk): the compilation of both `MESA` and `dStar` has been tested using a specific build environment.
