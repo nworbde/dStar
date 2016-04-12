@@ -12,6 +12,7 @@ subroutine conductivity(rho,T,chi,Gamma,eta,ionic,kappa,which_ee,which_eQ,K_comp
     integer, intent(in) :: which_ee, which_eQ
     logical, dimension(num_conductivity_channels), intent(in) :: K_components
     real(dp) :: nn,nion, nu, nu_c, kappa_pre, ne, kF, xF, eF, Gamma_e
+    real(dp) :: nu_n, kappa_n_pre, kFn, xFn, eFn
     
     ne = rho/amu*ionic%Ye
     kF = (threepisquare*ne)**onethird
@@ -19,7 +20,9 @@ subroutine conductivity(rho,T,chi,Gamma,eta,ionic,kappa,which_ee,which_eQ,K_comp
     eF = sqrt(1.0+xF**2)
     Gamma_e = Gamma/ionic%Z53
     kappa_pre = onethird*pi**2*boltzmann**2*T*ne/Melectron/eF
+    kappa_n_pre = 0.0
     
+    ! electrons
     call clear_kappa
     nu_c = 0.0
     nu = 0.0
@@ -50,12 +53,35 @@ subroutine conductivity(rho,T,chi,Gamma,eta,ionic,kappa,which_ee,which_eQ,K_comp
             kappa% eQ = -1.0
         end if
     end if
-    if (K_components(icond_sf) .and. ionic% Yn > 0.0) then
-        nn = rho*ionic% Yn/(1.0-chi)/Mneutron / density_n
-        nion = (1.0-ionic%Yn)*rho/Mneutron/ionic% A /density_n
+    
+    ! neutrons
+    call clear_kappa
+    nu_c = 0.0
+    nu_n = 0.0  
+    if (ionic% Yn > 0.0) then
+    nn = rho*ionic% Yn/(1.0-chi)/Mneutron / density_n
+    kFn = (threepisquare*nn)**onethird
+    xFn = hbar*kFn/Mneutron/clight
+    eFn = sqrt(1.0+xFn**2)
+    nion = (1.0-ionic%Yn)*rho/Mneutron/ionic% A /density_n    
+    kappa_n_pre = onethird*pi**2*boltzmann**2*T*nn/Mneutron/eFn      
+    if (K_components(icond_sf)) then
         kappa% sf =  sPh(nn,nion,T,ionic)
     end if
-    kappa% total = kappa_pre/nu + kappa% sf
+	if (K_components(icond_nQ)) then
+    	nu_c = n_imp(nn,nion,T,ionic)
+    	kappa% nQ = kappa_n_pre/nu_c
+        nu_n = nu_n + nu_c
+    end if    
+ 	if (K_components(icond_np)) then
+        nu_c = n_phonon(nn,nion,T,ionic)
+        kappa% np = kappa_n_pre/nu_c
+        nu_n = nu_n + nu_c
+    end if      
+		kappa% total = kappa_pre/nu + kappa_n_pre/nu_n + kappa% sf
+	else
+		kappa% total = kappa_pre/nu 
+	end if
     
     contains
     subroutine clear_kappa()
@@ -324,5 +350,64 @@ function sPh(nn, nion, temperature, ionic)
     Lsph = Llph*(vs/gmix)**2*(1.0+(1.0-alpha**2)**2 * wt**2)/alpha/wt**2
     sPh = onethird*Cv*vs*Lsph * K_n
 end function sPh
+
+function n_imp(nn, nion, temperature, ionic) result(nu)
+    ! neutron-impurity scattering, following S. Reddy's notes
+    !
+    use nucchem_def, only: composition_info_type
+    use constants_def
+    real(dp), intent(in) :: nn, nion, temperature
+    type(composition_info_type), intent(in) :: ionic
+    real(dp) :: ne		! number density of electrons
+    real(dp) :: kFn 	! neutron Fermi wavevector 
+    real(dp) :: EFn 	! neutron Fermi energy
+    real(dp) :: nu		! neutron-impurity scattering frequency
+    real(dp) :: V_0 	! effective neutron-impurity potential at V(R)
+    real(dp) :: R_a		! radius of scattering center
+    real(dp) :: Lambda_n_imp 	! Coulomb logarithm (Potekhin et al. 1999)
+	real(dp) :: fac, sf_frac, Tc
+
+	V_0 = 20.0*mev_to_ergs
+	R_a = 10.0*fm_to_cm
+	Tc = 1.0E8	
+	Lambda_n_imp = 1.0
+    fac = 4.0/27.0/pi/hbar**2/clight
+    sf_frac = exp(sqrt(1.0-temperature/Tc))
+   
+    kFn = (3.0*pi*nn)**onethird
+    EFn = hbar*clight*kFn
+    ne = ionic%Z*nion 
+    nu = fac*EFn*(ne/nn)*(V_0*R_a)**2*Lambda_n_imp*ionic%Q/(ionic%Z)**3
+end function n_imp
+
+function n_phonon(nn, nion, temperature, ionic) result(nu)
+    ! neutron-phonon scattering, following S. Reddy's notes
+    !
+    use nucchem_def, only: composition_info_type
+    use constants_def
+    real(dp), intent(in) :: nn, nion, temperature
+    type(composition_info_type), intent(in) :: ionic
+    real(dp) :: ne		! electron number density
+    real(dp) :: kFn 	! neutron Fermi wavevector 
+    real(dp) :: EFn 	! neutron Fermi energy
+    real(dp) :: nu		! neutron-impurity scattering frequency
+    real(dp) :: V_0 	! effective neutron-impurity potential at V(R)
+    real(dp) :: R_a		! radius of scattering center
+    real(dp) :: Lambda_n_phonon 	! Coulomb logarithm (Potekhin et al. 1999)
+	real(dp) :: fac, sf_frac, Tc
+
+	V_0 = 20.0*mev_to_ergs
+	R_a = 10.0*fm_to_cm
+	Tc = 1.0E8
+	Lambda_n_phonon = 1.0
+    fac = 4.0/27.0/pi/hbar**2/clight
+    ! suppression near critical temperature
+    sf_frac = exp(sqrt(1.0-temperature/Tc))
+   
+    kFn = (3.0*pi*nn)**onethird
+    EFn = hbar*clight*kFn
+    ne = ionic%Z*nion 
+    nu = fac*EFn*(nion/nn)*(V_0*R_a)**2*Lambda_n_phonon
+end function n_phonon
 
 end module eval_conductivity
