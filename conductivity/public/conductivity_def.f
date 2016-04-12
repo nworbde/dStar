@@ -6,10 +6,12 @@ module conductivity_def
 			&		icond_ee	= 1,	 &
 			&		icond_ei	= 2,	 &
 			&		icond_eQ	= 3,	 &
-			&		icond_sf	= 4
-	integer, parameter :: num_conductivity_channels = 4
+			&		icond_sf	= 4,	 &
+			&		icond_nQ	= 5, 	 &
+			& 		icond_np	= 6
+	integer, parameter :: num_conductivity_channels = 6
 	logical, dimension(num_conductivity_channels), parameter :: cond_use_all =  &
-				& [ .TRUE., .TRUE., .TRUE., .TRUE.]
+				& [ .TRUE., .TRUE., .TRUE., .TRUE., .TRUE., .TRUE.]
 	
 	! flag to control which ee scattering fmla. is used. 
   ! default: Shternin & Yakovlev (2006)
@@ -29,6 +31,8 @@ module conductivity_def
 		real(dp) :: ei
 		real(dp) :: eQ
 		real(dp) :: sf
+		real(dp) :: nQ
+		real(dp) :: np
 	end type conductivity_components
 
 end module conductivity_def
