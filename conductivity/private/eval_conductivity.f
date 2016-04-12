@@ -21,7 +21,7 @@ subroutine conductivity(rho,T,chi,Gamma,eta,ionic,kappa,which_ee,which_eQ,K_comp
     Gamma_e = Gamma/ionic%Z53
     kappa_pre = onethird*pi**2*boltzmann**2*T*ne/Melectron/eF
     kappa_n_pre = 0.0
-    
+        
     ! electrons
     call clear_kappa
     nu_c = 0.0
@@ -53,10 +53,9 @@ subroutine conductivity(rho,T,chi,Gamma,eta,ionic,kappa,which_ee,which_eQ,K_comp
             kappa% eQ = -1.0
         end if
     end if
+    kappa% total = kappa_pre/nu 
     
     ! neutrons
-    call clear_kappa
-    nu_c = 0.0
     nu_n = 0.0  
     if (ionic% Yn > 0.0) then
     nn = rho*ionic% Yn/(1.0-chi)/Mneutron / density_n
@@ -78,9 +77,7 @@ subroutine conductivity(rho,T,chi,Gamma,eta,ionic,kappa,which_ee,which_eQ,K_comp
         kappa% np = kappa_n_pre/nu_c
         nu_n = nu_n + nu_c
     end if      
-		kappa% total = kappa_pre/nu + kappa_n_pre/nu_n + kappa% sf
-	else
-		kappa% total = kappa_pre/nu 
+		kappa% total = kappa% total + kappa_n_pre/nu_n + kappa% sf
 	end if
     
     contains
@@ -90,6 +87,8 @@ subroutine conductivity(rho,T,chi,Gamma,eta,ionic,kappa,which_ee,which_eQ,K_comp
         kappa% ei = 0.0
         kappa% eQ = 0.0
         kappa% sf = 0.0     
+        kappa% nQ = 0.0
+        kappa% np = 0.0
     end subroutine clear_kappa
 end subroutine conductivity
 
