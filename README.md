@@ -4,6 +4,9 @@ A collection of modules for computing neutron star structure and evolution.
 
 ##What's new
 
+###Total mass, radius are now reported
+Both the `history.data` and `profile` datafiles now list the total mass (solar units) and radius (kilometers) in the header.  By total, I mean the value at the top of the domain, not the photosphere.
+
 ###Specify multiple accretion epochs
 You can now specify a run with a number of accretion "epochs": distinct periods of time with a different accretion rate.  For example, suppose you wish to accrete at 1.5e17 g/s for 1000 d (starting at t = 0 d) and then cool for 5000 d (that is, from t = 1000 d to t = 6000 d).  In the inlist, you would set the following flags.
 

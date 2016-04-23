@@ -10,11 +10,7 @@ This directory contains an example run of an accretion outburst/quiescent coolin
         DSTAR_LIB_DIR = /path/to/dStar/lib
         DSTAR_INC = /path/to/dStar/include
 
-3. Edit src/run.f.  Replace this variable with the correct path
-
-        character(len=*), parameter :: my_dStar_dir = '/path/to/local/dStar'
-
-4. Change the parameters as desired in the `inlist`.  In particular,
+3. Change the parameters as desired in the `inlist`.  In particular,
     
         write_interval_for_terminal = 1000
         write_interval_for_history = 1000
@@ -39,8 +35,12 @@ This directory contains an example run of an accretion outburst/quiescent coolin
         
     Look at the code for more details.
     
-5. Build the code: `./mk`
+4. Build the code: `./mk`
     
-6. And run it: `./run_dStar`
+5.  And run it: `./run_dStar -D<path to dStar> -I<inlist name>`
+    The command now takes two optional arguments, the path to the root directory of dStar and the name of the inlist file.  You no longer need to edit the src code for that.  The default values are
+    
+        default_dStar_dir = '../../dStar'
+        default_inlist_file = 'inlist'
     
 Happy modeling!
