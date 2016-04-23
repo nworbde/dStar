@@ -42,6 +42,8 @@ module NScool_def
         real(dp) :: Mcore     ! mass of core
         real(dp) :: Rcore     ! radius of core
         real(dp) :: ePhicore   ! potential of core
+        real(dp) :: Mtotal      ! total mass (at top of domain)
+        real(dp) :: Rtotal      ! total radius (at top of domain)
         real(dp) :: grav        ! gravity at surface
         
         real(dp) :: tsec      ! current value of time in seconds
