@@ -2,17 +2,19 @@ module NScool_history
    use NScool_def
    
    character(len=*), parameter :: scival = 'es15.6', intval = 'i15', fltval = 'f15.6'
-   integer, parameter :: num_header_cols = 4, header_col_width=15
+   integer, parameter :: num_header_cols = 6, header_col_width=15
    integer, parameter :: num_history_cols = 7, history_col_width=15
 
-   character(len=*), parameter :: header_count_fmt = '(4'//intval//')'
-   character(len=*), parameter :: header_title_fmt = '(4a15)'
-   character(len=*), parameter :: header_val_fmt = '(4'//scival//')'
+   character(len=*), parameter :: header_count_fmt = '(6'//intval//')'
+   character(len=*), parameter :: header_title_fmt = '(6a15)'
+   character(len=*), parameter :: header_val_fmt  &
+       & = '('//scival//',4'//fltval//','//scival//')'
    character(len=*), parameter :: history_count_fmt = '(7'//intval//')'
    character(len=*), parameter :: history_title_fmt = '(7a15)'
    character(len=*), parameter :: history_val_fmt = '('//intval//scival//',5'//fltval//')'
    character(len=header_col_width), dimension(num_header_cols) :: header_cols = [character(len=header_col_width) ::  &
-      & 'gravity', 'core_mass', 'core_radius', 'core_temp' ]
+      & 'gravity', 'total_mass', 'total_radius', &
+      & 'core_mass', 'core_radius', 'core_temp' ]
    character(len=history_col_width),dimension(num_history_cols) :: history_cols = [character(len=history_col_width) ::  &
       & 'model','time','lg_Mdot','lg_Teff','lg_Lsurf','lg_Lnu','lg_Lnuc' ]
    
@@ -49,7 +51,7 @@ module NScool_history
          write (iounit,'(a,"/",2a,/)') trim(history_date),trim(history_time),trim(history_zone)
          write (iounit,header_count_fmt) (ih, ih=1,num_header_cols)
          write (iounit,header_title_fmt) adjustr(header_cols)
-         write (iounit,header_val_fmt) s% grav, s% Mcore, s% Rcore, s% Tcore
+         write (iounit,header_val_fmt) s% grav, s% Mtotal, s% Rtotal, s% Mcore, s% Rcore, s% Tcore
          write (iounit,*)
          write (iounit,*)
          write(iounit,history_count_fmt) (ih, ih=1,num_history_cols)
