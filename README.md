@@ -31,7 +31,7 @@ We can make this even more convenient by setting the end of the outburst at t = 
 The structure pointer now contains arrays `t_monitor` and `Teff_monitor` that contain the epoch end times (in days) and the observer-frame effective temperature (in K) at the end of each epoch.  This facilitates comparison with observations.
 
 ###Command line options
-Check out the examples `basic_run`, `fit_lightcurve`, and `custom_Tc_Qimp` to see how to added command line options to your run.
+Check out the examples `basic_run`, `fit_lightcurve`, and `custom_Tc_Qimp` to see how to add command line options to your run.
 
 ###Tools for reading output
 Check out `tools/reader.py`. This contains a python class for reading the output history and profile data files. The quantities are stored as class members for easy access when analyzing results.
