@@ -8,6 +8,7 @@ data
 test_output.data
 test_output
 test_log
+test_abuntime
 tester
 LOGS
 .ipynb_checkpoints
