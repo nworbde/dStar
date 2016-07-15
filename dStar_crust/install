@@ -12,7 +12,11 @@ function check_okay {
 }
 
 this_module=${PWD##*/}
+./fetch_data
+check_okay
 mkdir -p ../data/crust_data/cache
+check_okay
+cp -r data/abuntime*.data ../data/crust_data/
 check_okay
 ./build_and_test
 check_okay

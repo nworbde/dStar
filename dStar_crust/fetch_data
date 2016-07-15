@@ -1,0 +1,101 @@
+#!/bin/bash
+
+function check_okay {
+    if [ $? -ne 0 ]; then
+        echo
+        pwd
+        echo "FAILED"
+        echo
+        exit 1
+    fi
+}
+
+function verify_datafile {
+    db=$1
+    key_cksm=$2
+    chk=$3
+    if [ ${chk##*/} = "md5" ]; then
+        this_cksm=( `$chk -q $db` )
+    else
+        this_cksm=( `$chk $db` )
+    fi
+    if [ ${this_cksm[0]} !=  $key_cksm ]; then
+        echo "FAILED"
+        echo "checksum is  ${this_cksm[0]}"
+        echo "compare with $key_cksm"
+        return 1
+    fi
+    return 0
+}
+
+ab_datafiles=(  abuntime_lx2_5.data )
+
+chksums=( 928ea08d1abd61acfc891a15f1b7f45f )
+
+URL=https://dl.dropboxusercontent.com/u/52649885/dStar/abuntime_data.txz
+
+echo
+echo "Installing abuntime tables"
+echo "-----------------------------------------------------"
+
+echo "establishing data directory..."
+mkdir -p data
+check_okay
+cd data
+
+chkr=""
+if [ `which md5sum` ]; then
+    chkr=`which md5sum`
+    echo "using $chkr"
+elif [ `which md5` ]; then
+    chkr=`which md5`
+    echo "using $chkr"
+else
+    echo "no md5 or md5sum available, skipping verification"
+fi
+
+need_to_fetch=0
+for i in `seq 1`; do
+    indx=$((i-1))
+    df="${ab_datafiles[$indx]}"
+    if [ -f $df ]; then
+        printf "   $df exists...verifying: "
+        if [ $chkr ]; then
+            verify_datafile $df ${chksums[$indx]} $chkr
+            if [ $? -ne 0 ]; then
+                echo "failed"
+                need_to_fetch=1
+            else
+                echo "passed"
+            fi
+        else
+            echo "skipped"
+        fi
+    else
+        need_to_fetch=1
+    fi
+done
+
+if [ $need_to_fetch -eq 1 ]; then
+    echo "fetching abuntime data from $URL..."
+    curl -fS $URL > abuntime_data.txz
+    check_okay
+    tar -xf abuntime_data.txz
+    check_okay
+    echo "verifying datafiles..."
+    for i in `seq 1`; do
+        indx=$((i-1))
+        printf "   ${ab_datafiles[$indx]}: "
+        if [ $chkr ]; then
+            verify_datafile ${ab_datafiles[$indx]} ${chksums[$indx]} $chkr
+            check_okay
+            echo "passed"
+        else
+            echo "skipped"
+        fi
+    done
+fi
+
+echo "done"
+echo
+cd ..
