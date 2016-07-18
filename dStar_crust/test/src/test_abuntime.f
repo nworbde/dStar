@@ -47,7 +47,9 @@ program test_abuntime
     & charged_ids, ncharged, ion_info)
 
     do k = 1,nz
-        write(*,'(2es11.4,3f7.2,es11.4,f7.3)') lgP(k),rho(k),ion_info(k)% Z, ion_info(k)% A, ion_info(k)% Q, Xneut(k), sum(abunds(:,k))
+        write(*,'(2es11.4,3f7.2,es11.4,f7.3)') lgP(k),rho(k), &
+        & ion_info(k)% Z, ion_info(k)% A, ion_info(k)% Q, Xneut(k), &
+        & sum(abunds(:,k))
     end do
     
 	call sf_shutdown

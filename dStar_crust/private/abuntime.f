@@ -125,8 +125,7 @@ contains
             else if (ios /= 0) then
                 print *,'abnormal return: ierr = ', ierr
                 return
-            end if
-            ! only accept if rho has incremented
+            end if            
             read(unitno,'(1x,5(a5,1pe10.3))') (isos(k),Yion(k,nz),k=1,nion)
             read(unitno,*)
             ! only increment nz if rho has increased
@@ -141,6 +140,9 @@ contains
         close(unitno)
         
         call realloc_abuntime_arrays(nz,ierr)
+        
+        ! scale temperature to Kelvin
+        T = T* 1.0e9_dp
         
     contains
         subroutine realloc_abuntime_arrays(newsize,ierr)
