@@ -1,4 +1,5 @@
 program test_abuntime
+    use iso_fortran_env, only: error_unit
     use constants_def, only: dp
     use constants_lib
     use nucchem_def
@@ -36,20 +37,20 @@ program test_abuntime
 	eos_handle = alloc_dStar_eos_handle(ierr)
     call check_okay('allocate eos',ierr)
     
-    print *,'reading abuntime'
+    write(error_unit,*) 'reading abuntime'
     call read_abuntime(abuntime_filename, nz, nion, rho, T, isos, abunds, ierr)
-    print *,'done'
-    print *,rho(nz),(isos(k),abunds(k,nz),k=1,15)
+    write(error_unit,*) 'done'
     
     allocate(Yion(nion,nz),Xneut(nz),charged_ids(nion),ion_info(nz), lgP(nz))
     
     call make_abuntime_crust(eos_handle, rho, T, isos, abunds, lgP, Yion, Xneut, &
     & charged_ids, ncharged, ion_info)
 
+    write(*,'(6a10,tr1)') 'lg(P)','lg(rho)','<Z>','<A>','Qimp','Xn'
+    write(*,'(6("----------",tr1))')
     do k = 1,nz
-        write(*,'(2es11.4,3f7.2,es11.4,f7.3)') lgP(k),rho(k), &
-        & ion_info(k)% Z, ion_info(k)% A, ion_info(k)% Q, Xneut(k), &
-        & sum(abunds(:,k))
+        write(*,'(6(f10.6,tr1))') lgP(k),log10(rho(k)), &
+        & ion_info(k)% Z, ion_info(k)% A, ion_info(k)% Q, Xneut(k)
     end do
     
 	call sf_shutdown

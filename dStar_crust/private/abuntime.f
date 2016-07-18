@@ -100,9 +100,9 @@ contains
         &   action='read',status='old', iostat=ierr)
         if (failure('opening'//trim(abuntime_filename),ierr)) return
         
-        print *,'reading '//abuntime_filename
+        write(error_unit,*) 'reading '//abuntime_filename
         read(unitno,'(1x,i5)') nion
-        print *,'nion = ',nion
+        write(error_unit,*) 'nion = ',nion
         allocate(isos(nion))
         
         allocate(rho(default_chunk_size),Yion(nion,default_chunk_size), &
@@ -123,7 +123,7 @@ contains
                 nz = nz-1
                 exit
             else if (ios /= 0) then
-                print *,'abnormal return: ierr = ', ierr
+                write(error_unit,*) 'abnormal return: ierr = ', ierr
                 return
             end if            
             read(unitno,'(1x,5(a5,1pe10.3))') (isos(k),Yion(k,nz),k=1,nion)
@@ -136,7 +136,7 @@ contains
             if (modulo(nz,100) == 0)  &
             & write (error_unit,'(a)',advance='no') '.'
         end do
-        print *,'got ',nz,' zones'
+        write(error_unit,'(/,a,i0,a)') 'got ',nz,' zones'
         close(unitno)
         
         call realloc_abuntime_arrays(nz,ierr)
