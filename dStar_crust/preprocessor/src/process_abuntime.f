@@ -8,19 +8,22 @@ program process_abuntime
 	use superfluid_lib
 	use dStar_eos_lib
     use abuntime
+    use dStar_crust_mod
 
     character(len=*), parameter ::  &
         & abuntime_filename ='../data/abuntime_lx2_5.data', &
         & abuntime_cache = '../data/cache/abuntime_lx2_5_cache.bin'
 
     integer :: nz, nion, ncharged
-    real(dp), dimension(:), allocatable :: rho, P, Xneut, deltaRho
+    real(dp), dimension(:), allocatable :: rho, P, Xneut
     real(dp), dimension(:,:), allocatable :: Yion
     character(len=iso_name_length), dimension(:), allocatable :: isos ! nion
     integer, dimension(:), allocatable :: charged_ids
     type(composition_info_type), dimension(:), allocatable :: ion_info
     real(dp) :: T
-    integer :: k,ierr, eos_handle
+    integer :: k,ierr, eos_handle, iDelta(1)
+    real(dp), dimension(:), allocatable :: lgP, lgRho, lgEps, delta_lgRho
+    real(dp), parameter :: delta = 0.001
     
     ierr = 0
     call constants_init('',ierr)
@@ -36,39 +39,40 @@ program process_abuntime
 	eos_handle = alloc_dStar_eos_handle(ierr)
     call check_okay('allocate eos',ierr)
     
-    write(output_unit,*) 'preprocessing abuntime tables'
+    write(output_unit,'(a)') 'preprocessing abuntime tables'
 
-    write(error_unit,*) 'reading abuntime'
+    write(error_unit,'(/,a)') 'reading abuntime'
     call read_abuntime(abuntime_filename, nz, nion, ncharged, P, rho, T, &
     &   isos, Yion, Xneut, charged_ids, ion_info, ierr)
     call check_okay('read_abuntime',ierr)
-    write(error_unit,*) 'done'
+    write(error_unit,'(a)') 'done'
 
-    print *,'ncharged = ',ncharged
-    print *,'size charged_ids = ',size(charged_ids)
+    write(error_unit,'(/,a)') 'processing abuntime data...'
+    allocate(lgP(nz), lgRho(nz), lgEps(nz), delta_lgRho(nz))
+    lgP = log10(P)
 
-    write(error_unit,*) 'writing cache'
+    call find_densities(eos_handle, &
+    &   lgP,lgRho,lgEps,Yion,ncharged,charged_ids,ion_info,T)
+
+    delta_lgRho = abs(lgRho - log10(rho))
+    iDelta = maxloc(delta_lgRho)
+    write(error_unit,'(a)') 'done'
+    write(error_unit,'(/,a,/,a,f8.5,a,f8.3,", ",f8.3)')  &
+    &   'consistency check:','max Delta(lgRho) = ', &
+    &   maxval(delta_lgRho),' at lgP, lgRho = ',lgP(iDelta),log10(rho(iDelta))
+
+    write(error_unit,'(/,a)') 'writing cache to '//abuntime_cache//'...'
     call write_abuntime_cache(abuntime_cache,nz,nion,ncharged,isos, &
-    &   charged_ids,ion_info,P,Yion,ierr)    
+    &   charged_ids,ion_info,Xneut,T,lgP,lgRho,lgEps,Yion,ierr)
     call check_okay('write_abuntime_cache',ierr)
-    write(error_unit,*) 'done'
+    write(error_unit,'(a)') 'done'
 
-    allocate(deltaRho(nz))
-    call check_abuntime(eos_handle, rho, T, isos, P,  &
-    &   Yion, Xneut, charged_ids, ncharged, ion_info, deltaRho)
+    deallocate(lgP, lgRho, lgEps, delta_lgRho)
+    deallocate(ion_info, charged_ids, isos, Yion, rho, P, Xneut)
     
-    do k = 1, nz
-        write(output_unit,'(2(es11.4,tr2),2(f3.0,tr1),f6.3,tr1,f5.2)')  &
-        &   P(k), rho(k), ion_info(k)% Z, ion_info(k)% A,  &
-        &   ion_info(k)% Q,Xneut(k)
-    end do
-    
+    call dStar_eos_shutdown
+    call sf_shutdown    
 	call nucchem_shutdown
-    
-    write(error_unit,'(a,es11.4)') 'max delta Rho = ',maxval(deltaRho)
-    write(error_unit,'(a,es11.4)') 'at P = ',P(maxloc(deltaRho))
-    
-    deallocate(deltaRho,ion_info,charged_ids,Xneut,Yion,P,isos,rho)
 
 contains
 	subroutine check_okay(msg,ierr)

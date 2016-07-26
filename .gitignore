@@ -14,3 +14,7 @@ LOGS
 .ipynb_checkpoints
 dStar_crust/preprocessor/process_abuntime
 dStar_crust/preprocessor/make/process_abuntime
+dStar_crust/preprocessor/print_abuntime
+dStar_crust/preprocessor/make/print_abuntime
+dStar_crust/preprocessor/abuntime_isos
+dStar_crust/preprocessor/abuntime_summary

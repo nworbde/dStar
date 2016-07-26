@@ -1,7 +1,7 @@
 include $(MESA_DIR)/utils/makefile_header
 
 LIB = libdstar_crust.a
-LIB_OBJS = 	dStar_crust_def.o HZ90.o abuntime.o dStar_crust_mod.o dStar_crust_lib.o
+LIB_OBJS = 	dStar_crust_def.o HZ90.o dStar_crust_mod.o dStar_crust_lib.o
 DSTAR_INC=../../include
 DSTAR_LIB=../../lib
 
