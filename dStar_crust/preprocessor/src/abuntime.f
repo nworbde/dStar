@@ -103,8 +103,7 @@ contains
             call compute_composition_moments(nion,indcs,abunds(:), &
             &   ion_info(nz),Xsum,ncharged,charged_ids,Yion(:,nz), &
             &   exclude_neutrons=.TRUE., abunds_are_mass_fractions=.FALSE.)
-            Xneut(nz) = abunds(n_indx)
-            
+                        
             ! only increment nz if P has increased
             if (P(nz) > last_P*delta_P) then
                 last_P = P(nz)
@@ -157,7 +156,7 @@ contains
     end subroutine read_abuntime
         
     subroutine read_abuntime_cache(cache_filename,nz,nion,ncharged,isos, &
-        &   charged_ids,ion_info,Xn,T,lgP,lgRho,lgEps,Yion,ierr)
+        &   charged_ids,ion_info,T,lgP,lgRho,lgEps,Yion,ierr)
         use nucchem_def, only: iso_name_length, composition_info_type
 
         character(len=*), intent(in) :: cache_filename
@@ -165,7 +164,6 @@ contains
         character(len=iso_name_length), intent(out), dimension(:), allocatable :: isos
         type(composition_info_type), dimension(:), allocatable, intent(out):: &
             &   ion_info
-        real(dp), dimension(:), allocatable, intent(out) :: Xn
         real(dp), intent(out) :: T
         real(dp), dimension(:), intent(out), allocatable :: lgP, lgRho, lgEps
         integer, intent(out), dimension(:), allocatable :: charged_ids
@@ -180,7 +178,7 @@ contains
         read(unitno) nz
         read(unitno) nion
         read(unitno) ncharged
-        allocate(isos(nion),ion_info(nz), Xn(nz), &
+        allocate(isos(nion),ion_info(nz), charged_ids(nion), &
         &   lgP(nz),lgRho(nz),lgEps(nz),Yion(nion,nz),stat=ierr)
         if (failure('allocating abuntime tables',ierr)) then
             close(unitno)
@@ -189,7 +187,6 @@ contains
         read(unitno) isos
         read(unitno) charged_ids
         read(unitno) ion_info
-        read(unitno) Xn
         read(unitno) T
         read(unitno) lgP
         read(unitno) lgRho
@@ -200,7 +197,7 @@ contains
     end subroutine read_abuntime_cache
 
     subroutine write_abuntime_cache(cache_filename,nz,nion,ncharged,isos, &
-    &   charged_ids,ion_info,Xn,T,lgP,lgRho,lgEps,Yion,ierr)
+    &   charged_ids,ion_info,T,lgP,lgRho,lgEps,Yion,ierr)
 
         use nucchem_def, only: iso_name_length, composition_info_type
         character(len=*), intent(in) :: cache_filename
@@ -208,7 +205,6 @@ contains
         character(len=iso_name_length), intent(in), dimension(:) :: isos
         integer, intent(in), dimension(:) :: charged_ids
         type(composition_info_type), intent(in), dimension(:) :: ion_info
-        real(dp), intent(in), dimension(:) :: Xn
         real(dp), intent(in) :: T
         real(dp), intent(in), dimension(:) :: lgP, lgRho, lgEps
         real(dp), intent(in), dimension(:,:) :: Yion
@@ -226,7 +222,6 @@ contains
         write(unitno) isos
         write(unitno) charged_ids
         write(unitno) ion_info
-        write(unitno) Xn
         write(unitno) T
         write(unitno) lgP
         write(unitno) lgRho

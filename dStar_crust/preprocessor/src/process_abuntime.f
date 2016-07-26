@@ -63,9 +63,13 @@ program process_abuntime
 
     write(error_unit,'(/,a)') 'writing cache to '//abuntime_cache//'...'
     call write_abuntime_cache(abuntime_cache,nz,nion,ncharged,isos, &
-    &   charged_ids,ion_info,Xneut,T,lgP,lgRho,lgEps,Yion,ierr)
+    &   charged_ids,ion_info,T,lgP,lgRho,lgEps,Yion,ierr)
     call check_okay('write_abuntime_cache',ierr)
     write(error_unit,'(a)') 'done'
+
+    print *,'ncharged = ',ncharged
+    print *,'size(charged_ids) = ',size(charged_ids)
+    print *,nuclib% name(charged_ids(1:10))
 
     deallocate(lgP, lgRho, lgEps, delta_lgRho)
     deallocate(ion_info, charged_ids, isos, Yion, rho, P, Xneut)

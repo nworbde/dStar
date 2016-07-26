@@ -1,12 +1,14 @@
 program print_abuntime
     
     use iso_fortran_env, only: error_unit, output_unit
-    use constants_def, only: dp 
+    use constants_def
+    use constants_lib
     use nucchem_def
+    use nucchem_lib
     use abuntime
     
-    real(dp), parameter :: abundance_threshold = 0.001_dp
-    real(dp), parameter :: default_min_lgP_increment = 0.0001_dp
+    real(dp), parameter :: abundance_threshold = 0.01_dp
+    real(dp), parameter :: default_min_lgP_increment = 0.001_dp
     character(len=*), parameter ::   &
         &   cache_filename = '../data/cache/abuntime_lx2_5_cache.bin'
     character(len=128) :: line_format
@@ -16,7 +18,7 @@ program print_abuntime
     integer, dimension(:), allocatable :: charged_ids
     type(composition_info_type), dimension(:), allocatable :: ion_info
     real(dp) :: T, lgP_last
-    real(dp), dimension(:), allocatable :: Xn, lgP, lgRho, lgEps
+    real(dp), dimension(:), allocatable :: lgP, lgRho, lgEps
     real(dp), dimension(:,:), allocatable :: Yion
     integer :: ierr, i, k
     character(len=iso_name_length), dimension(:), allocatable :: abund_isos
@@ -25,8 +27,11 @@ program print_abuntime
     logical, dimension(:,:), allocatable :: threshold
     integer :: summary_unit, iso_unit
     
+    call constants_init('',ierr)
+    call nucchem_init('../../data/',ierr)
+        
     call read_abuntime_cache(cache_filename,nz,nion,ncharged,isos, &
-        &   charged_ids,ion_info,Xn,T,lgP,lgRho,lgEps,Yion,ierr)
+        &   charged_ids,ion_info,T,lgP,lgRho,lgEps,Yion,ierr)
     
     allocate(threshold(nion,nz),above_thresh(nz))
     threshold = Yion > abundance_threshold*maxval(Yion(:,:))
@@ -37,24 +42,27 @@ program print_abuntime
     &   abundance_threshold,'*Ymax is',nabund
     
     allocate(abund_isos(nabund),abund_Ys(nabund))
-    write(line_format,'(a,i0,a)') "(4(f8.4,tr1),tr2,",nabund,"(a6,tr1,es11.4))"
+    write(line_format,'(a,i0,a)') "(5(f7.3,tr1),tr2,",nabund,"(a6,tr1,es10.3))"
     lgP_last = -100.0
     
     open(newunit=iso_unit,file='abuntime_isos',action='write',status='unknown')
-    write(iso_unit,'(a5,tr1)') isos
+    write(iso_unit,'(a5)') isos
+    close(iso_unit)
     
     open(newunit=summary_unit,file='abuntime_summary',action='write', &
     &   status='unknown')
     do i = 1, nz
         if (lgP(i) > lgP_last+default_min_lgP_increment) then
             lgP_last = lgP(i)
-            abund_isos(1:above_thresh(i)) = pack(isos,threshold(:,i))
-            abund_Ys(1:above_thresh(i)) = pack(Yion(:,i),threshold(:,i))
-            write(summary_unit,line_format) lgP(i), lgRho(i), lgEps(i), Xn(i), &
-                 &  (abund_isos(k),abund_Ys(k),k=1,above_thresh(i))
+            abund_isos(1:above_thresh(i)) = pack(nuclib% name(charged_ids(1:ncharged)), threshold(1:ncharged,i))
+            abund_Ys(1:above_thresh(i)) = pack(Yion(1:ncharged,i),threshold(1:ncharged,i))
+            write(summary_unit,line_format) lgP(i), lgRho(i), lgEps(i), &
+            &   ion_info(i)% Yn, ion_info(i)% Q, &
+            &   (abund_isos(k),abund_Ys(k),k=1,above_thresh(i))
         end if
     end do
     close(summary_unit)
     deallocate(threshold,above_thresh,abund_isos,abund_Ys)
+    call nucchem_shutdown
     
 end program print_abuntime
