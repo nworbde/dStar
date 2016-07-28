@@ -32,7 +32,8 @@ subroutine ion_mixture(rq,rs,Gamma_e,ionic,ncharged,charged_ids,Yion,Gamma,ionQ,
 		! ids of the charged species
 	real(dp), dimension(ncharged), intent(in) :: Yion
 		! renormalized abunances of charged species Yion = Y/(1-Yn)
-	real(dp), intent(out) :: Gamma,ionQ,f,u,p,s,cv,dpr,dpT
+    real(dp), intent(in) :: Gamma, ionQ
+	real(dp), intent(out) :: f,u,p,s,cv,dpr,dpT
 	integer, intent(out) :: phase,err
 	real(dp), dimension(ncharged) :: Z, A
 	real(dp) :: Mu
@@ -46,7 +47,7 @@ subroutine ion_mixture(rq,rs,Gamma_e,ionic,ncharged,charged_ids,Yion,Gamma,ionQ,
 	
 	! set the phase
 	rsi = rs*ionic% Z73*Mu
-	Gamma = Gamma_e * ionic% Z53
+!     Gamma = Gamma_e * ionic% Z53
 !     if (Gamma < rq% Gamma_melt .or. rsi < rq% rsi_melt) then
     if (Gamma < rq% Gamma_melt) then
 		phase = liquid_phase
@@ -56,8 +57,9 @@ subroutine ion_mixture(rq,rs,Gamma_e,ionic,ncharged,charged_ids,Yion,Gamma,ionQ,
 
 	! estimate T_p/T for a mixture and check that quantum effects are not important in liquid phase
 !	ionQ2 = 3.0*Gamma_e**2/rs/Mu * sum(Zmix**2*Ymix/Amix) *ionic%A / ionic%Z
-	ionQ2 = 3.0*Gamma_e**2/rs/Mu * ionic% Z2XoA2 *ionic% A / ionic% Z
-	ionQ = sqrt(ionQ2)
+    ionQ2 = ionQ**2
+!     ionQ2 = 3.0*Gamma_e**2/rs/Mu * ionic% Z2XoA2 *ionic% A / ionic% Z
+!     ionQ = sqrt(ionQ2)
 	if (phase == liquid_phase .and. ionQ2 > Q2_threshold) then
 		err = strong_quantum_effects
         if (.not. rq% suppress_warnings) &
