@@ -206,7 +206,7 @@ contains
     	Phi = y(tov_potential)
 
     	lgP = lnP/ln10 + log10(pressure_g)			! convert P to cgs
-    	call dStar_crust_get_results(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
+    	call dStar_crust_get_eos(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
 
     	eps = 10.0**(lgEps)	  ! mass-energy density, in g cm**-3
         rho = 10.0**(lgRho)               ! g cm**-3
@@ -315,7 +315,7 @@ contains
             vol = s% volume(i)
 
             lgP = log10(s% pressure(i)) + log10(pressure_g)            ! convert P to cgs
-            call dStar_crust_get_results(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
+            call dStar_crust_get_eos(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
             if (ierr /= 0) return
             write (*,'(5(f14.10,tr2),4(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi,  &
             &   10.0**lgP, 10.0**lgRho, 10.0**lgEps, vol*length_g**3

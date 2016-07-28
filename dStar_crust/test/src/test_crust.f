@@ -50,7 +50,7 @@ program test_crust
     
     write (*,'(/,5(a9,tr2),/)') 'lg(P)','lg(rho)','D lg(rho)','lg(Eps)','D ln(Eps)'
     do i = 1,Ntrial
-        call dStar_crust_get_results(lgP(i),lgRho(i),dlgRho(i),lgEps(i),dlgEps(i),ierr)
+        call dStar_crust_get_eos(lgP(i),lgRho(i),dlgRho(i),lgEps(i),dlgEps(i),ierr)
         call check_okay('dStar_crust_get_results',ierr)
         write(*,'(5(f9.5,tr2))') lgP(i),lgRho(i),dlgRho(i),lgEps(i),dlgEps(i)
     end do
@@ -58,8 +58,8 @@ program test_crust
     Niso = dStar_crust_get_composition_size()
     allocate(Yion(Niso,Ntrial),charged_ids(Niso))
     
-    call dStar_crust_get_composition(lgP,ncharged,charged_ids,Yion,Xneut,ion_info,ierr)
-    call check_okay('dStar_crust_get_composition',ierr)
+    call dStar_crust_get_composition_info(lgP,ncharged,charged_ids,Yion,Xneut,ion_info,ierr)
+    call check_okay('dStar_crust_get_composition_info',ierr)
 
     write (*,'(/,a9,tr2,2(a7,tr2),2(a6,tr2),2(a7,tr2),a7,/)') 'lg(P)','Xn','max(Y)','<Z>','<A>','Ye','Yn','Q'
     do i = 1,Ntrial

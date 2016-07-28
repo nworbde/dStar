@@ -61,7 +61,7 @@ module hz90
     &   'sr106', &
     &   'zr106', &
     &   'mo106', &
-    &   'ru106', &n_rxns
+    &   'ru106', &
     &   'pd106' ]
     
     integer, parameter :: n_rxns = 17
@@ -96,23 +96,22 @@ module hz90
 
 contains
     
-    subroutine set_HZ90_composition(lgP, Yion)
+    subroutine set_HZ90_composition(lgP, Y)
+        use const_def, only: dp, pi
         use nucchem_def
         use nucchem_lib
         real(dp), intent(in), dimension(:) :: lgP
-        real(dp), intent(out), dimension(:,:) :: Yion   ! (HZ90_number, size(lgP))
+        real(dp), intent(out), dimension(:,:) :: Y ! (HZ90_number, size(lgP))
         integer, dimension(max_nnuclib) :: network_indcs
-        
-        real(dp), allocatable, dimension(:,:) :: X
         integer :: Ntab, i, indx, n_indx, indx1, indx2
         integer, dimension(HZ90_number) :: indcs
-        
-        real(dp), dimension(n_rxns) :: lg_Pt        
+        real(dp), dimension(n_rxns) :: lg_Pt
         real(dp) :: lgP1, lgP2, width, Xsum
+        real(dp), allocatable, dimension(:,:) :: X
         
         Ntab = size(lgP)
         allocate(X(HZ90_number,Ntab))
-        X = 0.0
+        Y = 0.0
         lg_Pt = log10(transition_pressures)
         
         ! set the network pointers
@@ -122,7 +121,7 @@ contains
         network_indcs(indcs) = [(i,i=1,HZ90_number)]
         n_indx = network_indcs(get_nuclide_index('n'))
         
-        ! set the composiiton layer by layer, starting at the top
+        ! set the compositon layer by layer, starting at the top
         ! first layer (pressures up to the first transition)
         indx = network_indcs(get_nuclide_index(ion_composition(1)))
         where(lgP <= lg_Pt(1)) 
@@ -159,7 +158,15 @@ contains
             end where
         end do
 
-        forall(i=1,Ntab) Yion(:,i) = X(:,i)/nuclib% A(indcs(:))
+        ! convert to abundances
+        forall(i=1:HZ90_number) Y(i,:) = X(i,:)/nuclib% A(indcs(i))
+
+!         ! compute composition moments
+!         do i = 1, Ntab
+!             call compute_composition_moments(HZ90_number, indcs, X(:,i), &
+!             &   ion_info(i), Xsum, ncharged, charged_ids, Yion(:,i), &
+!             &   abunds_are_mass_fractions=.TRUE., exclude_neutrons=.TRUE.)
+!         end do
         deallocate(X)
     end subroutine set_HZ90_composition
 

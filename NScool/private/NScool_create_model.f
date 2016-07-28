@@ -199,7 +199,7 @@ contains
         lgP_bar = log10(s% P_bar)
         
         call allocate_NScool_iso_arrays(s, ierr)
-        call dStar_crust_get_composition(lgP_bar, s% ncharged, s% charged_ids, s% Yion_bar, s% Xneut_bar, s% ionic_bar, ierr)
+        call dStar_crust_get_composition_info(lgP_bar, s% ncharged, s% charged_ids, s% Yion_bar, s% Xneut_bar, s% ionic_bar, ierr)
         if (ierr /= 0) return
         
         ! can fix the impurity parameter to a specified value
