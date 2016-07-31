@@ -135,7 +135,7 @@ contains
         Nisos = tab% Nisos
         
         allocate(Y(Nisos,N),indcs(Nisos))
-        indcs = [(get_nuclide_index(tab% network(i)),i=1,Nisos)]
+        indcs = [(get_nuclide_index(adjustl(tab% network(i))),i=1,Nisos)]
         
         do i = 1, size(lgP)
             call dStar_crust_get_composition(lgP(i),Y(:,i),ierr)

@@ -192,9 +192,7 @@ contains
         abuntime_lgP_min = minval(lgP)
         abuntime_lgP_max = maxval(lgP)
         
-        ! pad the table
-        ! for the top, we'll just extend the composition
-        ! for the bottom, we'll use the HZ90 network
+        ! pad the table using HZ90
         n_top = (abuntime_lgP_min - crust_default_lgPmin)/lgP_increment
         n_bottom = (crust_default_lgPmax - abuntime_lgP_max)/lgP_increment
         nzout = n_top + nz + n_bottom
@@ -205,9 +203,17 @@ contains
         lgPout(n_top+nz+1:nzout) = [ (abuntime_lgP_max+real(i)*lgP_increment,i=1,n_bottom) ]
 
         Yout = 0.0_dp
-        Yout(1:nion,1:n_top) = spread(Y(1:nion,1),2,n_top)
+        allocate(Y_HZ90(HZ90_number,n_top))
+        call set_HZ90_composition(lgPout(1:n_top),Y_HZ90)
+        do i = 1, HZ90_number
+            call integer_dict_lookup(isodir,HZ90_network(i),indx,ierr)
+            Yout(indx,1:n_top) = Y_HZ90(i,:)
+        end do
+!         Yout(1:nion,1:n_top) = spread(Y(1:nion,1),2,n_top)
+
         Yout(1:nion,n_top+1:n_top+nz) = Y(:,:)
 
+        deallocate(Y_HZ90)
         allocate(Y_HZ90(HZ90_number,n_bottom))
         call set_HZ90_composition(lgPout(n_top+nz+1:nzout),Y_HZ90)
         do i = 1, HZ90_number
@@ -215,8 +221,15 @@ contains
             Yout(indx,n_top+nz+1:nzout) = Y_HZ90(i,:)
         end do
         
-        ! smooth the transition
+        ! smooth the transitions
         do i = 1, nnet
+            where(lgPout <= abuntime_lgP_min .and.  &
+                & lgPout >= abuntime_lgP_min-2*transition_width)
+                Yout(i,:) =  Yout(i,n_top+1)* &
+                &   cos(0.5*pi*(abuntime_lgP_min-lgPout)/2/transition_width) + &
+                &   Yout(i,:)* (1.0- &
+                &   cos(0.5*pi*(abuntime_lgP_min-lgPout)/2/transition_width))
+            end where
             where(lgPout >= abuntime_lgP_max .and.  &
                 & lgPout <= abuntime_lgP_max+2*transition_width)
                 Yout(i,:) =  Yout(i,n_top+nz)* &

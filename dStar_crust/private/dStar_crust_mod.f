@@ -76,31 +76,75 @@ contains
         real(dp), pointer, dimension(:,:) :: Y_val
         real(dp), pointer, dimension(:) :: Yptr
         real(dp), pointer, dimension(:,:) :: lgRho_val, lgEps_val
-        real(dp) :: lgPmin, delta_lgP, Xsum
+        real(dp) :: lgPmin, delta_lgP, Xsum, T
         integer :: N, Nisos, i
         integer :: ncharged
-        integer, dimension(HZ90_number) :: charged_ids
+        integer, dimension(:), allocatable :: charged_ids
         real(dp), dimension(:), allocatable :: lgP,lgRho,lgEps
         real(dp), dimension(:,:), allocatable :: Yion, Y
         type(composition_info_type), dimension(:), allocatable :: ion_info
-        integer, dimension(HZ90_number) :: indcs
+        integer, dimension(:), allocatable :: indcs
+        character(len=iso_name_length), dimension(:), allocatable :: isos
+        character(len=crust_filename_length) :: abuntime_filename
+        logical :: have_abuntime
+        integer :: unitno
         
         ierr = 0
-        lgPmin = tab% lgP_min
-        delta_lgP = tab% lgP_max - lgPmin
-        N = tab% nv
-        Nisos = HZ90_number
-        allocate(lgP(N), lgRho(N), lgEps(N), Yion(Nisos,N), &
-        &   Y(Nisos, N), ion_info(N), stat=ierr)
-        if (failure('do_generate_default_crust_table: allocating memory', ierr)) return
+        select case(trim(prefix))
         
-        ! set lgP; then determine the corresponding composition and densities
-        lgP = [ (lgPmin + real(i-1,dp)*(delta_lgP)/real(N-1,dp), i = 1,N)]
-        call set_HZ90_composition(lgP, Y)
+            case('HZ90')
+            lgPmin = tab% lgP_min
+            delta_lgP = tab% lgP_max - lgPmin
+            N = tab% nv
+            Nisos = HZ90_number
+            allocate(lgP(N), lgRho(N), lgEps(N), Yion(Nisos,N), &
+            &   Y(Nisos, N), ion_info(N), indcs(Nisos), charged_ids(Nisos), &
+            &   isos(Nisos), stat=ierr)
+            if (failure('do_generate_default_crust_table: allocating memory', ierr)) return
+            isos = HZ90_network
+            
+            ! set lgP; then determine the corresponding composition
+            lgP = [ (lgPmin + real(i-1,dp)*(delta_lgP)/real(N-1,dp), i = 1,N)]
+            call set_HZ90_composition(lgP, Y)
+            indcs = [(get_nuclide_index(HZ90_network(i)),i=1,HZ90_number)]
+        
+            case('abuntime')
+            ! check to see if the abuntime cache exists
+            abuntime_filename = trim(crust_datadir)//'/cache/abuntime.bin'
+            inquire(file=abuntime_filename, exist=have_abuntime)
+            if (have_abuntime) then
+                open(newunit=unitno,file=trim(abuntime_filename), &
+                &   action='read',status='old',form='unformatted', iostat=ierr)
+                if (failure('opening'//trim(abuntime_filename),ierr)) return
 
-        indcs = [(get_nuclide_index(HZ90_network(i)),i=1,HZ90_number)]
+                read(unitno) N
+                read(unitno) Nisos
+                allocate(isos(Nisos), lgP(N), lgRho(N), lgEps(N), Y(Nisos,N), &
+                &   Yion(Nisos,N), ion_info(N), indcs(Nisos), &
+                &   charged_ids(Nisos), stat=ierr)
+                if (failure('allocating abuntime tables',ierr)) then
+                    close(unitno)
+                    return
+                end if
+                read(unitno) isos
+                read(unitno) T
+                read(unitno) lgP
+                read(unitno) Y
+                close(unitno)
+                indcs = [(get_nuclide_index(adjustl(isos(i))),i=1,Nisos)]
+            else
+                print *,'missing abuntime composition file'
+                stop
+            end if
+                
+            case default
+            print *,'malformed prefix in do_generate_default_crust_table'
+            stop
+        end select
+
+        ! set the composition moments and densities
         do i = 1, N
-            call compute_composition_moments(HZ90_number, indcs, Y(:,i), &
+            call compute_composition_moments(Nisos, indcs, Y(:,i), &
             &   ion_info(i), Xsum, ncharged, charged_ids, Yion(:,i), &
             &   abunds_are_mass_fractions=.FALSE., exclude_neutrons=.TRUE.)
         end do
@@ -111,7 +155,7 @@ contains
         if (failure('do_allocate_crust_table', ierr)) return
         
         ! copy network information to table
-        tab% network = HZ90_network
+        tab% network = isos
 
         ! construct interpolants
         tab% lgP = lgP        
@@ -124,7 +168,7 @@ contains
             Yptr(1:4*N) => tab% Y(1:4*N,i)
             call interp_pm(tab% lgP, tab% nv, Yptr, pm_work_size, work, &
             &   'do_generate_default_crust_table: Y',ierr)
-            if (failure(trim(nuclib% name(charged_ids(i))),ierr)) return
+            if (failure(trim(nuclib% name(indcs(i))),ierr)) return
         end do
 
         ! eos
@@ -141,7 +185,7 @@ contains
         if (failure('lgEps',ierr)) return
         
         deallocate(work)
-        deallocate(lgP, lgRho, lgEps, Yion, ion_info)
+        deallocate(lgP, lgRho, lgEps, Yion, ion_info, indcs, charged_ids, isos)
 
     end subroutine do_generate_default_crust_table
     

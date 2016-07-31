@@ -43,9 +43,9 @@ program test_crust
     call check_okay('dStar_atm_startup',ierr)
     
     Tref = 1.0d8
-    call dStar_crust_load_table('hz90',eos_handle, Tref,ierr)
+    call dStar_crust_load_table('HZ90',eos_handle, Tref,ierr)
     call check_okay('dStar_crust_load_table',ierr)
-        
+   
     lgP = [(26.5+5.0*real(i-1,dp)/real(Ntrial-1,dp),i=1,Ntrial)]
     
     write (*,'(/,5(a9,tr2),/)') 'lg(P)','lg(rho)','D lg(rho)','lg(Eps)','D ln(Eps)'
@@ -62,6 +62,7 @@ program test_crust
     call check_okay('dStar_crust_get_composition_info',ierr)
 
     write (*,'(/,a9,tr2,2(a7,tr2),2(a6,tr2),2(a7,tr2),a7,/)') 'lg(P)','Xn','max(Y)','<Z>','<A>','Ye','Yn','Q'
+
     do i = 1,Ntrial
         write(*,'(f9.5,tr2,2(f7.4,tr2),2(f6.2,tr2),2(f7.4,tr2),f7.2)') lgP(i),Xneut(i),maxval(Yion(1:ncharged,i)), &
         &   ion_info(i)% Z, ion_info(i)% A, ion_info(i)% Ye, ion_info(i)% Yn, ion_info(i)%Q

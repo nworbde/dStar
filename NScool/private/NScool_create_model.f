@@ -100,7 +100,7 @@ contains
         call dStar_crust_startup(trim(dStar_data_dir),ierr)
         if (failure('dStar_crust_startup')) return
         
-        call dStar_crust_load_table('hz90',s% eos_handle, s% Tcore, ierr)
+        call dStar_crust_load_table('HZ90',s% eos_handle, s% Tcore, ierr)
         if (failure('dStar_crust_load_table')) return
 
     	call dStar_atm_startup(trim(dStar_data_dir),ierr)
