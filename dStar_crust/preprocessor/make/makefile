@@ -8,19 +8,22 @@ DSTAR_INC = ../../../include
 PREPROCESSOR = process_abuntime
 PREPROCESSOR_OBJS = abuntime.o process_abuntime.o
 
+PRINTER = print_abuntime
+PRINTER_OBJS = abuntime.o print_abuntime.o
+
 default: install
 
 $(PREPROCESSOR) : $(PREPROCESSOR_OBJS)
 	$(LOADER) $(FCopenmp) -o $@ $(PREPROCESSOR_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
 
-print_abuntime : abuntime.o print_abuntime.o
-	$(LOADER) $(FCopenmp) -o $@ abuntime.o print_abuntime.o $(LOAD_LOCAL) $(LOAD_OTHER)
+$(PRINTER) : $(PRINTER_OBJS)
+	$(LOADER) $(FCopenmp) -o $@ $(PRINTER_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
 
 %.o: $(TEST_SRC_DIR)/%.f
 	$(TEST_COMPILE) $(FCfree) $(FCimpno) -I$(DSTAR_INC) $<
 
-install: $(PREPROCESSOR)
-	cp $(PREPROCESSOR) ..
+install: $(PREPROCESSOR) $(PRINTER)
+	cp $(PREPROCESSOR) $(PRINTER) ..
 
 clean:
 	-@rm -f *.o *.mod $(PREPROCESSOR)

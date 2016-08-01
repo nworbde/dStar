@@ -12,7 +12,7 @@ program process_abuntime
     real(dp), parameter :: lgP_increment = 0.005_dp
     character(len=*), parameter ::  &
         & abuntime_filename ='../data/abuntime_lx2_5.data', &
-        & abuntime_cache = '../data/cache/abuntime_lx2_5_cache.bin'
+        & abuntime_cache = '../data/abuntime.bin'
 
     integer :: nz, nion !, ncharged
     real(dp), dimension(:,:), allocatable :: Yion,Yout,Ytot

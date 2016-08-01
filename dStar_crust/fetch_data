@@ -77,9 +77,12 @@ for i in `seq 1`; do
 done
 
 if [ $need_to_fetch -eq 1 ]; then
-    echo "fetching abuntime data from $URL..."
-    curl -fS $URL > abuntime_data.txz
-    check_okay
+    # check for zip file
+    if [ ! -f abuntime_data.txz ]; then
+        echo "fetching abuntime data from $URL..."
+        curl -fS $URL > abuntime_data.txz
+        check_okay
+    fi
     tar -xf abuntime_data.txz
     check_okay
     echo "verifying datafiles..."

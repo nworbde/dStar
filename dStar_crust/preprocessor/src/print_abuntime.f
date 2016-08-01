@@ -8,7 +8,7 @@ program print_abuntime
     use abuntime
     
     character(len=*), parameter ::   &
-        &   cache_filename = '../data/cache/abuntime_lx2_5_cache.bin'
+        &   cache_filename = '../data/abuntime.bin'
     character(len=128) :: line_format
     integer, dimension(:), allocatable :: above_thresh
     integer :: nz, nion
@@ -29,7 +29,8 @@ program print_abuntime
         
     call read_abuntime_cache(cache_filename,nz,nion,isos,T,lgP,Yion,ierr)
 
-    open(newunit=iso_unit,file='abuntime_isos',action='write',status='unknown')
+    open(newunit=iso_unit,file='../data/abuntime_isos', &
+    &   action='write',status='unknown')
     write(iso_unit,'(a5)') isos
     close(iso_unit)
     
@@ -64,7 +65,7 @@ program print_abuntime
     allocate(abund_isos(nabund),abund_Ys(nabund))
     write(line_format,'(a,i0,a)') "(f7.3,tr2,",nabund+1,"(a6,tr1,es10.3))"
     
-    open(newunit=summary_unit,file='abuntime_summary',action='write', &
+    open(newunit=summary_unit,file='../data/abuntime_summary',action='write', &
     &   status='unknown')
     
     do i = 1, nz

@@ -16,9 +16,11 @@ this_module=${PWD##*/}
 check_okay
 mkdir -p ../data/crust_data/cache
 check_okay
-cp -r data/abuntime*.data ../data/crust_data/
-check_okay
 ./build_and_test
+check_okay
+./build_abuntime
+cp data/abuntime.bin ../data/crust_data/cache/
+cp data/abuntime_{isos,summary} ../data/crust_data/
 check_okay
 cd make
 make install

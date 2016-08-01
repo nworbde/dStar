@@ -1,0 +1,35 @@
+#!/bin/bash
+
+function check_okay {
+	if [ $? -ne 0 ]
+	then
+		echo
+		pwd
+		echo "FAILED"
+		echo
+		exit 1
+	fi
+}
+
+cd preprocessor
+cd make
+make
+check_okay
+cd ..
+
+if [ ! -f ../data/abuntime_lx2_5.data ]; then
+    if [ -f ../data/abuntime_data.txz ]; then
+        tar -xf abuntime_data.txz
+        check_okay
+    else
+        echo "no abuntime datafile found"
+        exit 1
+    fi
+fi
+
+./process_abuntime
+check_okay
+rm ../data/abuntime_lx2_5.data
+./print_abuntime
+check_okay
+cd ..
