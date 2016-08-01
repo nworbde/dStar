@@ -342,9 +342,11 @@ module dStar_eos_lib
 		real(dp) :: tau,vn,vp,Tns,Tps,Tnt,Rn,Rp,Rns,Rnt
 		real(dp) :: grad_ad, gamma3m1, gamma1
 		
-		! densities of nucleons, electrons [fm**-3]
+		! densities of nucleons, electrons, neutrons, protons [fm**-3]
 		n = rho/(amu*density_n)
 		n_e = x*n
+        nn = n*(1.0_dp-x)
+        np = n_e
 		xfac = (1.0_dp-2.0_dp*x)**2
 
 		! get the basic eos results for nucleons and electrons
@@ -359,17 +361,10 @@ module dStar_eos_lib
 		u_n = u_m + xfac*u_a
 		dur_n = dur_m + xfac*dur_a
 		dpr_n = dpr_m + xfac*dpr_a
-		
-! 		! superfluid: k denotes wavenumber in inverse fm
-        nn = n*(1.0_dp-x)
-! 		kn = (0.5*threepisquare*nn)**onethird
-        np = n_e
-! 		kp = (0.5*threepisquare*np)**onethird
-! 		call sf_get_results(kp,kn,Tc)
-		
+				
 		! thermal terms: nucleons are treated as ideal, non-relativistic gases
 		! neutrons; meff is for symmetric matter, probably need to correct this
-		lambda3 = pi**2 * (hbar**2/(Mneutron*meff*boltzmann*T))**1.5 / sqrt(2.0) * cm_to_fm**3
+        lambda3 = pi**2 * (hbar**2/(Mneutron*meff*boltzmann*T))**1.5 / sqrt(2.0) * cm_to_fm**3
 		zetan = ifermi12(nn * lambda3)
 		cvn = 2.5*zfermi32(zetan)/zfermi12(zetan)  &
 			&	- 4.5*zfermi12(zetan)/zfermim12(zetan)
