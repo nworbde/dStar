@@ -140,9 +140,12 @@ contains
         do i = 1, size(lgP)
             call dStar_crust_get_composition(lgP(i),Y(:,i),ierr)
             if (ierr /= 0) return
+            ! ensure abundances are positive definite and renormalize
+            where (Y(:,i) < 0.0_dp) Y(:,i) = 0.0_dp
             call compute_composition_moments(Nisos, indcs, Y(:,i), &
             &   ion_info(i), Xsum, ncharged, charged_ids, Yion(:,i), &
-            &   abunds_are_mass_fractions=.FALSE., exclude_neutrons=.TRUE.)
+            &   abunds_are_mass_fractions=.FALSE., exclude_neutrons=.TRUE., &
+            &   renormalize_mass_fractions=.TRUE.)
         end do
         Xneut = ion_info% Yn
         deallocate(Y,indcs)
