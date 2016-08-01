@@ -4,10 +4,13 @@ A collection of modules for computing neutron star structure and evolution.
 
 ##What's new
 
+###A tutorial on crust cooling
+Look in the `examples/INT-16-2b-demo` directory for a demonstration of using this code that was presented in a talk given at the INT workshop 16-2b, "Phases of Dense Matter".  See the `README.md` file in that directory for instructions.
+
 ###Total mass, radius are now reported
 Both the `history.data` and `profile` datafiles now list the total mass (solar units) and radius (kilometers) in the header.  By total, I mean the value at the top of the domain, not the photosphere.
 
-###Specify multiple accretion epochs
+###Multiple accretion epochs can be specified
 You can now specify a run with a number of accretion "epochs": distinct periods of time with a different accretion rate.  For example, suppose you wish to accrete at 1.5e17 g/s for 1000 d (starting at t = 0 d) and then cool for 5000 d (that is, from t = 1000 d to t = 6000 d).  In the inlist, you would set the following flags.
 
       number_epochs = 2
@@ -27,11 +30,11 @@ We can make this even more convenient by setting the end of the outburst at t = 
     epoch_boundaries = -1000.0,0.0,50.0,100.0,500.0,1000.0,2000.0,5000.0
 
 
-###Store time, observed effective temperature
+###Time, observed effective temperature are stored
 The structure pointer now contains arrays `t_monitor` and `Teff_monitor` that contain the epoch end times (in days) and the observer-frame effective temperature (in K) at the end of each epoch.  This facilitates comparison with observations.
 
 ###Command line options
-Check out the examples `basic_run`, `fit_lightcurve`, and `custom_Tc_Qimp` to see how to added command line options to your run.
+Check out the examples `basic_run`, `fit_lightcurve`, and `custom_Tc_Qimp` to see how to add command line options to your run.
 
 ###Tools for reading output
 Check out `tools/reader.py`. This contains a python class for reading the output history and profile data files. The quantities are stored as class members for easy access when analyzing results.
