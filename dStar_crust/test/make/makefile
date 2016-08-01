@@ -13,9 +13,6 @@ default: install
 $(TEST) : $(TEST_OBJS)
 	$(LOADER) $(FCopenmp) -o $@ $(TEST_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
 
-test_abuntime : test_abuntime.o
-	$(LOADER) $(FCopenmp) -o $@ test_abuntime.o $(LOAD_LOCAL) $(LOAD_OTHER)
-
 %.o: $(TEST_SRC_DIR)/%.f
 	$(TEST_COMPILE) $(FCfree) $(FCimpno) -I$(DSTAR_INC) $<
 

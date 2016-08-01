@@ -41,7 +41,6 @@ contains
         &   action='read',status='old', iostat=ierr)
         if (failure('opening'//trim(filename),ierr)) return
 
-        write(error_unit,'(a)') 'reading '//trim(filename)
         read(unitno,'(1x,i5)') nion
         write(error_unit,'(a,i5)') 'nion = ',nion
         allocate(isos(nion))

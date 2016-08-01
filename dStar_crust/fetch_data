@@ -28,14 +28,13 @@ function verify_datafile {
     return 0
 }
 
-ab_datafiles=(  abuntime_lx2_5.data )
-
+ab_datafiles=( rp03.data )
 chksums=( 928ea08d1abd61acfc891a15f1b7f45f )
-
-URL=https://dl.dropboxusercontent.com/u/52649885/dStar/abuntime_data.txz
+archive=JINAcrust_data.txz
+URL=https://dl.dropboxusercontent.com/u/52649885/dStar/$archive
 
 echo
-echo "Installing abuntime tables"
+echo "Installing JINA crust tables"
 echo "-----------------------------------------------------"
 
 echo "establishing data directory..."
@@ -78,12 +77,12 @@ done
 
 if [ $need_to_fetch -eq 1 ]; then
     # check for zip file
-    if [ ! -f abuntime_data.txz ]; then
-        echo "fetching abuntime data from $URL..."
-        curl -fS $URL > abuntime_data.txz
+    if [ ! -f $archive ]; then
+        echo "fetching data from $URL..."
+        curl -fS $URL > $archive
         check_okay
     fi
-    tar -xf abuntime_data.txz
+    tar -xf $archive
     check_okay
     echo "verifying datafiles..."
     for i in `seq 1`; do

@@ -108,9 +108,10 @@ contains
             call set_HZ90_composition(lgP, Y)
             indcs = [(get_nuclide_index(HZ90_network(i)),i=1,HZ90_number)]
         
-            case('abuntime')
+            case('rp03')
             ! check to see if the abuntime cache exists
-            abuntime_filename = trim(crust_datadir)//'/cache/abuntime.bin'
+            abuntime_filename = &
+            &   trim(crust_datadir)//'/cache/'//trim(prefix)//'.bin'
             inquire(file=abuntime_filename, exist=have_abuntime)
             if (have_abuntime) then
                 open(newunit=unitno,file=trim(abuntime_filename), &
@@ -133,7 +134,7 @@ contains
                 close(unitno)
                 indcs = [(get_nuclide_index(adjustl(isos(i))),i=1,Nisos)]
             else
-                print *,'missing abuntime composition file'
+                print *,'missing composition file '//trim(prefix)//'.bin'
                 stop
             end if
                 

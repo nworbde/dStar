@@ -11,25 +11,29 @@ function check_okay {
 	fi
 }
 
+archive=JINAcrust.txz
+datafile=rp03.data
+datadir=../data
+
 cd preprocessor
 cd make
 make
 check_okay
 cd ..
 
-if [ ! -f ../data/abuntime_lx2_5.data ]; then
-    if [ -f ../data/abuntime_data.txz ]; then
-        tar -xf abuntime_data.txz
+if [ ! -f $datadir/$datafile ]; then
+    if [ -f $datadir/$archive ]; then
+        tar -xf $archive
         check_okay
     else
-        echo "no abuntime datafile found"
+        echo "$datafile not found"
         exit 1
     fi
 fi
 
 ./process_abuntime
 check_okay
-rm ../data/abuntime_lx2_5.data
+rm $datadir/$datafile
 ./print_abuntime
 check_okay
 cd ..

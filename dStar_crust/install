@@ -18,9 +18,9 @@ mkdir -p ../data/crust_data/cache
 check_okay
 ./build_and_test
 check_okay
-./build_abuntime
-cp data/abuntime.bin ../data/crust_data/cache/
-cp data/abuntime_{isos,summary} ../data/crust_data/
+./preprocess_JINAcrust
+cp data/*.bin ../data/crust_data/cache/
+cp data/*_{isos,summary} ../data/crust_data/
 check_okay
 cd make
 make install

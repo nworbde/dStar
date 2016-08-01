@@ -11,8 +11,8 @@ program process_abuntime
 
     real(dp), parameter :: lgP_increment = 0.005_dp
     character(len=*), parameter ::  &
-        & abuntime_filename ='../data/abuntime_lx2_5.data', &
-        & abuntime_cache = '../data/abuntime.bin'
+        & abuntime_filename ='../data/rp03.data', &
+        & abuntime_cache = '../data/rp03.bin'
 
     integer :: nz, nion !, ncharged
     real(dp), dimension(:,:), allocatable :: Yion,Yout,Ytot
@@ -29,15 +29,15 @@ program process_abuntime
     call nucchem_init('../../data/',ierr)
     call check_okay('nucchem_init',ierr)
     
-    write(output_unit,'(a)') 'preprocessing abuntime tables'
+    write(output_unit,'(a)') 'preprocessing JINA crust tables'
 
-    write(error_unit,'(/,a)') 'reading abuntime'
+    write(error_unit,'(/,a)') 'reading '//abuntime_filename//' ...'
     call read_abuntime(abuntime_filename, nz, nion, T, lgP, &
     &   isos, Yion, ierr,lgP_increment)
     call check_okay('read_abuntime',ierr)
     write(error_unit,'(a)') 'done'
 
-    write(error_unit,'(/,a)') 'processing abuntime...'
+    write(error_unit,'(/,a)') 'processing table...'
     call reduce_abuntime(nz,nion,isos,lgP,Yion,nnet,isonet,Yout,ierr)
     call expand_abuntime(nz,nnet,isonet,lgP,Yout,lgP_increment, &
         & nztot,ntot,network,lgPtot,Ytot,ierr)
