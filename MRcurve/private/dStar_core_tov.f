@@ -207,7 +207,7 @@ contains
 		! now determine our regime and get the appropriate coefficients
 		if (lgP <= lgP_blend_max) then
 			! we shall need the crust coefficients
-			call dStar_crust_get_results(lgPc,lgRhoc,dlgRhoc,lgEpsc,dlgEpsc,ierr)
+			call dStar_crust_get_eos(lgPc,lgRhoc,dlgRhoc,lgEpsc,dlgEpsc,ierr)
 			! convert to nuclear units
 			lgRhoc = lgRhoc - log10(amu*density_n)
 			lgEpsc = lgEpsc - log10(mass_n*density_n)
