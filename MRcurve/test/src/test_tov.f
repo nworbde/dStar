@@ -60,7 +60,7 @@ program test_TOV
     call check_okay('dStar_atm_startup',ierr)
     
     Tref = 1.0d8
-    call dStar_crust_load_table('hz90',eos_handle, Tref,ierr)
+    call dStar_crust_load_table('HZ90',eos_handle, Tref,ierr)
     call check_okay('dStar_crust_load_table',ierr)
 	
 	call dStar_core_load_table(model,ierr)
