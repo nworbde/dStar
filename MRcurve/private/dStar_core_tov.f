@@ -131,8 +131,8 @@ contains
         work = 0.0
         
         itol = 0
-        rtol = 1.0e-5
-        atol = 1.0e-5
+        rtol = 1.0e-6
+        atol = 1.0e-6
         iout = 2    ! want dense output.. eventually turn off?
         lout = error_unit
         lipar = num_core_ipar
@@ -160,7 +160,7 @@ contains
         lnP = lgPstart * ln10 + log(pressure_n/pressure_g)
         lnPend = lgPend * ln10 + log(pressure_n/pressure_g)
 		! make the initial stepsize very small because dP/dr is small at center.
-        h = -1.0e-4
+        h = -1.0e-6
         rpar(core_output_step_crust) = lnP_rez
         rpar(core_last_recorded_step) = lnP + rpar(core_output_step_crust)
 
