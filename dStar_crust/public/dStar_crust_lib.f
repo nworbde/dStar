@@ -9,7 +9,7 @@ contains
 		if (crust_is_initialized) then
             ierr = 1
 			write(error_unit,*) 'dStar_crust_startup: ', &
-			&    'package alreading initialized'
+			&    'package already initialized'
 			return
 		end if
 		crust_datadir = trim(datadir)//'/crust_data'
@@ -32,7 +32,7 @@ contains
 		call do_free_crust_table(tab)
 	end subroutine dStar_crust_free_table
     
-	subroutine dStar_crust_load_table(prefix,eos_handle, Tref,ierr)
+	subroutine dStar_crust_load_table(prefix,eos_handle,Tref,ierr)
 		use iso_fortran_env, only : error_unit
 		use dStar_crust_mod, only : do_load_crust_table
 		character(len=*), intent(in) :: prefix

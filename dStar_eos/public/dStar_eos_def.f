@@ -37,10 +37,11 @@ module dStar_eos_def
 		
 	! The components
 	integer, parameter :: &
-		& icrust_eos_ep = 1, &
+		&	icrust_eos_ep = 1, &
 		&	icrust_eos_ion = 2, &
-		&	icrust_eos_neutron = 3
-	integer, parameter :: num_crust_eos_components = 3
+		&	icrust_eos_neutron = 3, &
+		&	icrust_eos_radiation = 4
+	integer, parameter :: num_crust_eos_components = 4
     
     ! it can be interesting to look at the individual components; supply a vector of this to get the individual pieces
     type crust_eos_component

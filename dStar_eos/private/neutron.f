@@ -2,39 +2,38 @@ module neutron_eos
 	! implements fit for pure neutron gas from Mackie & Baym 1977.
 	! Should have a more up-to-date fmla.
 	!
-	! n is the local density of neutrons = Yn*n_b/(1-chi), where chi is the volume fraction 
-	! occupied by the nucleus
+	! n is the local density of neutrons = Yn*n_b/(1-chi), where chi is the 
+	! volume fraction occupied by the nucleus
 	!
-	! The MB77 fit is for a zero-temperature gas. To get the specific heat and entropy,
-	! we use the values for an ideal fermion gas. Not great, but need to do something...
+	! The MB77 fit is for a zero-temperature gas. To get the specific heat and 
+	! entrozpy,we use the values for an ideal fermion gas. Not great, but need
+	! to do something...
 	! 
 
 	contains
-	subroutine MB77(n,T,f,u,p,s,cv,dpr,dpT)
+	subroutine MB77(n,T,Tns,f,u,p,s,cv,dpr,dpT)
 !         use crust_eos_def
 		use constants_def
 		use fermi
-		use superfluid_def, only: max_number_sf_types, neutron_1S0
-		use superfluid_lib, only: sf_get_results
 		
 		real(dp), intent(in) :: n		! cm**-3
 		real(dp), intent(in) :: T	! K
+		real(dp), intent(in) :: Tns	! neutron 1S0 critical temp [K]
 		real(dp), intent(out) :: f, u, s	! ergs/neutron
 		real(dp), intent(out) :: p	! dyn cm**-2
 		real(dp), intent(out) :: cv	! ergs/K/neutron
 		real(dp) :: dpr, dpT, mu_n	! dp/dlnN, dp/dlnT, chem. pot.
 		real(dp), parameter, dimension(4) :: c = [1.2974,15.0298,-15.2343,7.4663]
-        real(dp), parameter :: kF_p = 0.0
+!         real(dp), parameter :: kF_p = 0.0
 		real(dp) :: k,pF,tau,v,R,dpdk,dkdn
 		real(dp) :: lambda3, zeta	! zeta = chem. pot(ideal Fermi gas)/kT
-		real(dp) :: Tns, Tc(max_number_sf_types)
 		
 		f = 0.0; u = 0.0; p = 0.0; s = 0.0; cv = 0.0; dpr = 0.0; dpT = 0.0
 		if (n == 0.0) return
 		
 		k = (0.5*threepisquare*n)**onethird / cm_to_fm
 		dkdn = onethird*k/n
-		call sf_get_results(kF_p,k,Tc)
+! 		call sf_get_results(kF_p,k,Tc)
 		
 		u = k*(c(1) + k*(c(2) + k*(c(3) + k*c(4))))	! MeV per baryon
 		u = u*mev_to_ergs
@@ -53,7 +52,7 @@ module neutron_eos
 		s = s*boltzmann
 
 		! Now set the superfluid reduction factor
-		Tns = Tc(neutron_1S0)
+! 		Tns = Tc(neutron_1S0)
 		if (T < Tns) then
 			tau = T/Tns
 			v = sqrt(1.0-tau)*(1.456-0.157/sqrt(tau) + 1.764/tau)

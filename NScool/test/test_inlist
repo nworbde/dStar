@@ -9,7 +9,7 @@
     write_interval_for_history = 1
     write_interval_for_profile = 1
     starting_number_for_profile = 0
-    
+    suppress_first_step_output = .FALSE.
     output_directory = 'LOGS'
     
     ! controls for the solver
@@ -17,8 +17,6 @@
     maximum_number_of_models = 10000
     maximum_timestep = 0.0
         ! implies that max = tend-t
-    maximum_end_time = 1.0d9
-        ! seconds
     integration_tolerance = 1.0d-4
     ! limits on temperature: if a zone goes outside these bounds, reduce stepsize
     min_lg_temperature_integration = 7.0
@@ -29,8 +27,9 @@
     core_temperature = 3.0d8
     fix_atmosphere_temperature_when_accreting = .TRUE.
     atmosphere_temperature_when_accreting = 5.0d8
-    Mdot = 1.0e17
-    start_time = 0.0
+    number_epochs = 2
+    epoch_Mdots = 1.0e17,0.0
+    epoch_boundaries = -11566.0,0.0,11566.0
     
     ! extra controls for hook routines
     extra_real_controls(:) = 0.0

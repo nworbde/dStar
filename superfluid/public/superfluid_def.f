@@ -23,9 +23,9 @@ module superfluid_def
     type (sf_table_type), dimension(max_number_sf_types), target :: sf_tables
     
     logical :: sf_is_initialized = .false.
-    character(len=256) :: sf_datadir
+    character(len=256), save :: sf_datadir
     
     ! you might want to scale the gaps by some factor; this is normally set to one
-    real(dp), dimension(max_number_sf_types) :: sf_scale
+    real(dp), dimension(max_number_sf_types), save :: sf_scale
     
 end module superfluid_def

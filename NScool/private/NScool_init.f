@@ -15,6 +15,17 @@ contains
     end subroutine do_NScool_init
 
     subroutine do_NScool_shutdown()
+        use dStar_atm_lib
+        use dStar_crust_lib
+        use dStar_eos_lib
+        use nucchem_lib
+        use superfluid_lib
+        
+        call dStar_atm_shutdown
+        call dStar_crust_shutdown
+        call dStar_eos_shutdown
+        call nucchem_shutdown
+        call sf_shutdown
     end subroutine do_NScool_shutdown
 
     function alloc_NScool_data(ierr)
@@ -56,7 +67,8 @@ contains
      
         s% base_profile_filename = ''
         s% history_filename = ''
-      
+        s% profile_manifest_filename = ''
+        
         ! zonal information
         s% target_resolution_lnP = 0.0               ! target (d lnP) of a zone
         s% nz = -1
@@ -111,6 +123,10 @@ contains
         nullify(s% tab_lnCp)  ! (4*n_tab, nz) coefficients for ln(Cp)
         nullify(s% tab_lnGamma)
         nullify(s% tab_lnK)   ! (4*n_tab, nz) coefficients for ln(Kcond)
+        
+        ! storage for Teff(t)
+        nullify(s% t_monitor)
+        nullify(s% Teff_monitor)
     end function alloc_NScool_data
     
     subroutine dealloc_NScool_data(id, ierr)

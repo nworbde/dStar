@@ -33,7 +33,7 @@ contains
 		
 		if (.not. sf_is_initialized) then
 			ierr = -1
-			write(error_unit,*) 'sf_load_gaps called on uninitialied sf module'
+			write(error_unit,*) 'sf_load_gaps called on uninitialized sf module'
 			return
 		end if
 		ierr = 0

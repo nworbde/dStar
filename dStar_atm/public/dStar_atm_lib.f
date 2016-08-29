@@ -9,7 +9,7 @@ contains
 		if (atm_is_initialized) then
             ierr = 1
 			write(error_unit,*) 'dStar_atm_startup: ', &
-			&    'package alreading initialized'
+			&    'package already initialized'
 			return
 		end if
 		atm_datadir = trim(datadir)//'/atm_data'
@@ -32,14 +32,15 @@ contains
 		call do_free_atm_table(tab)
 	end subroutine dStar_atm_free_table
     
-	subroutine dStar_atm_load_table(prefix,grav,Plight,ierr)
+	subroutine dStar_atm_load_table(prefix,grav,Plight,Pb,ierr)
 		use iso_fortran_env, only : error_unit
 		use dStar_atm_mod, only : do_load_atm_table
 		character(len=*), intent(in) :: prefix
-		real(dp), intent(in) :: grav,Plight
+		real(dp), intent(in) :: grav,Plight,Pb
 		integer, intent(out) :: ierr
 		
-		call do_load_atm_table(prefix, grav, Plight, ierr)
+        write (error_unit,'(a)') 'loading atmosphere model '//prefix
+		call do_load_atm_table(prefix, grav, Plight, Pb, ierr)
 		if (ierr /= 0) then
 			write(error_unit,'(a,i3)') 'dStar_atm_load_one: ierr = ',ierr
 		end if

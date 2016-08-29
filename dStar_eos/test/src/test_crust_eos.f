@@ -3,6 +3,7 @@ program test_crust_eos
     use constants_lib
 	use nucchem_def
 	use nucchem_lib
+	use superfluid_def
 	use superfluid_lib
 	use dStar_eos_lib
 
@@ -14,7 +15,8 @@ program test_crust_eos
 	integer :: i, ncharged
 	real(dp) :: Xsum
 	type(crust_eos_component), dimension(num_crust_eos_components) :: eos_components
-	
+    logical, parameter :: dbg = .FALSE.
+    
 	! n/o16/fe56 composition
 	Z = [0.0,8.0,26.0]; A = [1.0,16.0,56.0]
 	N = A-Z
@@ -35,6 +37,7 @@ program test_crust_eos
 	call compute_composition_moments(3,chem_ids,Y,ionic,Xsum,ncharged, charged_ids, Yion,  &
 			& exclude_neutrons = .TRUE.)
 	call write_headers
+	call do_one(1.0e2_dp)
 	call do_one(1.0e5_dp)
 	call do_one(1.0e7_dp)
 	call do_one(1.0e9_dp)
@@ -82,7 +85,8 @@ program test_crust_eos
 		use constants_def, only: ln10,avogadro,boltzmann
 		real(dp), intent(in) :: rho
 		real(dp) :: lgr, lgT, T, Tc(max_number_sf_types)
-		real(dp) :: chi,Gamma,TpT,f,u,p,s,cv,chi_rho,chi_T,chk
+		real(dp) :: Gamma,TpT,f,u,p,s,cv,chi_rho,chi_T,chk
+		real(dp) :: k,Tcs(max_number_sf_types),chi,kFn,kFp
 		integer :: phase
 		integer :: i
 		
@@ -91,17 +95,26 @@ program test_crust_eos
 		do i = 1, 11
 			lgT = 7.5 + (i-1)/10.0
 			T = 10.0**lgT
-			call eval_crust_eos(eos_handle,rho,T,ionic,ncharged,charged_ids,Yion, &
-				& res, phase, chi, eos_components)
+			
+			chi = nuclear_volume_fraction(rho,ionic,default_nuclear_radius)
+			kFn = neutron_wavenumber(rho,ionic,chi)
+			kFp = 0.0_dp
+			call sf_get_results(kFp,kFn,Tcs)
+			call eval_crust_eos(eos_handle,rho,T,ionic,ncharged,charged_ids, &
+			&	Yion, Tcs, res, phase, chi, eos_components)
 			chk = exp(res(i_lnP)-res(i_lnE))/rho
 			write (*,'(2f8.2,3es12.4,10f8.3)')  &
 				& lgr,lgT,res(i_Gamma),res(i_Theta),res(i_Cv)/boltzmann/avogadro,res(i_lnE)/ln10,res(i_lnP)/ln10,res(i_lnS)/ln10, &
 				& res(i_chiRho),res(i_chiT),res(i_Gamma1),res(i_Gamma3),  &
 				& res(i_grad_ad), res(i_mu_e),res(i_mu_n)
-!                 print *, phase
-			! write (*,'(a,7es12.4)') 'electron: ',eos_components(icrust_eos_ep)
-			! write (*,'(a,7es12.4)') 'ion: ',eos_components(icrust_eos_ion)
-			! write (*,'(a,7es12.4)') 'neutron: ',eos_components(icrust_eos_neutron)
+			
+                if (dbg) then
+                    write (*,'(a11,7a12)') 'component: ','pressure','energy','entropy','free energy','Cv','chi_rho','chi_T'
+                    write (*,'(a11,7es12.4)') 'electron: ',eos_components(icrust_eos_ep)
+                    write (*,'(a11,7es12.4)') 'ion: ',eos_components(icrust_eos_ion)
+                    write (*,'(a11,7es12.4)') 'neutron: ',eos_components(icrust_eos_neutron)
+                    write (*,'(a11,7es12.4)') 'radiation: ',eos_components(icrust_eos_radiation)
+                end if
 		end do
 	end subroutine do_one
 

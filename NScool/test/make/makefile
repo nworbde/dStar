@@ -13,6 +13,9 @@ default: install
 $(TEST) : $(TEST_OBJS)
 	$(LOADER) $(FCopenmp) -o $@ $(TEST_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
 
+test_args: test_argparse.o
+	$(LOADER) $(FCopenmp) -o $@ test_argparse.o $(LOAD_LOCAL) $(LOAD_OTHER)
+
 %.o: $(TEST_SRC_DIR)/%.f
 	$(TEST_COMPILE) $(FCfree) $(FCimpno) -I$(DSTAR_INC) $<
 
