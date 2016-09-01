@@ -7,16 +7,18 @@ module conductivity_def
     &		icond_ei	= 2,	 &
     &		icond_eQ	= 3,	 &
     &		icond_sf	= 4,     &
-    &       icond_kap   = 5
-    integer, parameter :: num_conductivity_channels = 5
+    &       icond_kap   = 5,	 &
+    &		icond_nQ	= 6, 	 &
+    &		icond_np	= 7
+    integer, parameter :: num_conductivity_channels = 7
     logical, dimension(num_conductivity_channels), parameter :: cond_use_all =  &
-    & [ .TRUE., .TRUE., .TRUE., .TRUE., .TRUE. ]
+    & [ .TRUE., .TRUE., .TRUE., .TRUE., .TRUE., .TRUE., .TRUE.]
     logical, dimension(num_conductivity_channels), parameter :: cond_use_only_conduction = &
-    & [ .TRUE., .TRUE., .TRUE., .TRUE., .FALSE. ]
+    & [ .TRUE., .TRUE., .TRUE., .TRUE., .FALSE., .TRUE., .TRUE. ]
     logical, dimension(num_conductivity_channels), parameter :: cond_use_only_kap = &
-    & [ .FALSE., .FALSE., .FALSE., .FALSE., .TRUE. ]
+    & [ .FALSE., .FALSE., .FALSE., .FALSE., .TRUE., .FALSE., .FALSE.]
     logical, dimension(num_conductivity_channels), parameter :: cond_exclude_sf = &
-    & [ .TRUE., .TRUE., .TRUE., .FALSE., .TRUE. ]
+    & [ .TRUE., .TRUE., .TRUE., .FALSE., .TRUE., .TRUE., .TRUE. ]
 
     ! flag to control which ee scattering fmla. is used. 
     ! default: Shternin & Yakovlev (2006)
@@ -37,6 +39,10 @@ module conductivity_def
         real(dp) :: eQ
         real(dp) :: sf
         real(dp) :: kap
+        real(dp) :: nQ
+        real(dp) :: np
+        real(dp) :: electron_total
+        real(dp) :: neutron_total
     end type conductivity_components
 
 end module conductivity_def

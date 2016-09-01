@@ -23,10 +23,11 @@ program test_cond
     call dStar_eos_startup('../../data')
     eos_handle = alloc_dStar_eos_handle(ierr)
     
-    write (output_unit, '(5a6,8a14,/,5("======"),8("=============="))') &
+    write (output_unit, '(5a6,10a14,/,5("======"),10("=============="))') &
         & 'lg(r)','lg(T)','<Z>','<A>','Y_n', &
         & 'Gamma','eta_e', &
-        & 'K_tot','K_ee','K_ei','K_eQ','K_sF','kappa_rad'
+        & 'K_tot','K_ee','K_ei','K_eQ','K_sF','kappa_rad', &
+        & 'K_nQ', 'K_n,phn'
         
     do i = 2,14
         N = [1,aa(i)-zz(i)]
@@ -67,10 +68,11 @@ program test_cond
             Gamma = res(i_Gamma)
             mu_e = res(i_mu_e)
             call get_thermal_conductivity(rho,T,chi,Gamma,eta,mu_e,ionic,kappa)
-            write (output_unit, '(5f6.2,8es14.6)') &
+            write (output_unit, '(5f6.2,10es14.6)') &
                 & lgr,lgT,ionic%Z,ionic%A,ionic%Yn, &
                 & Gamma,mu_e*mev_to_ergs/boltzmann/T, &
-                & kappa% total,kappa%ee,kappa%ei,kappa%eQ,kappa%sf,kappa% kap
+                & kappa% total,kappa%ee,kappa%ei,kappa%eQ,kappa%sf,kappa% kap, &
+                & kappa%nQ, kappa%np
         end do
     end subroutine do_one
 end program test_cond
