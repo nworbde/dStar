@@ -124,9 +124,15 @@ module NScool_def
         real(dp), pointer, dimension(:,:) :: tab_lnK    ! (4*n_tab, nz) coefficients for ln(Kcond)
         real(dp), pointer, dimension(:,:) :: tab_lnGamma  ! (4*n_tab, nz) coefficients for ln(plasma Gamma)
 
-        ! storage for the lightcurve at selected points
-        real(dp), pointer, dimension(:) :: t_monitor    ! (d, number_epochs)
-        real(dp), pointer, dimension(:) :: Teff_monitor ! (K, number_epochs)
+        ! storage for the lightcurve at selected points. arrays have dimension
+        ! (number_epochs)
+        !
+        ! time (d)
+        real(dp), pointer, dimension(:) :: t_monitor
+        ! effective temperature (K), observer frame
+        real(dp), pointer, dimension(:) :: Teff_monitor
+        ! emergent flux*(m_u/mdot) (MeV/u), local
+        real(dp), pointer, dimension(:) :: Qb_monitor
 
         logical :: in_use
         

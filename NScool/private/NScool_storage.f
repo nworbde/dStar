@@ -189,6 +189,8 @@ contains
             if (failed('t_monitor')) exit
             call do1epoch(s% Teff_monitor)
             if (failed('Teff_monitor')) exit
+            call do1epoch(s% Qb_monitor)
+            if (failed('Qb_monitor')) exit
             return
         end do
         ierr = -1

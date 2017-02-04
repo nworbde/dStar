@@ -49,7 +49,7 @@
     core_mass = 1.6     ! Msun
     core_radius = 11.0    ! km
     
-    lgPcrust_bot = 32.5 ! cgs
+    lgPcrust_bot = 32.5 ! cgs ... 32.8 is better (Will Newton)
     lgPcrust_top = 27.0 ! cgs; this is also used to set the bottom of the atmosphere for bc09
     
     target_resolution_lnP = 0.1

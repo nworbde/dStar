@@ -48,7 +48,7 @@ contains
     end subroutine NScool_create_model
 
     subroutine NScool_evolve_model(id, ierr)
-        use constants_def, only : julian_day
+        use constants_def, only : julian_day, amu, ergs_to_mev
         use NScool_def, only : NScool_info, get_NScool_info_ptr
         use NScool_evolve, only: do_integrate_crust
         integer, intent(in) :: id
@@ -74,6 +74,12 @@ contains
             call do_integrate_crust(id,ierr)
             s% t_monitor(i_epoch) = s% tsec / julian_day
             s% Teff_monitor(i_epoch) = s% Teff * s% ePhi(1)
+            ! need to check about the frame in which Mdot is defined
+            if (s% Mdot > 0.0) then
+                s% Qb_monitor(i_epoch) = s% Lsurf*amu/s% Mdot*ergs_to_mev
+            else
+                s% Qb_monitor(i_epoch) = 0.0
+            end if
         end do
     end subroutine NScool_evolve_model
 

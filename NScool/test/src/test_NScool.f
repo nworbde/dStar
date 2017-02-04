@@ -49,7 +49,9 @@ program test_NScool
     ! (end of the epochs that were specified in the inlist).
     call get_NScool_info_ptr(NScool_id,s,ierr)    
     do i = 1, s% number_epochs
-        write(output_unit,'(2(a," = ",es11.4))') 't/d',s% t_monitor(i),'; obs. Teff/K', s% Teff_monitor(i)
+        write(output_unit,'(3(a," = ",es11.4))')  &
+        &   't/d',s% t_monitor(i),'; obs. Teff/K', s% Teff_monitor(i), &
+        & '; local Qb', s% Qb_monitor(i)
     end do
     
     call NScool_shutdown    
