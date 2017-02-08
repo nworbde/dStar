@@ -1,8 +1,8 @@
 include $(MESA_DIR)/utils/makefile_header
 
-DSTAR_LIB_DIR = /Users/edward/Projects/dStar/lib
+DSTAR_LIB_DIR = /path/to/dStar/lib
 LOAD_OTHER = -L$(DSTAR_LIB_DIR) -lnscool -ldstar_crust -lsuperfluid -lconductivity -lneutrino -ldstar_eos -ldstar_atm -lnucchem -lconstants -L$(MESA_LIB_DIR) $(LOAD_MESA_NUMERICS)
-DSTAR_INC = /Users/edward/Projects/dStar/include
+DSTAR_INC = /path/to/dStar/include
 
 EXEC = run_dStar
 EXEC_OBJS = run.o
