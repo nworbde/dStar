@@ -19,7 +19,7 @@ This directory contains an example run of an accretion outburst/quiescent coolin
     
 4.  Build the code: `./mk`
     
-5.  And run it: `./run_dStar -D<path to dStar> -I<inlist name> -Q<shallow heating in Mev> -M<core mass in solar units> -R<core radius in solar units>`
+5.  And run it: `./run_dStar -D<path to dStar> -I<inlist name> -Q<shallow heating in Mev> -M<core mass in solar units> -R<core radius in km>`
     The command now takes five optional arguments, the path to the root directory of dStar and the name of the inlist file, as well as the amount of shallow heating and the core mass and radius. The default values are
     
         default_dStar_dir = '../../dStar'
