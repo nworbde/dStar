@@ -76,7 +76,7 @@ contains
             s% Teff_monitor(i_epoch) = s% Teff * s% ePhi(1)
             ! need to check about the frame in which Mdot is defined
             if (s% Mdot > 0.0) then
-                s% Qb_monitor(i_epoch) = s% Lsurf*amu/s% Mdot*ergs_to_mev
+                s% Qb_monitor(i_epoch) = s% Lsurf/s% Mdot * amu*ergs_to_mev
             else
                 s% Qb_monitor(i_epoch) = 0.0
             end if
