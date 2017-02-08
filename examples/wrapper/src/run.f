@@ -7,9 +7,9 @@ program run_dStar
     
     character(len=*), parameter :: default_dStar_dir = '../../dStar'
     character(len=*), parameter :: default_inlist_file = 'inlist'
-    character(len=*), parameter :: default_Q_heating_shallow = '0.0' ! MeV
-    character(len=*), parameter :: default_core_mass = '1.6' ! Msun
-    character(len=*), parameter :: default_core_radius = '11.0' ! km
+    real(dp), parameter :: default_Q_heating_shallow = 0.0 ! MeV
+    real(dp), parameter :: default_core_mass = 1.6 ! Msun
+    real(dp), parameter :: default_core_radius = 11.0 ! km
     
     character(len=64) :: my_dStar_dir, inlist, Q_heating_shallow_arg, &
         & core_mass_arg, core_radius_arg
@@ -54,20 +54,25 @@ program run_dStar
     if (len_trim(inlist)==0) inlist = default_inlist_file
 
     Q_heating_shallow_arg = trim(get_command_arg('Qheating'))
-    if (len_trim(Q_heating_shallow_arg)==0)  &
-        & Q_heating_shallow_arg = default_Q_heating_shallow
-    read(Q_heating_shallow_arg,*) Q_heating_shallow
+    if (len_trim(Q_heating_shallow_arg) > 0)  then
+        read(Q_heating_shallow_arg,*) Q_heating_shallow
+    else
+        Q_heating_shallow = default_Q_heating_shallow
+    end if
 
     core_mass_arg = trim(get_command_arg('Mcore'))
-    if (len_trim(core_mass_arg)==0)  &
-        & core_mass_arg = default_core_mass
-    read(core_mass_arg,*) core_mass
-    print *, 'core mass = ',core_mass
-
+    if (len_trim(core_mass_arg) > 0)  then
+        read(core_mass_arg,*) core_mass
+    else
+        core_mass = default_core_mass
+    end if
+    
     core_radius_arg = trim(get_command_arg('Rcore'))
-    if (len_trim(core_radius_arg)==0)  &
-        & core_radius_arg = default_core_radius
-    read(core_radius_arg,*) core_radius
+    if (len_trim(core_radius_arg) > 0)  then
+        read(core_radius_arg,*) core_radius
+    else
+        core_radius = default_core_radius
+    end if
     
     call NScool_init(my_dStar_dir, ierr)
     call check_okay('NScool_init',ierr)
@@ -82,7 +87,7 @@ program run_dStar
     call check_okay('get_NScool_info_ptr',ierr)
     s% Q_heating_shallow = Q_heating_shallow
     s% core_mass = core_mass
-    s$ core_radius = core_radius
+    s% core_radius = core_radius
     s% Mcore = core_mass
     s% Rcore = core_radius
     
