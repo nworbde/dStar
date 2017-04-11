@@ -11,7 +11,7 @@ function check_okay {
 }
 
 function fetch_and_verify {
-    # if file exists and is verified, then no need to fetch from repository
+    # if file exists and is verified, then no need to unpack
     need_to_fetch=1
     lib=$1
     chks=$2
@@ -29,7 +29,7 @@ function fetch_and_verify {
     fi
 
     if [ $need_to_fetch -eq 1 ]; then        
-        echo "fetching $lib from $url..."
+        echo "unpacking $lib from $url..."
         get_datafile $lib $url
         echo "verifying $lib..."
         verify_datafile $lib $chks
@@ -38,12 +38,12 @@ function fetch_and_verify {
 }
 
 function get_datafile {
-    zip='.bz2'
+    zip='.xz'
     db=$1
     tmpfile="tmp_$db"
     url=$2
-    unzip=`which bunzip2`
-    curl -fS $url | $unzip > $tmpfile
+    unzip=`which xzcat`
+    $unzip $url > $tmpfile
     check_okay
     mv -i $tmpfile $db
     check_okay
@@ -76,17 +76,14 @@ function verify_datafile {
 
 LIB=helm_table.dat
 MD5=29f10f751dfd9a184235cfecf6114bc7
-URL=https://dl.dropboxusercontent.com/u/52649885/dStar/helm_table.dat.bz2
+LIB_ZIP=helm_table.dat.xz
 
 echo
 echo "Installing Helm EOS table"
 echo "-------------------------------------------------"
 
-echo "establishing data directory..."
-mkdir -p data
-check_okay
 cd data
-fetch_and_verify $LIB $MD5 $URL
+fetch_and_verify $LIB $MD5 $LIB_ZIP
 check_okay
 
 echo "done"

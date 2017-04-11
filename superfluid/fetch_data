@@ -70,15 +70,15 @@ chksums=(   749634fe8af4e9717c9265fd9d5933cf \
             a197991ea1c060f61a909b49bc2ef231 \
             fd432bb9821ab2d4e951c33a3a7e52ae )
 
-URL=https://dl.dropboxusercontent.com/u/52649885/dStar/Tc_data.tar.bz2
+archive="Tc_data.txz"
 
 echo
 echo "Installing tables of superfluid critical temperatures"
 echo "-----------------------------------------------------"
 
-echo "establishing data directory..."
-mkdir -p data
-check_okay
+# echo "establishing data directory..."
+# mkdir -p data
+# check_okay
 cd data
 
 chkr=""
@@ -115,19 +115,16 @@ for i in `seq 20`; do
 done
 
 if [ $need_to_fetch -eq 1 ]; then
-    echo "fetching Tc_data from $URL..."
-    curl -fS $URL > Tc_data.tar.bz2
-    check_okay
-    tar -xf Tc_data.tar.bz2
-    check_okay
-    cd Tc_data
+    echo "unpacking Tc_data..."
+    tar -xf $archive
     check_okay
     echo "verifying datafiles..."
     for i in `seq 20`; do
         indx=$((i-1))
         printf "   ${sf_datafiles[$indx]}: "
+        df="Tc_data/${sf_datafiles[$indx]}"
         if [ $chkr ]; then
-            verify_datafile ${sf_datafiles[$indx]} ${chksums[$indx]} $chkr
+            verify_datafile $df ${chksums[$indx]} $chkr
             check_okay
             echo "passed"
         else
