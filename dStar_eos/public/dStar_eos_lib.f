@@ -101,7 +101,7 @@ module dStar_eos_lib
 		real(dp) :: k	! fm
 		real(dp) :: n	! cm**-3
 		n = rho*ionic%Yn/amu/(1.0-chi)
-		k = (0.5*threepisquare*n)**onethird / cm_to_fm
+		k = (threepisquare*n)**onethird / cm_to_fm
 	end function neutron_wavenumber
 	
 	subroutine eval_crust_eos( &
