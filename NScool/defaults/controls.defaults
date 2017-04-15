@@ -64,8 +64,8 @@
     lgP_min_heating_shallow = 27.0
     lgP_max_heating_shallow = 28.0
     Q_heating_shallow = 3.0! MeV
-    
-    
+    use_other_set_heating = .FALSE.
+
 !   selection of superfluid gaps, courtesy Dany Page
 !
 !       attr    reference notes

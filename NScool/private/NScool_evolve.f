@@ -552,6 +552,11 @@ contains
             call do_one
         end if
         
+        ! now hook in user-supplied routine
+        if (s% use_other_set_heating) then
+            call s% other_set_heating(s% id, ierr)
+        end if
+        
     contains
         subroutine do_one()
             real(dp) :: M_norm

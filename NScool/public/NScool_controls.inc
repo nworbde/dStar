@@ -48,7 +48,10 @@
     logical  :: turn_on_extra_heating
     real(dp) :: lgP_min_heating_shallow
     real(dp) :: lgP_max_heating_shallow
-    real(dp) :: Q_heating_shallow ! MeV
+    real(dp) :: Q_heating_shallow ! MeV    
+    ! user-supplied routine to compute heating; this will overwrite the 
+    ! built-in routines, but both may be used together
+    logical :: use_other_set_heating
     
     ! controls for the superfluidity
     logical :: use_other_sf_critical_temperatures

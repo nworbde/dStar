@@ -16,6 +16,10 @@ module NScool_def
         integer, intent(in) :: id
         integer, intent(out) :: ierr
     end subroutine set_Qimp_interface
+    subroutine set_heating_interface(id,ierr)
+        integer, intent(in) :: id
+        integer, intent(out) :: ierr
+    end subroutine set_heating_interface
     subroutine set_sf_interface(id,kp,kn,Tc)
         use constants_def
         use superfluid_def
@@ -138,7 +142,10 @@ module NScool_def
         
         procedure(set_Qimp_interface), pointer, nopass ::  &
         & other_set_Qimp => null()
-            
+        
+        procedure(set_heating_interface), pointer, nopass ::  &
+        & other_set_heating => null()
+        
         procedure(set_sf_interface), pointer, nopass ::  &
         & other_sf_get_results => null()
         
@@ -146,7 +153,6 @@ module NScool_def
 
     integer, parameter :: max_NScool_handles = 10
     type(NScool_info), dimension(max_NScool_handles), target :: NScool_handles
-
 
 contains
     subroutine get_NScool_info_ptr(id,s,ierr)
