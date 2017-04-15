@@ -1,0 +1,72 @@
+&controls
+    
+    ! controls for output
+    write_interval_for_terminal = 1
+    write_interval_for_terminal_header = 10
+    write_interval_for_history = 1
+    write_interval_for_profile = 1
+    starting_number_for_profile = 1
+    
+    output_directory = 'LOGS'
+    
+    ! controls for the solver
+    maximum_number_of_models = 10000
+    maximum_timestep = 0.0
+        ! implies that max = tend-t
+    integration_tolerance = 1.0d-4
+    ! limits on temperature: if a zone goes outside these bounds, reduce stepsize
+    min_lg_temperature_integration = 7.0
+    max_lg_temperature_integration = 9.5
+    ! spatial resolution
+    target_resolution_lnP = 0.05
+
+    ! macroscopic NS parameters
+    fix_core_temperature = .TRUE.
+    core_temperature = 3.25e7
+    fix_atmosphere_temperature_when_accreting = .FALSE.
+    atmosphere_temperature_when_accreting = 2.4d8
+    
+    ! integration epochs
+    number_epochs = 12
+    epoch_Mdots = 2.0e17,11*0.0
+    epoch_boundaries = -912.0,0.0,30.0,56.0,100.0,180.0,300.0,560.0,1000.0,1800.0,3000.0,5600.0,10000.0
+    
+    ! other routines
+    use_other_set_Qimp = .TRUE.
+    use_other_set_heating = .TRUE.
+    ! extra controls for hook routines
+    ! defined here
+    ! 1. extra heating from pion -> neutrino
+    ! 2. Q in the pasta
+    ! 3.-4. density limits for extra heating
+    extra_real_controls = 4.0,20.0,1.0e12,1.0e13
+    
+    ! core properties
+    core_mass = 1.6     ! Msun
+    core_radius = 10.42    ! km
+    
+    ! crust boundaries (pressure)
+    eos_pasta_transition_in_fm3 = 0.05
+    lgPcrust_bot = 33.0 ! cgs
+    lgPcrust_top = 26.0 ! cgs
+    
+    ! heating
+    turn_on_extra_heating = .TRUE.
+    Q_heating_shallow = 1.0
+    lgP_min_heating_shallow = 27.0
+    lgP_max_heating_shallow = 28.0
+    
+    ! shell Urca cooling
+    turn_on_shell_Urca = .FALSE.
+    
+    which_neutron_1S0_gap = 'gipsf08'
+    
+    ! atmosphere composition
+    lg_atm_light_element_column = 9.0
+    
+    ! impurities
+    fix_Qimp = .TRUE.
+    Qimp = 1.0
+    
+    turn_on_shell_Urca = .FALSE.
+/
