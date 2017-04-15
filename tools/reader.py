@@ -1,6 +1,4 @@
-from __future__ import print_function, division
 import numpy as np
-from string import translate, maketrans
 
 class dStarData:
     """
@@ -8,9 +6,9 @@ class dStarData:
     The class is initialized with a dictionary of values.
     """
     def __init__(self,d):
-        trans = maketrans('( ','__')
+        trans = str.maketrans('( ','__',').&=-+*%^#@!,/?<>;:~[]')
         for k, v in d.items():
-            k = translate(k,trans,').&=-+*%^#@!,/?<>;:~[]')
+            k = k.translate(trans)
             setattr(self,k,v)
 
 class dStarReader:
@@ -70,7 +68,7 @@ class dStarReader:
                 lno+=1
                 if lno == meta_line:
                     self._meta_head = line.split()
-                    self._meta_data = np.fromstring(f.next(),sep=' ')
+                    self._meta_data = np.fromstring(f.readline(),sep=' ')
                     break
 
         # stuff the meta data into a dictionary
@@ -82,6 +80,11 @@ class dStarReader:
         
         # now read in main section of data and convert to a recarry view
         self._arr = np.genfromtxt(file,skip_header=header_lines,names=True,dtype=None).view(np.recarray)
+        # only keep modes where t[i] - t[i-1] > 0
+        self._kept_models = [0]
+        for i in range(1,self._arr.shape[0]):
+            if self._arr.time[i] > self._arr.time[self._kept_models[-1]]:
+                self._kept_models.append(i)
 
     @property
     def header(self):
@@ -118,6 +121,10 @@ class dStarReader:
         number of lines in the file
         """
         return self._arr.shape[0]
+    
+    @property
+    def increasing(self):
+        return self._kept_models
 
 class dStarCrustReader:
     """
