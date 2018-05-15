@@ -4,6 +4,9 @@ A collection of modules for computing neutron star structure and evolution.
 
 ## What's new
 
+### The code has been updated to use `mesa` version 10398.
+This required (finally) getting rid of tabs, explicity specifying `dp` in a few places, and changing `INTENT()` on a few interfaces. 
+
 ### A tutorial on crust cooling
 Look in the `examples/INT-16-2b-demo` directory for a demonstration of using this code that was presented in a talk given at the INT workshop 16-2b, "Phases of Dense Matter".  See the `README.md` file in that directory for instructions.
 
@@ -43,7 +46,7 @@ Check out `tools/reader.py`. This contains a python class for reading the output
   * [MESA](http://mesa.sourceforge.net): `dStar` makes use of the `MESA` numerical, utility, and equation of state libraries.
   * [MESA SDK](http://www.astro.wisc.edu/~townsend/static.php?ref=mesasdk): the compilation of both `MESA` and `dStar` has been tested using a specific build environment.
 
-This version of `dStar` has been tested with `MESA` version 7503 and the 2014 December 12 (or later) version of the `MESA SDK`.
+This version of `dStar` has been tested with `MESA` version 10398 and the 2018 January 27 (or later) version of the `MESA SDK`.
 
 ## How to install
   1. Follow the instructions on the MESA website to build a working version of `MESA`, and ensure that the environment variable `MESA_DIR` points to that directory.
@@ -52,7 +55,7 @@ This version of `dStar` has been tested with `MESA` version 7503 and the 2014 De
 ### What the installation does
 For each module, the install script
 
-  1. Downloads, verifies, and installs to the `data` directory the necessary data files
+  1. Downloads, verifies, and installs to the `data` directory the necessary data files.  Note that the `md5` utility is used first for checking data integrity. This may be an issue on linux systems which prefer `md5sum`. If so, edit the `fetch_data` scripts.
   2. Compiles each module as a library.
   3. Performs a test of each module and compares the output against a sample.  A deviation from allowed tolerances results in a install failure.
   4. Installs the library and module files into the top-level `install` and `lib` directories.
