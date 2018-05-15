@@ -3,10 +3,10 @@ module conductivity_def
 
     ! used for mask array to control which components are included
     integer, parameter :: &
-    &		icond_ee	= 1,	 &
-    &		icond_ei	= 2,	 &
-    &		icond_eQ	= 3,	 &
-    &		icond_sf	= 4,     &
+    &       icond_ee    = 1,     &
+    &       icond_ei    = 2,     &
+    &       icond_eQ    = 3,     &
+    &       icond_sf    = 4,     &
     &       icond_kap   = 5
     integer, parameter :: num_conductivity_channels = 5
     logical, dimension(num_conductivity_channels), parameter :: cond_use_all =  &

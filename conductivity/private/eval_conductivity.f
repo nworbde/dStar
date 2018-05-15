@@ -16,14 +16,14 @@ subroutine conductivity(rho,T,chi,Gamma,eta,mu_e,ionic,kappa,which_ee,which_eQ,K
     ne = rho/amu*ionic%Ye
     kF = (threepisquare*ne)**onethird
     xF = hbar*kF/Melectron/clight
-    eF = sqrt(1.0+xF**2)
+    eF = sqrt(1.0_dp+xF**2)
     Gamma_e = Gamma/ionic%Z53
     kappa_pre = onethird*pi**2*boltzmann**2*T*ne/Melectron/eF
     
     call clear_kappa
-    nu_c = 0.0
-    nu = 0.0
-    K_opacity = 0.0
+    nu_c = 0.0_dp
+    nu = 0.0_dp
+    K_opacity = 0.0_dp
     if (K_components(icond_ee)) then 
         if (which_ee == icond_sy06) then
             nu_c = ee_SY06(ne,T)
@@ -45,32 +45,32 @@ subroutine conductivity(rho,T,chi,Gamma,eta,mu_e,ionic,kappa,which_ee,which_eQ,K
            nu_c = eQ_page(kF,T,ionic%Ye,ionic%Z,ionic%Z2,ionic%A,ionic%Q)
        end if
         nu = nu + nu_c
-        if (ionic%Q > 1.0e-8) then
+        if (ionic%Q > 1.0e-8_dp) then
             kappa% eQ = kappa_pre/nu_c
         else
-            kappa% eQ = -1.0
+            kappa% eQ = -1.0_dp
         end if
     end if
     if (K_components(icond_sf) .and. ionic% Yn > 0.0) then
-        nn = rho*ionic% Yn/(1.0-chi)/Mneutron / density_n
-        nion = (1.0-ionic%Yn)*rho/Mneutron/ionic% A /density_n
+        nn = rho*ionic% Yn/(1.0_dp-chi)/Mneutron / density_n
+        nion = (1.0_dp-ionic%Yn)*rho/Mneutron/ionic% A /density_n
         kappa% sf =  sPh(nn,nion,T,ionic)
     end if
     if (K_components(icond_kap)) then
         kappa% kap = Rosseland_kappa(rho,T,mu_e,ionic)
-        K_opacity = 4.0*onethird*arad*clight*T**3/rho/kappa% kap
+        K_opacity = 4.0_dp*onethird*arad*clight*T**3/rho/kappa% kap
     end if
     kappa% total = kappa% sf + K_opacity
-    if (nu > 0.0) kappa% total = kappa% total + kappa_pre/nu
+    if (nu > 0.0_dp) kappa% total = kappa% total + kappa_pre/nu
     
     contains
     subroutine clear_kappa()
-        kappa% total = 0.0
-        kappa% ee  = 0.0
-        kappa% ei = 0.0
-        kappa% eQ = 0.0
-        kappa% sf = 0.0    
-        kappa% kap = 0.0 
+        kappa% total = 0.0_dp
+        kappa% ee  = 0.0_dp
+        kappa% ei = 0.0_dp
+        kappa% eQ = 0.0_dp
+        kappa% sf = 0.0_dp
+        kappa% kap = 0.0_dp
     end subroutine clear_kappa
 end subroutine conductivity
 
@@ -269,9 +269,9 @@ function eQ_page(kF,T,Ye,Z,Z2,A,Q) result(nu)
    fac = 4.0*onethird*clight*finestructure**2/electron_compton/pi
    
    dZ2 = Q/A
-	kF2 = kF**2
-	x = electron_compton*kF
-	gamma = sqrt(1.0+x**2)
+    kF2 = kF**2
+    x = electron_compton*kF
+    gamma = sqrt(1.0+x**2)
    v = x/gamma
    qs = 0.048196/sqrt(v)
    L = log(1.0/qs)-0.5*(1+v**2)
@@ -341,14 +341,14 @@ function electron_scattering(eta_e,theta,Ye) result(kTh)
     real(dp) :: xi, xi2, theta2
     real(dp) :: t1, t2, t3, Gbar
     
-    xi	= exp(0.8168*eta_e - 0.05522*eta_e**2)
-    xi2	= xi**2
+    xi  = exp(0.8168*eta_e - 0.05522*eta_e**2)
+    xi2 = xi**2
     theta2 = theta**2
-    t1	= 1.129 + 0.2965*xi - 0.005594*xi2
-    t2	= 11.47 + 0.3570*xi + 0.1078*xi2
-    t3	= -3.249 + 0.1678*xi - 0.04706*xi2
+    t1  = 1.129 + 0.2965*xi - 0.005594*xi2
+    t2  = 11.47 + 0.3570*xi + 0.1078*xi2
+    t3  = -3.249 + 0.1678*xi - 0.04706*xi2
   
-    Gbar	=  t1 + t2*theta + t3*theta2
+    Gbar    =  t1 + t2*theta + t3*theta2
     kTh = 8.0*onethird*pi*avogadro*(electroncharge**2/Melectron/clight2)**2*Ye/Gbar
 end function electron_scattering
 
