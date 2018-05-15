@@ -4,7 +4,7 @@ module NScool_evolve
     integer, parameter :: i_id = 1
     integer, parameter :: i_num_terminal_writes = 2
     integer, parameter :: num_deriv_ipar = 2
-    integer, parameter :: num_deriv_rpar = 1    ! not used
+    integer, parameter :: num_deriv_rpar = 0
     
 contains
     subroutine do_integrate_crust(NScool_id,ierr)
@@ -25,8 +25,6 @@ contains
         integer :: lwork, liwork, lrd, lid
         integer :: imas,mumas,mlmas
         real(dp), dimension(1) :: rtol, atol
-        real(dp), dimension(num_deriv_rpar), target :: rpar_vals
-        integer, dimension(num_deriv_ipar), target :: ipar_vals
         real(dp), pointer, dimension(:) :: rpar
         integer, pointer, dimension(:) :: ipar
         real(dp), pointer, dimension(:) :: rpar_decsol, work
@@ -89,8 +87,7 @@ contains
         iwork = 0
         work = 0.0
 
-        ipar => ipar_vals
-        rpar => rpar_vals
+        allocate(ipar(num_deriv_ipar),rpar(num_deriv_rpar))
 
         ipar(i_id) = NScool_id
         ipar(i_num_terminal_writes) = 0
