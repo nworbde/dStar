@@ -82,11 +82,11 @@ echo "-----------------------------------------------------"
 cd data
 
 chkr=""
-if [ `which md5sum` ]; then
-    chkr=`which md5sum`
-    echo "using $chkr"
-elif [ `which md5` ]; then
+if [ `which md5` ]; then
     chkr=`which md5`
+    echo "using $chkr"
+elif [ `which md5sum` ]; then
+    chkr=`which md5sum`
     echo "using $chkr"
 else
     echo "no md5 or md5sum available, skipping verification"
