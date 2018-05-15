@@ -11,7 +11,8 @@ module NScool_history
        & = '('//scival//',4'//fltval//','//scival//')'
    character(len=*), parameter :: history_count_fmt = '(7'//intval//')'
    character(len=*), parameter :: history_title_fmt = '(7a15)'
-   character(len=*), parameter :: history_val_fmt = '('//intval//scival//',5'//fltval//')'
+   character(len=*), parameter :: history_val_fmt = &
+       & '('//intval//','//scival//',5'//fltval//')'
    character(len=header_col_width), dimension(num_header_cols) :: header_cols = [character(len=header_col_width) ::  &
       & 'gravity', 'total_mass', 'total_radius', &
       & 'core_mass', 'core_radius', 'core_temp' ]
@@ -75,8 +76,9 @@ module NScool_history
          call free_iounit(iounit)
          return
       end if
-      write(iounit,history_val_fmt) s% model, s% tsec/julian_day, safelog10(s% Mdot), log10(s% Teff), log10(s% Lsurf),  &
-      & log10(Lnu), safelog10(Lnuc)
+      write(iounit,history_val_fmt) s% model, s% tsec/julian_day,  &
+          & safelog10(s% Mdot), log10(s% Teff), log10(s% Lsurf), &
+          & log10(Lnu), safelog10(Lnuc)
       close(iounit)
       call free_iounit(iounit)
   contains

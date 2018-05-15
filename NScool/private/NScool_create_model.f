@@ -68,18 +68,18 @@ contains
         write (error_unit,*) 'initializing microphysics...'
         call nucchem_init(trim(dStar_data_dir),ierr)
         if (failure('nucchem_init')) return
-	
+    
         call sf_startup(trim(dStar_data_dir),ierr)
         if (failure('sf_startup')) return
-	
+    
         call sf_load_gaps(trim(s% which_proton_1S0_gap), trim(s% which_neutron_1S0_gap), &
             & trim(s% which_neutron_3P2_gap), ierr)
         if (failure('sf_load_gaps')) return
         sf_scale(1:max_number_sf_types) = s% scale_sf_critical_temperatures
-	
+    
         call dStar_eos_startup(trim(dStar_data_dir))
         if (failure('dStar_eos_startup')) return
-	
+    
         s% eos_handle = alloc_dStar_eos_handle(ierr)
         if (failure('alloc_dStar_eos_handle')) return
     
@@ -103,7 +103,7 @@ contains
         call dStar_crust_load_table('hz90',s% eos_handle, s% Tcore, ierr)
         if (failure('dStar_crust_load_table')) return
 
-    	call dStar_atm_startup(trim(dStar_data_dir),ierr)
+        call dStar_atm_startup(trim(dStar_data_dir),ierr)
         if (failure('dStar_atm_startup')) return
 
         write(error_unit,*) 'integrating TOV equations...'
@@ -168,7 +168,7 @@ contains
 
         Plight = s% grav * 10.0_dp**s% lg_atm_light_element_column
         
-    	call dStar_atm_load_table(s% atm_model, s% grav, Plight, s% Psurf, ierr)
+        call dStar_atm_load_table(s% atm_model, s% grav, Plight, s% Psurf, ierr)
         if (failure('dStar_atm_load_table')) return
 
     contains
@@ -278,11 +278,11 @@ contains
             lnGamma_val(1:4,1:s% n_tab) => s% tab_lnGamma(1:4*s% n_tab, iz)
             lnEnu_val(1:4,1:s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, iz)
             chi = nuclear_volume_fraction(s% rho(iz),s% ionic(iz), &
-            &	default_nuclear_radius)
-			kn = neutron_wavenumber(s% rho(iz),s% ionic(iz),chi)
-			kp = 0.0_dp
+            &   default_nuclear_radius)
+            kn = neutron_wavenumber(s% rho(iz),s% ionic(iz),chi)
+            kp = 0.0_dp
             if (.not. s% use_other_sf_critical_temperatures) then
-				call sf_get_results(kp,kn,Tc)
+                call sf_get_results(kp,kn,Tc)
             else
                 call s% other_sf_get_results(s% id,kp,kn,Tc)
             end if
@@ -290,8 +290,8 @@ contains
                 Ttab = exp(s% tab_lnT(itemp))
                 call eval_crust_eos( &
                 &   s% eos_handle, s% rho(iz), Ttab, s% ionic(iz),  &
-                &	s% ncharged, s% charged_ids, s% Yion(1:s% ncharged,iz), &
-                &	Tc, eos_results, eos_phase, chi, components)
+                &   s% ncharged, s% charged_ids, s% Yion(1:s% ncharged,iz), &
+                &   Tc, eos_results, eos_phase, chi, components)
                 lnCp_val(1,itemp) = log(eos_results(i_Cp))
                 lnGamma_val(1,itemp) = log(eos_results(i_Gamma))
 !                 if (is_bad_num(lnCp_val(1,itemp)) .and. itemp == 40) then
@@ -309,9 +309,9 @@ contains
                 if (iz == 1 .and. itemp == 1) then
                     s% rho_bar(iz) = s% rho(iz)*(s% P_bar(iz)/s% P(iz))**(1.0/eos_results(i_chiRho))
                 end if
-				                
+                                
                 call get_crust_neutrino_emissivity(s% rho(iz), Ttab,  &
-                &	s% ionic(iz), chi, Tc(neutron_1S0),  &
+                &   s% ionic(iz), chi, Tc(neutron_1S0),  &
                 &   eps_nu, nu_channels)
                 lnEnu_val(1,itemp) = log(eps_nu% total/s% rho(iz))
                 
@@ -346,10 +346,10 @@ contains
             lnKcond_val(1:4,1:s% n_tab) => s% tab_lnK(1:4*s% n_tab, iz)
             do itemp = 1, s% n_tab
                 Ttab = exp(s% tab_lnT(itemp))
-				chi = nuclear_volume_fraction(s% rho_bar(iz),s% ionic_bar(iz),&
-				&	default_nuclear_radius)
-				kn = neutron_wavenumber(s% rho_bar(iz), s% ionic_bar(iz),chi)
-				kp = 0.0_dp
+                chi = nuclear_volume_fraction(s% rho_bar(iz),s% ionic_bar(iz),&
+                &   default_nuclear_radius)
+                kn = neutron_wavenumber(s% rho_bar(iz), s% ionic_bar(iz),chi)
+                kp = 0.0_dp
                 if (.not. s% use_other_sf_critical_temperatures) then
                     call sf_get_results(kp,kn,Tc)
                 else
@@ -357,14 +357,14 @@ contains
                 end if
                 call eval_crust_eos( &
                 &   s% eos_handle, s% rho_bar(iz), Ttab, s% ionic_bar(iz),  &
-                &	s% ncharged, s% charged_ids, &
-                &	s% Yion_bar(1:s% ncharged,iz), Tc, eos_results,  &
-                &	eos_phase, chi)
+                &   s% ncharged, s% charged_ids, &
+                &   s% Yion_bar(1:s% ncharged,iz), Tc, eos_results,  &
+                &   eos_phase, chi)
                 if (itemp == 1)  &
-                &	delP(iz) = abs(1.0 - exp(eos_results(i_lnP))/s% P_bar(iz))
+                &   delP(iz) = abs(1.0 - exp(eos_results(i_lnP))/s% P_bar(iz))
                                 
                 call get_thermal_conductivity(s% rho_bar(iz), Ttab, chi, &
-                &	eos_results(i_Gamma), eos_results(i_Theta), &
+                &   eos_results(i_Gamma), eos_results(i_Theta), &
                 &   eos_results(i_mu_e), s% ionic_bar(iz), &
                 &   Kcomponents, use_pcy=s% use_pcy_for_ee_scattering, &
                 &   use_page=s% use_page_for_eQ_scattering, &

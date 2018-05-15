@@ -4,7 +4,7 @@ module NScool_evolve
     integer, parameter :: i_id = 1
     integer, parameter :: i_num_terminal_writes = 2
     integer, parameter :: num_deriv_ipar = 2
-    integer, parameter :: num_deriv_rpar = 0
+    integer, parameter :: num_deriv_rpar = 1    ! not used
     
 contains
     subroutine do_integrate_crust(NScool_id,ierr)
@@ -248,7 +248,7 @@ contains
         integer, intent(in) :: n, lrpar, lipar
         real(dp), intent(in) :: x, h
         real(dp), intent(inout) :: y(:) ! okay to edit y if necessary (e.g., replace negative values by zeros)
-        real(dp), intent(out) :: f(:) ! dy/dx
+        real(dp), intent(inout) :: f(:) ! dy/dx
         integer, intent(inout), pointer :: ipar(:) ! (lipar)
         real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
         integer, intent(out) :: ierr ! nonzero means retry with smaller timestep.
@@ -295,8 +295,8 @@ contains
         integer, intent(in) :: n, ldfy, lrpar, lipar
         real(dp), intent(in) :: x, h
         real(dp), intent(inout) :: y(:)
-        real(dp), intent(out) :: f(:) ! dy/dx
-        real(dp), intent(out) :: dfdy(:,:) !dfdy(ldfy, n)
+        real(dp), intent(inout) :: f(:) ! dy/dx
+        real(dp), intent(inout) :: dfdy(:,:) !dfdy(ldfy, n)
         ! dense: dfdy(i, j) = partial f(i) / partial y(j)
         ! banded: dfdy(i-j+mujac+1, j) = partial f(i) / partial y(j)
            ! uses rows 1 to mljac+mujac+1 of dfdy.
@@ -451,7 +451,7 @@ contains
         
         lgTb = s% lnT_bar(1)/ln10
             
-    	call dStar_atm_get_results(lgTb,lgTeff,dlgTeff,lgflux,dlgflux, ierr)
+        call dStar_atm_get_results(lgTb,lgTeff,dlgTeff,lgflux,dlgflux, ierr)
         if (ierr /= 0) return
         s% Lsurf = s% area(1) * 10.0**lgflux     ! emergent luminosity
         s% dlnLsdlnT = dlgflux
@@ -485,7 +485,7 @@ contains
             lnGamma_interp(1:4*s% n_tab) => s% tab_lnGamma(1:4*s% n_tab, iz)
             lnEnu_interp(1:4*s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, iz)
         
-    		call interp_value_and_slope(s% tab_lnT, s% n_tab, lnKcond_interp, s% lnT_bar(iz), s% lnK(iz), s% dlnK_dlnT(iz), ierr)
+            call interp_value_and_slope(s% tab_lnT, s% n_tab, lnKcond_interp, s% lnT_bar(iz), s% lnK(iz), s% dlnK_dlnT(iz), ierr)
             if (failure('lnK', iz)) return
 
             call interp_value_and_slope(s% tab_lnT, s% n_tab, lnCp_interp, s% lnT(iz), s% lnCp(iz), s% dlnCp_dlnT(iz), ierr)
