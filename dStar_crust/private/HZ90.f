@@ -3,7 +3,7 @@ module hz90
     use const_def, only: dp
     use nucchem_def, only: iso_name_length
     
-    real(dp), parameter :: transition_width = 0.02  
+    real(dp), parameter :: transition_width = 0.02
     
     integer, parameter :: HZ90_number = 19
     integer, parameter :: HZ08_number = 34
@@ -186,7 +186,7 @@ contains
         real(dp), dimension(:,:), intent(in) :: Yion
         integer, intent(in) :: ncharged
         integer, dimension(:), intent(in) :: charged_ids
-		real(dp), intent(in) :: Tref
+        real(dp), intent(in) :: Tref
         type(composition_info_type), dimension(:), intent(in) :: ionic
         real(dp), dimension(:), pointer :: rpar=>null()
         integer, dimension(:), pointer :: ipar=>null()
@@ -257,8 +257,8 @@ contains
        ! returns with ierr = 0 if was able to evaluate f and df/dx at x
        ! if df/dx not available, it is okay to set it to 0
        use constants_def
-	   use superfluid_def, only: max_number_sf_types
-	   use superfluid_lib, only: sf_get_results
+       use superfluid_def, only: max_number_sf_types
+       use superfluid_lib, only: sf_get_results
        use nucchem_def
        use dStar_eos_def
        use dStar_eos_lib
@@ -299,11 +299,11 @@ contains
        rho = 10.0**lgRho
        T = rpar(ncharged+13)
        chi = nuclear_volume_fraction(rho,ionic,default_nuclear_radius)
-	   kFp = 0.0_dp
-	   kFn = neutron_wavenumber(rho,ionic,chi)
-	   call sf_get_results(kFp,kFn,Tcs)
+       kFp = 0.0_dp
+       kFn = neutron_wavenumber(rho,ionic,chi)
+       call sf_get_results(kFp,kFn,Tcs)
        call eval_crust_eos(eos_handle,rho,T,ionic,ncharged, &
-       &	charged_ids,Yion,Tcs,res,phase,chi)
+       &    charged_ids,Yion,Tcs,res,phase,chi)
        Eint = res(i_lnE)
        
        lgPwant = rpar(ncharged+12)
