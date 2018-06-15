@@ -25,6 +25,9 @@
     logical :: fix_atmosphere_temperature_when_accreting
     real(dp) :: atmosphere_temperature_when_accreting
     
+    logical :: load_mass_accretion_rate
+    character(len=256) :: mass_accretion_rate_file
+    real(dp) :: Mdot_scale
     integer :: number_epochs
     real(dp), dimension(max_number_basic_epochs) :: basic_epoch_Mdots
     real(dp), dimension(0:max_number_basic_epochs) :: basic_epoch_boundaries

@@ -30,6 +30,9 @@
     fix_atmosphere_temperature_when_accreting = .TRUE.
     atmosphere_temperature_when_accreting = 1.0d8
     
+    load_mass_accretion_rate = .FALSE.
+    mass_accretion_rate_file = 'mdot'
+    Mdot_scale = 1.0_dp
     number_epochs = 1
     basic_epoch_Mdots = 0.0_dp ! g/s
     ! days

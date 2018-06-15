@@ -28,6 +28,8 @@ module NScool_ctrls_io
         make_inner_boundary_insulating, &
         fix_atmosphere_temperature_when_accreting, & 
         atmosphere_temperature_when_accreting, &
+        load_mass_accretion_rate, &
+        mass_accretion_rate_file, &
         number_epochs, &
         basic_epoch_Mdots, &
         basic_epoch_boundaries, &
@@ -173,15 +175,6 @@ contains
         s% fix_atmosphere_temperature_when_accreting = fix_atmosphere_temperature_when_accreting
         s% atmosphere_temperature_when_accreting = atmosphere_temperature_when_accreting
         
-        s% number_epochs = number_epochs
-        call allocate_NScool_epoch_arrays(s, ierr)
-        if (ierr /= 0) then
-            write(*,*) 'unable to allocate epochs'
-            return
-        end if
-        s% epoch_Mdots(1:number_epochs) = basic_epoch_Mdots(1:number_epochs)
-        s% epoch_boundaries(0:number_epochs) = basic_epoch_boundaries(0:number_epochs)*julian_day
-
         s% Mcore = core_mass
         s% Rcore = core_radius
         s% Psurf = 10.0**lgPcrust_top
@@ -238,6 +231,23 @@ contains
         s% atm_model = atm_model
         s% fix_Qimp = fix_Qimp
         s% Qimp = Qimp
+        
+        ! epochs and mass accretion rates
+        s% load_mass_accretion_rate = load_mass_accretion_rate
+        s% mass_accretion_rate_file = mass_accretion_rate_file
+        s% Mdot_scale = Mdot_scale
+        if (.not. s% load_mass_accretion_rate) then
+            s% number_epochs = number_epochs
+            call allocate_NScool_epoch_arrays(s, ierr)
+            if (ierr /= 0) then
+                write(*,*) 'unable to allocate epochs'
+                return
+            end if
+            s% epoch_Mdots(1:number_epochs) = basic_epoch_Mdots(1:number_epochs) * s% Mdot_scale
+            s% epoch_boundaries(0:number_epochs) = basic_epoch_boundaries(0:number_epochs)*julian_day
+        else
+            call do_load_mass_accretion_rate(s, ierr)
+        end if
 
    end subroutine store_controls
    
@@ -246,5 +256,72 @@ contains
        integer, intent(out) :: ierr
        write(io,nml=controls,iostat=ierr)
    end subroutine write_controls
+   
+   subroutine do_load_mass_accretion_rate(s, ierr)
+       use iso_fortran_env, only : IOSTAT_END
+       use utils_lib, only : realloc_double
+       use storage, only: allocate_NScool_epoch_arrays
+       
+       type(NScool_info), pointer :: s
+       integer, intent(out) :: ierr
+       character(len=256) :: filename
+       integer :: file_id
+       integer, parameter :: initial_epoch_length = 64
+       real(dp), dimension(:), pointer :: t_epoch, Mdot_epoch
+       integer :: lines_read,iostat,this_line,epoch_length
+       ierr = 0
+       if (.not. s% load_mass_accretion_rate) return
+       filename = trim(s% mass_accretion_rate_file)
+       epoch_length = initial_epoch_length
+       allocate(t_epoch(epoch_length), &
+           Mdot_epoch(epoch_length), stat=ierr)
+       if (failed('allocate storage')) return
+       open(newunit=file_id,file=filename, &
+           & status='old',action='read',iostat=ierr)
+       if (failed('load mass accretion rate from '//filename)) return
+       ! skip first line
+       read(file_id,*)
+       
+       lines_read = 0
+       do
+           this_line = lines_read+1
+           read(file_id,*,iostat=ierr) &
+                & t_epoch(this_line),Mdot_epoch(this_line)
+           if (ierr == IOSTAT_END) then
+               ierr = 0
+               exit
+           end if
+           lines_read = this_line
+           if (this_line == size(t_epoch)) then
+               epoch_length = 2*size(t_epoch)
+               call realloc_double(t_epoch,epoch_length,ierr)
+               if (failed('realloc t_epoch')) exit
+               call realloc_double(Mdot_epoch,epoch_length,ierr)
+               if (failed('realloc Mdot_epoch')) exit
+           end if
+       end do
+       close(file_id)
+       if (ierr == 0) then
+           s% number_epochs = lines_read - 1
+           call allocate_NScool_epoch_arrays(s, ierr)
+           s% epoch_boundaries(0:s% number_epochs) = t_epoch(1:s% number_epochs + 1)
+           s% epoch_Mdots(1:s% number_epochs) =  &
+               & 0.5*s% Mdot_scale*(Mdot_epoch(1:s% number_epochs) + Mdot_epoch(2:s% number_epochs+1))
+       end if
+       deallocate(t_epoch)
+       nullify(t_epoch)
+       deallocate(Mdot_epoch)
+       nullify(Mdot_epoch)
+
+   contains
+       function failed(msg)
+           character(len=*), intent(in) :: msg
+           logical :: failed
+           failed = .FALSE.
+           if (ierr == 0) return
+           write (*,*) 'do_load_mass_accretion_rate failed: ',trim(msg)
+           failed = .TRUE.
+       end function failed
+    end subroutine do_load_mass_accretion_rate
    
 end module NScool_ctrls_io
