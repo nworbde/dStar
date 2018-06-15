@@ -29,8 +29,8 @@ module NScool_ctrls_io
         fix_atmosphere_temperature_when_accreting, & 
         atmosphere_temperature_when_accreting, &
         number_epochs, &
-        epoch_Mdots, &
-        epoch_boundaries, &
+        basic_epoch_Mdots, &
+        basic_epoch_boundaries, &
         core_mass, &
         core_radius, &
         lgPcrust_bot, &
@@ -135,6 +135,7 @@ contains
     subroutine store_controls(s,ierr)
         use constants_def, only : Msun, julian_day
         use num_lib, only : solver_option
+        use storage, only: allocate_NScool_epoch_arrays
         type(NScool_info), pointer :: s
         integer, intent(out) :: ierr
 
@@ -171,9 +172,15 @@ contains
         s% make_inner_boundary_insulating = make_inner_boundary_insulating
         s% fix_atmosphere_temperature_when_accreting = fix_atmosphere_temperature_when_accreting
         s% atmosphere_temperature_when_accreting = atmosphere_temperature_when_accreting
+        
         s% number_epochs = number_epochs
-        s% epoch_Mdots = epoch_Mdots
-        s% epoch_boundaries = epoch_boundaries*julian_day
+        call allocate_NScool_epoch_arrays(s, ierr)
+        if (ierr /= 0) then
+            write(*,*) 'unable to allocate epochs'
+            return
+        end if
+        s% epoch_Mdots(1:number_epochs) = basic_epoch_Mdots(1:number_epochs)
+        s% epoch_boundaries(0:number_epochs) = basic_epoch_boundaries(0:number_epochs)*julian_day
 
         s% Mcore = core_mass
         s% Rcore = core_radius

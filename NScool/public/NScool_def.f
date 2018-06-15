@@ -8,7 +8,7 @@ module NScool_def
     integer, parameter :: num_extra_logical_controls = 32
 
     ! maximum number of sub-intervals
-    integer, parameter :: max_number_epochs = 64
+    integer, parameter :: max_number_basic_epochs = 64
 
     ! interfaces for customizable routines
     abstract interface
@@ -53,6 +53,10 @@ module NScool_def
         real(dp) :: tsec      ! current value of time in seconds
         real(dp) :: dt        ! value of timestep just taken, in seconds
         integer :: model      ! counter that is incremented after each successful step
+
+        ! storage for epochs
+        real(dp), pointer, dimension(:) :: epoch_Mdots
+        real(dp), pointer, dimension(:) :: epoch_boundaries
 
         ! information about the current epoch
         !   The integration runs from 0 to epoch_duration.  When the step

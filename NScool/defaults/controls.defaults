@@ -31,10 +31,10 @@
     atmosphere_temperature_when_accreting = 1.0d8
     
     number_epochs = 1
-    epoch_Mdots = 0.0_dp ! g/s
+    basic_epoch_Mdots = 0.0_dp ! g/s
     ! days
-    epoch_boundaries = 0.0_dp
-    epoch_boundaries(1) = 365.0_dp
+    basic_epoch_boundaries = 0.0_dp
+    basic_epoch_boundaries(1) = 365.0_dp
     
     ! other routines
     use_other_set_Qimp = .FALSE.

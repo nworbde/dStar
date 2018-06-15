@@ -26,8 +26,8 @@
     real(dp) :: atmosphere_temperature_when_accreting
     
     integer :: number_epochs
-    real(dp), dimension(max_number_epochs) :: epoch_Mdots
-    real(dp), dimension(0:max_number_epochs) :: epoch_boundaries
+    real(dp), dimension(max_number_basic_epochs) :: basic_epoch_Mdots
+    real(dp), dimension(0:max_number_basic_epochs) :: basic_epoch_boundaries
     
     real(dp) :: core_mass
     real(dp) :: core_radius

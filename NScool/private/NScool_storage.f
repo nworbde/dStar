@@ -21,6 +21,7 @@ contains
         call NScool_iso_arrays(s, do_deallocate, ierr)
         call NScool_info_arrays(s, do_deallocate, ierr)
         call NScool_work_arrays(s, do_deallocate, ierr)
+        call NScool_epoch_arrays(s, do_deallocate, ierr)
         call free_NScool(s)
     end subroutine free_arrays
     
@@ -59,6 +60,18 @@ contains
         integer, intent(out) :: ierr
         call NScool_work_arrays(s, do_deallocate, ierr)
     end subroutine free_NScool_work_arrays
+    
+    subroutine allocate_NScool_epoch_arrays(s, ierr)
+        type(NScool_info), pointer :: s
+        integer, intent(out) :: ierr
+        call NScool_epoch_arrays(s, do_allocate, ierr)
+    end subroutine allocate_NScool_epoch_arrays
+    
+    subroutine free_NScool_epoch_arrays(s, ierr)
+        type(NScool_info), pointer :: s
+        integer, intent(out) :: ierr
+        call NScool_epoch_arrays(s, do_deallocate, ierr)
+    end subroutine free_NScool_epoch_arrays
         
     subroutine NScool_iso_arrays(s, action, ierr)
         type(NScool_info), pointer :: s
@@ -265,6 +278,32 @@ contains
         end function failed
     end subroutine NScool_work_arrays
     
+    subroutine NScool_epoch_arrays(s, action, ierr)
+        type(NScool_info), pointer :: s
+        integer, intent(in) :: action
+        integer, intent(out) :: ierr
+        integer :: nepochs
+
+        nepochs = s% number_epochs
+        ! treat this differently
+        do
+            call do1Depoch(s% epoch_Mdots,1,nepochs,action,ierr)
+            if (failed('epoch_Mdots')) exit
+            call do1Depoch(s% epoch_boundaries,0,nepochs,action,ierr)
+            if (failed('epoch_boundaries')) exit
+            return
+        enddo
+    contains
+        function failed(str)
+            character(len=*), intent(in) :: str
+            logical :: failed
+            failed = .FALSE.
+            if (ierr == 0) return
+            write (*,*) 'NScool_epoch_arrays failed for ',trim(str)
+            failed = .TRUE.
+        end function failed
+    end subroutine NScool_epoch_arrays
+    
     subroutine do1D(ptr,sz1,action,ierr)
         real(dp), dimension(:), pointer :: ptr
         integer, intent(in) :: sz1,action
@@ -312,6 +351,22 @@ contains
             allocate(ptr(sz1),stat=ierr)
         end select
     end subroutine do1Dcomp
+    
+    subroutine do1Depoch(ptr,lb,ub,action,ierr)
+        real(dp), dimension(:), pointer :: ptr
+        integer, intent(in) :: lb, ub, action
+        integer, intent(out) :: ierr
+        ierr = 0
+        select case(action)
+            case (do_deallocate)
+            if (associated(ptr)) then
+                deallocate(ptr)
+                nullify(ptr)
+            end if
+            case (do_allocate)
+            allocate(ptr(lb:ub),stat=ierr)
+        end select
+    end subroutine do1Depoch
     
     subroutine do2D(ptr,sz1,sz2,action,ierr)
         real(dp), dimension(:,:), pointer :: ptr
