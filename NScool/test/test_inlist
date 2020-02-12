@@ -27,9 +27,7 @@
     core_temperature = 3.0d8
     fix_atmosphere_temperature_when_accreting = .TRUE.
     atmosphere_temperature_when_accreting = 5.0d8
-    number_epochs = 2
-    epoch_Mdots = 1.0e17,0.0
-    epoch_boundaries = -11566.0,0.0,11566.0
+    epoch_datafile = 'accretion_history'
     
     ! extra controls for hook routines
     extra_real_controls(:) = 0.0

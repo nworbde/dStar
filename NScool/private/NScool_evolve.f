@@ -566,18 +566,22 @@ contains
     
     subroutine load_accretion_epochs(s, ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit
+        use constants_def, only: julian_day
         use storage, only: free_NScool_epoch_arrays, allocate_NScool_epoch_arrays
         type(NScool_info), pointer :: s
         integer, intent(out) :: ierr
+        integer :: i, nepochs, unitno
+        real(dp) :: mdot, end_time, start_time
         
         ierr = 0
         ! if already allocated, issue a warning and scrub the table
-        if (allocated(s% t_monitor)) then
+        if (associated(s% t_monitor)) then
             write(error_unit,'(a)') 'load_accretion_epochs: overwriting already loaded table'
             call free_NScool_epoch_arrays(s, ierr)
             s% number_epochs = 0
         end if
         
+        print *,'opening ',s% epoch_datafile
         open(newunit=unitno,file=trim(s% epoch_datafile), &
         & action='read',status='old',form='formatted', iostat=ierr)
         if (failure('opening'//trim(s% epoch_datafile))) return
@@ -585,7 +589,7 @@ contains
         read(unitno,*) nepochs,start_time
         s% number_epochs = nepochs
         call allocate_NScool_epoch_arrays(s,ierr)
-        if failure('allocating epoch arrays') then
+        if (failure('allocating epoch arrays')) then
             s% number_epochs = 0
             return
         end if
@@ -600,6 +604,8 @@ contains
         
     contains
         function failure(msg)
+            character(len=*), intent(in) :: msg
+            logical :: failure
             failure = (ierr /= 0)
             if (failure) then
                 write(error_unit,*) trim(msg),': ierr = ',ierr

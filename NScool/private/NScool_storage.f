@@ -61,16 +61,16 @@ contains
         call NScool_work_arrays(s, do_deallocate, ierr)
     end subroutine free_NScool_work_arrays
     
-    subroutine allocate_NScool_epoch_arrays(s, ierr):
+    subroutine allocate_NScool_epoch_arrays(s, ierr)
         type(NScool_info), pointer :: s
-            integer, intent(out) :: ierr
-            call NScool_epoch_arrays(s, do_allocate, ierr)
+        integer, intent(out) :: ierr
+        call NScool_epoch_arrays(s, do_allocate, ierr)
     end subroutine allocate_NScool_epoch_arrays
 
-    subroutine free_NScool_epoch_arrays(s, ierr):
+    subroutine free_NScool_epoch_arrays(s, ierr)
         type(NScool_info), pointer :: s
-            integer, intent(out) :: ierr
-            call NScool_epoch_arrays(s, do_deallocate, ierr)
+        integer, intent(out) :: ierr
+        call NScool_epoch_arrays(s, do_deallocate, ierr)
     end subroutine free_NScool_epoch_arrays
         
     subroutine NScool_iso_arrays(s, action, ierr)
@@ -350,7 +350,7 @@ contains
             case (do_allocate)
             allocate(ptr(st1:sz1),stat=ierr)
         end select
-    end subroutine do1D
+    end subroutine do1Doffset
     
     subroutine do1Dint(ptr,sz1,action,ierr)
         integer, dimension(:), pointer :: ptr
