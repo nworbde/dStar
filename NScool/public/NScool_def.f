@@ -8,7 +8,7 @@ module NScool_def
     integer, parameter :: num_extra_logical_controls = 32
 
     ! maximum number of sub-intervals
-    integer, parameter :: max_number_epochs = 64
+!     integer, parameter :: max_number_epochs = 64
 
     ! interfaces for customizable routines
     abstract interface

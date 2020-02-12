@@ -24,10 +24,11 @@
     
     logical :: fix_atmosphere_temperature_when_accreting
     real(dp) :: atmosphere_temperature_when_accreting
-    
-    integer :: number_epochs
-    real(dp), dimension(max_number_epochs) :: epoch_Mdots
-    real(dp), dimension(0:max_number_epochs) :: epoch_boundaries
+
+    character(len=256) :: epoch_datafile
+!     integer :: number_epochs
+!     real(dp), dimension(max_number_epochs) :: epoch_Mdots
+!     real(dp), dimension(0:max_number_epochs) :: epoch_boundaries
     
     real(dp) :: core_mass
     real(dp) :: core_radius

@@ -171,9 +171,10 @@ contains
         s% make_inner_boundary_insulating = make_inner_boundary_insulating
         s% fix_atmosphere_temperature_when_accreting = fix_atmosphere_temperature_when_accreting
         s% atmosphere_temperature_when_accreting = atmosphere_temperature_when_accreting
-        s% number_epochs = number_epochs
-        s% epoch_Mdots = epoch_Mdots
-        s% epoch_boundaries = epoch_boundaries*julian_day
+        s% epoch_data = epoch_data
+!         s% number_epochs = number_epochs
+!         s% epoch_Mdots = epoch_Mdots
+!         s% epoch_boundaries = epoch_boundaries*julian_day
 
         s% Mcore = core_mass
         s% Rcore = core_radius
