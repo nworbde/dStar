@@ -132,6 +132,11 @@ module NScool_def
         real(dp), pointer, dimension(:,:) :: tab_lnK    ! (4*n_tab, nz) coefficients for ln(Kcond)
         real(dp), pointer, dimension(:,:) :: tab_lnGamma  ! (4*n_tab, nz) coefficients for ln(plasma Gamma)
 
+		! storage for the accretion rate
+        integer :: number_epochs
+        real(dp), pointer, dimension(:) :: epoch_Mdots
+        real(dp), pointer, dimension(:) :: epoch_boundaries
+
         ! storage for the lightcurve at selected points. arrays have dimension
         ! (number_epochs)
         !

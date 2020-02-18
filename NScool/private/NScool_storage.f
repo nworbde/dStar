@@ -66,7 +66,7 @@ contains
         integer, intent(out) :: ierr
         call NScool_epoch_arrays(s, do_allocate, ierr)
     end subroutine allocate_NScool_epoch_arrays
-    
+
     subroutine free_NScool_epoch_arrays(s, ierr)
         type(NScool_info), pointer :: s
         integer, intent(out) :: ierr
@@ -109,12 +109,12 @@ contains
         type(NScool_info), pointer :: s
         integer, intent(in) :: action
         integer, intent(out) :: ierr
-        integer :: nz, nisos, nepochs
+        integer :: nz, nisos !, nepochs
         
         ierr = 0
         nz = s% nz
         nisos = s% nisos
-        nepochs = s% number_epochs
+!         nepochs = s% number_epochs
         
         do
             call do1(s% dm)
@@ -198,21 +198,21 @@ contains
             if (failed('lnK')) exit
             call do1(s% dlnK_dlnT)
             if (failed('dlnK_dlnT')) exit
-            call do1epoch(s% t_monitor)
-            if (failed('t_monitor')) exit
-            call do1epoch(s% Teff_monitor)
-            if (failed('Teff_monitor')) exit
-            call do1epoch(s% Qb_monitor)
-            if (failed('Qb_monitor')) exit
+!             call do1epoch(s% t_monitor)
+!             if (failed('t_monitor')) exit
+!             call do1epoch(s% Teff_monitor)
+!             if (failed('Teff_monitor')) exit
+!             call do1epoch(s% Qb_monitor)
+!             if (failed('Qb_monitor')) exit
             return
         end do
         ierr = -1
         
     contains
-        subroutine do1epoch(ptr)
-            real(dp), dimension(:), pointer :: ptr
-            call do1D(ptr, nepochs, action, ierr)
-        end subroutine do1epoch
+!         subroutine do1epoch(ptr)
+!             real(dp), dimension(:), pointer :: ptr
+!             call do1D(ptr, nepochs, action, ierr)
+!         end subroutine do1epoch
         subroutine do1(ptr)
             real(dp), dimension(:), pointer :: ptr
             call do1D(ptr, nz, action, ierr)
@@ -283,17 +283,33 @@ contains
         integer, intent(in) :: action
         integer, intent(out) :: ierr
         integer :: nepochs
-
-        nepochs = s% number_epochs
-        ! treat this differently
+        
+        ierr = 0
+        nepochs = s% number_epochs        
         do
-            call do1Depoch(s% epoch_Mdots,1,nepochs,action,ierr)
+            call do1(s% epoch_Mdots)
             if (failed('epoch_Mdots')) exit
-            call do1Depoch(s% epoch_boundaries,0,nepochs,action,ierr)
+            call do1(s% epoch_boundaries,start=0)
             if (failed('epoch_boundaries')) exit
+            call do1(s% t_monitor)
+            if (failed('t_monitor')) exit
+            call do1(s% Teff_monitor)
+            if (failed('Teff_monitor')) exit
+            call do1(s% Qb_monitor)
+            if (failed('Qb_monitor')) exit
             return
-        enddo
+        end do
+        ierr = -1
     contains
+        subroutine do1(ptr,start)
+            real(dp), dimension(:), pointer :: ptr
+            integer, optional, intent(in) :: start
+            if (present(start)) then
+                call do1Doffset(ptr,start,nepochs,action,ierr)
+            else
+                call do1D(ptr,nepochs,action,ierr)
+            end if
+        end subroutine do1
         function failed(str)
             character(len=*), intent(in) :: str
             logical :: failed
@@ -319,6 +335,22 @@ contains
             allocate(ptr(sz1),stat=ierr)
         end select
     end subroutine do1D
+    
+    subroutine do1Doffset(ptr,st1,sz1,action,ierr)
+        real(dp), dimension(:), pointer :: ptr
+        integer, intent(in) :: st1,sz1,action
+        integer, intent(out) :: ierr
+        ierr = 0
+        select case(action)
+            case (do_deallocate)
+            if (associated(ptr)) then
+                deallocate(ptr)
+                nullify(ptr)
+            end if
+            case (do_allocate)
+            allocate(ptr(st1:sz1),stat=ierr)
+        end select
+    end subroutine do1Doffset
     
     subroutine do1Dint(ptr,sz1,action,ierr)
         integer, dimension(:), pointer :: ptr

@@ -28,8 +28,9 @@ module NScool_ctrls_io
         make_inner_boundary_insulating, &
         fix_atmosphere_temperature_when_accreting, & 
         atmosphere_temperature_when_accreting, &
-        load_mass_accretion_rate, &
-        mass_accretion_rate_file, &
+        load_epochs, &
+        epoch_datafile, &
+        Mdot_scale, &
         number_epochs, &
         basic_epoch_Mdots, &
         basic_epoch_boundaries, &
@@ -174,7 +175,7 @@ contains
         s% make_inner_boundary_insulating = make_inner_boundary_insulating
         s% fix_atmosphere_temperature_when_accreting = fix_atmosphere_temperature_when_accreting
         s% atmosphere_temperature_when_accreting = atmosphere_temperature_when_accreting
-        
+
         s% Mcore = core_mass
         s% Rcore = core_radius
         s% Psurf = 10.0**lgPcrust_top
@@ -233,8 +234,8 @@ contains
         s% Qimp = Qimp
         
         ! epochs and mass accretion rates
-        s% load_mass_accretion_rate = load_mass_accretion_rate
-        s% mass_accretion_rate_file = mass_accretion_rate_file
+        s% load_epochs = load_epochs
+        s% epoch_datafile = epoch_datafile
         s% Mdot_scale = Mdot_scale
         if (.not. s% load_mass_accretion_rate) then
             s% number_epochs = number_epochs

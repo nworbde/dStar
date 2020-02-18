@@ -50,7 +50,7 @@ contains
     subroutine NScool_evolve_model(id, ierr)
         use constants_def, only : julian_day, amu, ergs_to_mev
         use NScool_def, only : NScool_info, get_NScool_info_ptr
-        use NScool_evolve, only: do_integrate_crust
+        use NScool_evolve, only: do_integrate_crust, load_accretion_epochs
         integer, intent(in) :: id
         integer, intent(out) :: ierr
         type(NScool_info), pointer :: s
@@ -58,6 +58,8 @@ contains
 
         ierr = 0
         call get_NScool_info_ptr(id,s,ierr)
+        if (ierr /= 0) return
+        call load_accretion_epochs(s,ierr)
         if (ierr /= 0) return
         do i_epoch = 1, s% number_epochs
             s% epoch_start_time = s% epoch_boundaries(i_epoch-1)

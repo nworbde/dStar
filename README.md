@@ -43,6 +43,7 @@ Check out the examples `basic_run`, `fit_lightcurve`, and `custom_Tc_Qimp` to se
 Check out `tools/reader.py`. This contains a python class for reading the output history and profile data files. The quantities are stored as class members for easy access when analyzing results.
 
 ## Dependencies
+  * [git-lfs](https://git-lfs.github.com): the data files are stored using `git lfs`, which needs to be installed prior to cloning the repository.
   * [MESA](http://mesa.sourceforge.net): `dStar` makes use of the `MESA` numerical, utility, and equation of state libraries.
   * [MESA SDK](http://www.astro.wisc.edu/~townsend/static.php?ref=mesasdk): the compilation of both `MESA` and `dStar` has been tested using a specific build environment.
 
