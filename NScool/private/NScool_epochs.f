@@ -1,6 +1,6 @@
 module NScool_epochs
     use NScool_def
-    integer, parameter :: initial_epoch_length = 2
+    integer, parameter :: initial_epoch_length = 64
     integer, parameter :: token_null   = 0
     integer, parameter :: token_EOF    = 1
     integer, parameter :: token_string = 2
