@@ -27,7 +27,8 @@
     
     logical :: load_epochs
     character(len=256) :: epoch_datafile
-    real(dp) :: Mdot_scale
+    real(dp) :: epoch_time_scale
+    real(dp) :: epoch_Mdot_scale
     integer :: number_epochs
     real(dp), dimension(max_number_basic_epochs) :: basic_epoch_Mdots
     real(dp), dimension(0:max_number_basic_epochs) :: basic_epoch_boundaries

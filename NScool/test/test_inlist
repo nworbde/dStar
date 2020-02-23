@@ -30,7 +30,6 @@
     number_epochs = 2
     basic_epoch_Mdots = 1.0e17,0.0
     basic_epoch_boundaries = -11566.0,0.0,11566.0
-    epoch_datafile = 'accretion_history'
     
     ! extra controls for hook routines
     extra_real_controls(:) = 0.0
