@@ -14,8 +14,8 @@ This directory contains an example run of an accretion outburst/quiescent coolin
     
         ! integration epochs
         number_epochs = 16
-        epoch_Mdots = 10*6.7e16,6*0.0
-        epoch_boundaries = -20.0,-18.0,-16.0,-14.0,-12.0,-10.0,-8.0,-6.0,-4.0,-2.0, 0.0,3.0,10.0,30.0,100.0,300.0,600.0
+        basic_epoch_Mdots = 10*6.7e16,6*0.0
+        basic_epoch_boundaries = -20.0,-18.0,-16.0,-14.0,-12.0,-10.0,-8.0,-6.0,-4.0,-2.0, 0.0,3.0,10.0,30.0,100.0,300.0,600.0
     
 4.  Build the code: `./mk`
     

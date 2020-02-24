@@ -28,8 +28,8 @@
     
     ! integration epochs
     number_epochs = 12
-    epoch_Mdots = 2.0e17,11*0.0
-    epoch_boundaries = -912.0,0.0,30.0,56.0,100.0,180.0,300.0,560.0,1000.0,1800.0,3000.0,5600.0,10000.0
+    basic_epoch_Mdots = 2.0e17,11*0.0
+    basic_epoch_boundaries = -912.0,0.0,30.0,56.0,100.0,180.0,300.0,560.0,1000.0,1800.0,3000.0,5600.0,10000.0
     
     ! other routines
     use_other_set_Qimp = .TRUE.

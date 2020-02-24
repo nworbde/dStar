@@ -35,8 +35,8 @@
     ! at 65.1 d after end of outburst, for comparing with observation
     ! 3. t = [65.1, 235.7] d, Mdot = 0.0.  Record Teff at 235.7 d after end of 
     ! outburst.  And so on.
-    epoch_Mdots = 1.0e17,8*0.0
-    epoch_boundaries = -4383.0,0.0,65.1,235.7,751.6,929.5,1500.5,1570.4,1595.4,3039.7
+    basic_epoch_Mdots = 1.0e17,8*0.0
+    basic_epoch_boundaries = -4383.0,0.0,65.1,235.7,751.6,929.5,1500.5,1570.4,1595.4,3039.7
     
     ! core properties
     core_mass = 1.6     ! Msun
