@@ -25,9 +25,13 @@
     logical :: fix_atmosphere_temperature_when_accreting
     real(dp) :: atmosphere_temperature_when_accreting
     
+    logical :: load_epochs
+    character(len=256) :: epoch_datafile
+    real(dp) :: epoch_time_scale
+    real(dp) :: epoch_Mdot_scale
     integer :: number_epochs
-    real(dp), dimension(max_number_epochs) :: epoch_Mdots
-    real(dp), dimension(0:max_number_epochs) :: epoch_boundaries
+    real(dp), dimension(max_number_basic_epochs) :: basic_epoch_Mdots
+    real(dp), dimension(0:max_number_basic_epochs) :: basic_epoch_boundaries
     
     real(dp) :: core_mass
     real(dp) :: core_radius
@@ -48,7 +52,10 @@
     logical  :: turn_on_extra_heating
     real(dp) :: lgP_min_heating_shallow
     real(dp) :: lgP_max_heating_shallow
-    real(dp) :: Q_heating_shallow ! MeV
+    real(dp) :: Q_heating_shallow ! MeV    
+    ! user-supplied routine to compute heating; this will overwrite the 
+    ! built-in routines, but both may be used together
+    logical :: use_other_set_heating
     
     ! controls for the superfluidity
     logical :: use_other_sf_critical_temperatures

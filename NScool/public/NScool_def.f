@@ -8,7 +8,7 @@ module NScool_def
     integer, parameter :: num_extra_logical_controls = 32
 
     ! maximum number of sub-intervals
-    integer, parameter :: max_number_epochs = 64
+    integer, parameter :: max_number_basic_epochs = 64
 
     ! interfaces for customizable routines
     abstract interface
@@ -16,6 +16,10 @@ module NScool_def
         integer, intent(in) :: id
         integer, intent(out) :: ierr
     end subroutine set_Qimp_interface
+    subroutine set_heating_interface(id,ierr)
+        integer, intent(in) :: id
+        integer, intent(out) :: ierr
+    end subroutine set_heating_interface
     subroutine set_sf_interface(id,kp,kn,Tc)
         use constants_def
         use superfluid_def
@@ -49,6 +53,10 @@ module NScool_def
         real(dp) :: tsec      ! current value of time in seconds
         real(dp) :: dt        ! value of timestep just taken, in seconds
         integer :: model      ! counter that is incremented after each successful step
+
+        ! storage for epochs
+        real(dp), pointer, dimension(:) :: epoch_Mdots
+        real(dp), pointer, dimension(:) :: epoch_boundaries
 
         ! information about the current epoch
         !   The integration runs from 0 to epoch_duration.  When the step
@@ -124,15 +132,24 @@ module NScool_def
         real(dp), pointer, dimension(:,:) :: tab_lnK    ! (4*n_tab, nz) coefficients for ln(Kcond)
         real(dp), pointer, dimension(:,:) :: tab_lnGamma  ! (4*n_tab, nz) coefficients for ln(plasma Gamma)
 
-        ! storage for the lightcurve at selected points
-        real(dp), pointer, dimension(:) :: t_monitor    ! (d, number_epochs)
-        real(dp), pointer, dimension(:) :: Teff_monitor ! (K, number_epochs)
+        ! storage for the lightcurve at selected points. arrays have dimension
+        ! (number_epochs)
+        !
+        ! time (d)
+        real(dp), pointer, dimension(:) :: t_monitor
+        ! effective temperature (K), observer frame
+        real(dp), pointer, dimension(:) :: Teff_monitor
+        ! emergent flux*(m_u/mdot) (MeV/u), local
+        real(dp), pointer, dimension(:) :: Qb_monitor
 
         logical :: in_use
         
         procedure(set_Qimp_interface), pointer, nopass ::  &
         & other_set_Qimp => null()
-            
+        
+        procedure(set_heating_interface), pointer, nopass ::  &
+        & other_set_heating => null()
+        
         procedure(set_sf_interface), pointer, nopass ::  &
         & other_sf_get_results => null()
         
@@ -140,7 +157,6 @@ module NScool_def
 
     integer, parameter :: max_NScool_handles = 10
     type(NScool_info), dimension(max_NScool_handles), target :: NScool_handles
-
 
 contains
     subroutine get_NScool_info_ptr(id,s,ierr)

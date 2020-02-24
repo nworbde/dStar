@@ -1,0 +1,14 @@
+! Test file for reading in the accretion history.
+! Lines starting with a '!' are ignored
+!
+number_cycles 2
+Mdot_scale 1.0e18  ! [g/s]
+columns 'time [d]'  'Mdot [Eddington]'
+!
+epochs  ! time [d]  Mdot [Eddington]
+        -10000.0    0.1
+             0.0    0.0
+            10.0    0.0
+           100.0    0.0
+          1000.0    0.0
+         10000.0    0.0

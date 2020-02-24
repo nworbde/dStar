@@ -10,18 +10,18 @@ contains
         real(dp), intent(in) :: Tref
         integer, intent(out) :: ierr
         logical, parameter :: dbg = .FALSE.
-		type(crust_table_type), pointer :: tab
+        type(crust_table_type), pointer :: tab
         real(dp), pointer, dimension(:,:) :: lgRho_val    
         character(len=crust_filename_length) :: table_name, cache_filename
         logical :: have_cache
         integer :: unitno
         
         tab => crust_table
-		! if the table is already allocated, issue a warning and scrub the table
-		if (tab% is_loaded) then
-			write(error_unit,'(a)') 'do_load_crust_table: overwriting already loaded table'
-			call do_free_crust_table(tab)
-		end if
+        ! if the table is already allocated, issue a warning and scrub the table
+        if (tab% is_loaded) then
+            write(error_unit,'(a)') 'do_load_crust_table: overwriting already loaded table'
+            call do_free_crust_table(tab)
+        end if
 
         call generate_crust_filename(prefix,Tref,table_name)
         cache_filename = trim(crust_datadir)//'/cache/'//trim(table_name)//'.bin'
@@ -65,7 +65,7 @@ contains
         integer, intent(in) :: eos_handle
         real(dp), intent(in) :: Tref
         type(crust_table_type), pointer :: tab
-		real(dp), dimension(:), pointer :: work=>null()
+        real(dp), dimension(:), pointer :: work=>null()
         real(dp), pointer, dimension(:,:) :: lgRho_val, lgEps_val
         real(dp) :: lgPmin, delta_lgP
         integer :: N, i, ierr
@@ -84,7 +84,7 @@ contains
         
         call do_make_crust(lgP,Yion,Xneut,charged_ids,ncharged,ion_info)        
         call find_densities(eos_handle,lgP,lgRho,lgEps, &
-        	& Yion,ncharged,charged_ids,ion_info,Tref)
+            & Yion,ncharged,charged_ids,ion_info,Tref)
         
         call do_allocate_crust_table(tab, N, ierr)
         lgRho_val(1:4,1:N) => tab% lgRho(1:4*N)
@@ -155,33 +155,33 @@ contains
         integer, intent(in) :: n
         integer, intent(out) :: ierr
                 
-		allocate(tab% lgP(n), tab% lgRho(4*n), tab% lgEps(4*n), stat=ierr)
+        allocate(tab% lgP(n), tab% lgRho(4*n), tab% lgEps(4*n), stat=ierr)
         if (ierr /= 0) return
         tab% nv = n
     end subroutine do_allocate_crust_table
     
-	subroutine generate_crust_filename(prefix,Tref,filename)
-		! naming convention for flies is prefix_ttt
-		! where ttt = 100*log10(Tref), to 3 significant digits
-		character(len=*), intent(in) :: prefix
-		real(dp), intent(in) :: Tref
-		character(len=crust_filename_length), intent(out) :: filename
-		
-		write (filename,'(a,"_",i0.3)') trim(prefix), int(100.0*log10(Tref))
-	end subroutine generate_crust_filename
+    subroutine generate_crust_filename(prefix,Tref,filename)
+        ! naming convention for flies is prefix_ttt
+        ! where ttt = 100*log10(Tref), to 3 significant digits
+        character(len=*), intent(in) :: prefix
+        real(dp), intent(in) :: Tref
+        character(len=crust_filename_length), intent(out) :: filename
+        
+        write (filename,'(a,"_",i0.3)') trim(prefix), int(100.0*log10(Tref))
+    end subroutine generate_crust_filename
 
-	subroutine do_free_crust_table(tab)
-		type(crust_table_type), pointer :: tab
-		tab% nv = 0
-		tab% lgP_min = 0.0
-		tab% lgP_max = 0.0
-		if (allocated(tab% lgP)) deallocate(tab% lgP)
-		if (associated(tab% lgRho)) deallocate(tab% lgRho)
-		if (associated(tab% lgEps)) deallocate(tab% lgEps)
+    subroutine do_free_crust_table(tab)
+        type(crust_table_type), pointer :: tab
+        tab% nv = 0
+        tab% lgP_min = 0.0
+        tab% lgP_max = 0.0
+        if (allocated(tab% lgP)) deallocate(tab% lgP)
+        if (associated(tab% lgRho)) deallocate(tab% lgRho)
+        if (associated(tab% lgEps)) deallocate(tab% lgEps)
         nullify(tab% lgRho)
         nullify(tab% lgEps)
-		tab% is_loaded = .FALSE.
-	end subroutine do_free_crust_table
+        tab% is_loaded = .FALSE.
+    end subroutine do_free_crust_table
         
     function failure(msg,ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit

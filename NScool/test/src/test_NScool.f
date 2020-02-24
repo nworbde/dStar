@@ -31,7 +31,7 @@ program test_NScool
     
     call NScool_init(my_dStar_dir, ierr)
     call check_okay('NScool_init',ierr)
-    
+
     NScool_id = alloc_NScool(ierr)
     call check_okay('NScool_id',ierr)
     
@@ -49,7 +49,9 @@ program test_NScool
     ! (end of the epochs that were specified in the inlist).
     call get_NScool_info_ptr(NScool_id,s,ierr)    
     do i = 1, s% number_epochs
-        write(output_unit,'(2(a," = ",es11.4))') 't/d',s% t_monitor(i),'; obs. Teff/K', s% Teff_monitor(i)
+        write(output_unit,'(3(a," = ",es11.4))')  &
+        &   't/d',s% t_monitor(i),'; obs. Teff/K', s% Teff_monitor(i), &
+        & '; local Qb', s% Qb_monitor(i)
     end do
     
     call NScool_shutdown    
@@ -62,6 +64,8 @@ contains
 		if (ierr /= 0) then
 			write (error_unit,*) trim(msg)//': ierr = ',ierr
 			if (ierr < 0) stop
+        else
+            write (error_unit,*) trim(msg)//': okay'
 		end if
 	end subroutine check_okay
 end program test_NScool

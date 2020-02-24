@@ -11,7 +11,7 @@ function check_okay {
 }
 
 function fetch_and_verify {
-    # if file exists and is verified, then no need to fetch from repository
+    # if file exists and is verified, then no need to unpack
     need_to_fetch=1
     lib=$1
     chks=$2
@@ -29,7 +29,7 @@ function fetch_and_verify {
     fi
 
     if [ $need_to_fetch -eq 1 ]; then        
-        echo "fetching $lib from $url..."
+        echo "unpacking $lib..."
         get_datafile $lib $url
         echo "verifying $lib..."
         verify_datafile $lib $chks
@@ -38,12 +38,12 @@ function fetch_and_verify {
 }
 
 function get_datafile {
-    zip='.bz2'
+    zip='.xz'
     db=$1
     tmpfile="tmp_$db"
     url=$2
-    unzip=`which bunzip2`
-    curl -fS $url | $unzip > $tmpfile
+    unzip=`which xzcat`
+    $unzip $url > $tmpfile
     check_okay
     mv -i $tmpfile $db
     check_okay
@@ -53,14 +53,14 @@ function verify_datafile {
     db=$1
     key_cksm=$2
     chk=""
-    if [ `which md5sum` ]; then
-        chk=`which md5sum`
-        echo "using $chk"
-        this_cksm=( `$chk $db` )
-    elif [ `which md5` ]; then
+    if [ `which md5` ]; then
         chk=`which md5`
         echo "using $chk"
         this_cksm=( `$chk -q $db` )
+    elif [ `which md5sum` ]; then
+        chk=`which md5sum`
+        echo "using $chk"
+        this_cksm=( `$chk $db` )
     else
         echo "no md5 or md5sum available, skipping verification"
         return 0
@@ -81,18 +81,15 @@ NLIB=nuclib_db
 MD5_NLIB=f9690eb559428a95d4357bd2101f08bb
 
 #locations
-NLIB_URL=https://dl.dropboxusercontent.com/u/52649885/dStar/crust_isotopes.data.bz2
+NLIB_ZIP=crust_isotopes.data.xz
 
 echo
 echo "Installing Nuclib Datafiles"
 echo "-------------------------------------------------"
 
-echo "establishing data directory..."
-mkdir -p data
-check_okay
 cd data
 
-fetch_and_verify $NLIB $MD5_NLIB $NLIB_URL
+fetch_and_verify $NLIB $MD5_NLIB $NLIB_ZIP
 check_okay
 
 echo "done"

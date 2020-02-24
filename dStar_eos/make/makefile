@@ -10,6 +10,7 @@ DSTAR_INC=../../include
 DSTAR_LIB=../../lib
 COMPILE = $(COMPILE_TO_TEST) $(FCfree) -I$(DSTAR_INC)
 COMPILE_FIXED = $(COMPILE_TO_TEST) $(FCfixed) -I$(DSTAR_INC)
+COMPILE_FIXED_LEGACY = $(filter-out -std=f2008, $(COMPILE_FIXED))
 
 %.o:%.f
 	$(COMPILE) $<
@@ -21,7 +22,7 @@ helm_alloc.o: $(MOD_PRIVATE_DIR)/helm_alloc.f
 	 $(COMPILE_FIXED) $<
 
 helm_core.o: $(MOD_PRIVATE_DIR)/helm_core.f
-	$(COMPILE_FIXED) $<
+	$(COMPILE_FIXED_LEGACY) $<
 
 generate_acprs_table: acprs.o
 	$(FC) -o $@ acprs.o -L. -lcrust_eos -L../../lib -L../../mesa_numerics/lib -lchem -lalert -lsuperfluid -linterp_1d

@@ -1,6 +1,13 @@
 lib
 include
-data
+atm_data
+core_data
+crust_data
+cache
+Tc_data
+Skyrme_data
+data/eos
+data/nucchem
 *.a
 *.o
 *.mod
@@ -12,3 +19,13 @@ tester
 LOGS
 .ipynb_checkpoints
 
+
+dStar_crust/data/rp03_isos
+
+dStar_crust/data/rp03_summary
+
+dStar_crust/data/rp03.bin
+
+dStar_eos/data/helm_table.dat
+
+nucchem/data/nuclib_db

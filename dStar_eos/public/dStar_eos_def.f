@@ -2,46 +2,46 @@ module dStar_eos_def
     use constants_def, only: dp
     
 
-	! The results for the overall mixture
-	integer, parameter :: i_lnP = 1
-		! pressure
-	integer, parameter :: i_lnE = 2
-		! internal energy per unit mass
-	integer, parameter :: i_lnS	= 3
-		! entropy per unit mass
-	integer, parameter :: i_grad_ad = 4
-		! (d lnT/d ln P)_S
-	integer, parameter :: i_chiRho = 5
-		! (d lnP/d lnRho)_T
-	integer, parameter :: i_chiT = 6
-		! (d lnP/d lnT)_Rho
-	integer, parameter :: i_Cp = 7
-		! (dH/dT)_P, H = E + P/Rho
-	integer, parameter :: i_Cv = 8
-		! (dE/dT)_Rho
-	integer, parameter :: i_Chi = 9
-		! volume fraction occupied by nuclei
-	integer, parameter :: i_Gamma = 10
-		! plasma coupling parameter
-	integer, parameter :: i_Theta = 11
-		! temperature/ion plasma temperature
-	integer, parameter :: i_mu_e = 12
-		! chemical pot. electrons
-	integer, parameter :: i_mu_n = 13
-		! chemical pot. neutrons
-	integer, parameter :: i_Gamma1 = 14
-		! (d lnP/d lnRho)_S
-	integer, parameter :: i_Gamma3 = 15
-		! = Gamma3 - 1 = (d lnT/d lnRho)_S
-	integer, parameter :: num_dStar_eos_results = 15
-		
-	! The components
-	integer, parameter :: &
-		&	icrust_eos_ep = 1, &
-		&	icrust_eos_ion = 2, &
-		&	icrust_eos_neutron = 3, &
-		&	icrust_eos_radiation = 4
-	integer, parameter :: num_crust_eos_components = 4
+    ! The results for the overall mixture
+    integer, parameter :: i_lnP = 1
+        ! pressure
+    integer, parameter :: i_lnE = 2
+        ! internal energy per unit mass
+    integer, parameter :: i_lnS = 3
+        ! entropy per unit mass
+    integer, parameter :: i_grad_ad = 4
+        ! (d lnT/d ln P)_S
+    integer, parameter :: i_chiRho = 5
+        ! (d lnP/d lnRho)_T
+    integer, parameter :: i_chiT = 6
+        ! (d lnP/d lnT)_Rho
+    integer, parameter :: i_Cp = 7
+        ! (dH/dT)_P, H = E + P/Rho
+    integer, parameter :: i_Cv = 8
+        ! (dE/dT)_Rho
+    integer, parameter :: i_Chi = 9
+        ! volume fraction occupied by nuclei
+    integer, parameter :: i_Gamma = 10
+        ! plasma coupling parameter
+    integer, parameter :: i_Theta = 11
+        ! temperature/ion plasma temperature
+    integer, parameter :: i_mu_e = 12
+        ! chemical pot. electrons
+    integer, parameter :: i_mu_n = 13
+        ! chemical pot. neutrons
+    integer, parameter :: i_Gamma1 = 14
+        ! (d lnP/d lnRho)_S
+    integer, parameter :: i_Gamma3 = 15
+        ! = Gamma3 - 1 = (d lnT/d lnRho)_S
+    integer, parameter :: num_dStar_eos_results = 15
+        
+    ! The components
+    integer, parameter :: &
+        &   icrust_eos_ep = 1, &
+        &   icrust_eos_ion = 2, &
+        &   icrust_eos_neutron = 3, &
+        &   icrust_eos_radiation = 4
+    integer, parameter :: num_crust_eos_components = 4
     
     ! it can be interesting to look at the individual components; supply a vector of this to get the individual pieces
     type crust_eos_component
