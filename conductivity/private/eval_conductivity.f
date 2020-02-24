@@ -100,7 +100,6 @@ contains
                 if (R < 1.0E-10) R = 0.0
             end if
 
-            ! note double multiplication by R
             if (K_components(icond_nQ)) then
                 nu_c = n_imp(nn,nion,T,ionic,ierr)
                 kappa% nQ = kappa_n_pre/nu_c*R
