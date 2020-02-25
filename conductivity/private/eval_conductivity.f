@@ -2,9 +2,9 @@ module eval_conductivity
     use conductivity_def
 
     integer, parameter :: int_default_max_steps = 1000
-    real(dp), parameter :: int_default_max_step_size = 0.0
-    real(dp), parameter :: int_default_starting_step = 1.0e-3    
-    
+    real(dp), parameter :: int_default_max_step_size = 0.0_dp
+    real(dp), parameter :: int_default_starting_step = 1.0e-10_dp
+
 contains
     
     subroutine conductivity(rho,T,chi,Gamma,eta,mu_e,ionic,Tns, &
@@ -560,7 +560,7 @@ contains
         R_a = (3.0*(ionic%A-ionic%Z)/4.0/pi/n_in)**onethird    
     
         y(1) = 0.0
-        kn_start = 1.0E-10 
+        kn_start = int_default_starting_step 
         kn_end = 2.0*kFn*R_a
         h = 0.0
 
@@ -659,7 +659,7 @@ contains
         n_in = n_l/2.0*(1.0+0.9208*isospin)
         R_a = (3.0*(ionic%A-ionic%Z)/4.0/pi/n_in)**onethird
     
-        kn_start = 1.0E-10 
+        kn_start = int_default_starting_step
         kn_end = 2.0*kFn*R_a
         h = 0.0
         rpar(1) = temperature
