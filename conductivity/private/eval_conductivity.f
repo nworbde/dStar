@@ -511,11 +511,15 @@ contains
         real(dp), intent(in) :: nn, nion, temperature
         type(composition_info_type), intent(in) :: ionic
         integer, intent(out) :: ierr
+        real(dp) :: nu      ! neutron-impurity scattering frequency
+
+        integer, parameter :: num_integration_variables = 1
+        integer, parameter :: num_ipar = 0
+        integer, parameter :: num_rpar = 6
     
         real(dp) :: ne      ! number density of electrons
         real(dp) :: kFn     ! neutron Fermi wavevector 
         real(dp) :: EFn     ! neutron Fermi energy
-        real(dp) :: nu      ! neutron-impurity scattering frequency
         real(dp) :: V       ! effective neutron-impurity potential 
         real(dp) :: Lambda_n_imp    ! Coulomb logarithm (Potekhin et al. 1999)
         real(dp) :: fac, sf_frac, Tc, xFn
@@ -526,19 +530,17 @@ contains
         real(dp), dimension(:), pointer :: y
         integer ,dimension(:), pointer :: iwork => null()
         real(dp), dimension(:), pointer :: work => null()
-        real(dp), dimension(1) :: rtol, atol
+        real(dp), dimension(num_integration_variables) :: rtol, atol
         integer, dimension(:), pointer :: ipar => null()
         real(dp), dimension(:), pointer :: rpar => null()
         real(dp) :: h, kn_end, kn_start, kn, kfi
-        integer :: liwork, lwork, itol, lipar, lrpar
-        integer :: n, idid, lout, iout, npts, num_integration_variables, num_ipar, num_rpar
+        integer :: liwork, lwork, itol, lipar, lrpar, idid, lout, iout, npts
 
-        allocate(y(1))
-        num_ipar = 0
-        num_rpar = 6    
+        allocate(y(num_integration_variables))
+
         kFn = (threepisquare*nn)**onethird
         kfi = (threepisquare*nn/ionic%Yn*(1.0-ionic%Yn)/ionic%A)**onethird
-        num_integration_variables = 1
+
         call dop853_work_sizes( &
         &   num_integration_variables,num_integration_variables,liwork,lwork)
         allocate(iwork(liwork), work(lwork),ipar(num_ipar), rpar(num_rpar))
@@ -549,11 +551,10 @@ contains
         itol = 0
         rtol = 1.0e-4
         atol = 1.0e-5
-        iout = 0    ! want dense output
+        iout = 0    ! solout is never called for output
         lout = error_unit
         lipar = num_ipar
         lrpar = num_rpar
-        n = num_integration_variables
                     
         !calculate n_in and R_a using Sly4 model for now
         isospin = 1.0 - 2.0*ionic%Z/ionic%A
@@ -575,9 +576,10 @@ contains
         rpar(5) = kfn
         rpar(6) = R_a
 
-        call dop853(n,structure_factor_impurity,kn_start,y,kn_end,h, &
+        call dop853(num_integration_variables, &
+        &   structure_factor_impurity,kn_start,y,kn_end,h, &
         &   int_default_max_step_size,int_default_max_steps, &
-        & rtol,atol,itol, null_solout, iout, work, lwork, iwork, liwork,  &
+        &   rtol,atol,itol, null_solout, iout, work, lwork, iwork, liwork,  &
         &   num_rpar, rpar, num_ipar, ipar, lout, idid)
 
         if (idid < 0) then
@@ -611,10 +613,16 @@ contains
     
         real(dp), intent(in) :: nn, nion, temperature
         type(composition_info_type), intent(in) :: ionic
+        integer, intent(out) :: ierr
+        real(dp) :: nu              ! neutron-impurity scattering frequency
+
+        integer, parameter :: num_integration_variables = 1
+        integer, parameter :: num_ipar = 0
+        integer, parameter :: num_rpar = 6
+        
         real(dp) :: ne              ! electron number density
         real(dp) :: kFn             ! neutron Fermi wavevector 
         real(dp) :: EFn             ! neutron Fermi energy
-        real(dp) :: nu              ! neutron-impurity scattering frequency
         real(dp) :: V               ! effective neutron-impurity potential 
         real(dp) :: Lambda_n_phonon ! Coulomb logarithm (Potekhin et al. 1999)
         real(dp) :: fac, sf_frac, Tc, xFn
@@ -622,22 +630,19 @@ contains
         real(dp) :: qD, qi, ktf, beta, qs, wf, sf, L2, eta_n_0, G_k, Tp, eta_n
         real(dp) :: isospin, n_0, n_2, n_l, n_in
         real(dp), dimension(:), pointer :: y
-        integer, intent(out) :: ierr
         integer ,dimension(:), pointer :: iwork => null()
         real(dp), dimension(:), pointer :: work => null()
-        real(dp), dimension(1) :: rtol, atol
+        real(dp), dimension(num_integration_variables) :: rtol, atol
         integer, dimension(:), pointer :: ipar => null()
         real(dp), dimension(:), pointer :: rpar => null()
         real(dp) :: h, kn_end, kn_start, kn, kfi
-        integer :: liwork, lwork, itol, lipar, lrpar
-        integer :: n, idid, lout, iout, npts, num_integration_variables, num_ipar, num_rpar
+        integer :: liwork, lwork, itol, lipar, lrpar,idid, lout, iout, npts
 
-        allocate(y(1))
-        num_ipar = 0
-        num_rpar = 6    
+        allocate(y(num_integration_variables))
+
         kFn = (threepisquare*nn)**onethird
         kfi = (threepisquare*nn/ionic%Yn*(1.0-ionic%Yn)/ionic%A)**onethird
-        num_integration_variables = 1
+
         call dop853_work_sizes( &
         &   num_integration_variables,num_integration_variables,liwork,lwork)
         allocate(iwork(liwork), work(lwork),ipar(num_ipar), rpar(num_rpar))
@@ -648,11 +653,10 @@ contains
         itol = 0
         rtol = 1.0e-4
         atol = 1.0e-5
-        iout = 0    ! want dense output
+        iout = 0 ! solout is never called
         lout = error_unit
         lipar = num_ipar
         lrpar = num_rpar
-        n = num_integration_variables
                   
         y(1) = 0.0
 
@@ -674,7 +678,8 @@ contains
         rpar(5) = kfn
         rpar(6) = R_a
 
-        call dop853(n,structure_factor_phonon,kn_start,y,kn_end,h, &
+        call dop853(num_integration_variables, &
+        &   structure_factor_phonon,kn_start,y,kn_end,h, &
         &   int_default_max_step_size,int_default_max_steps, &
         &   rtol,atol,itol, null_solout, iout, work, lwork, iwork, liwork,  &
         &   num_rpar, rpar, num_ipar, ipar, lout, idid)
@@ -707,7 +712,6 @@ contains
         V = hbar**2*(threepisquare*n_in)**(2.0/3.0)/2.0/Mneutron &
         &   *(1.0 - (nn/n_in)**(2.0/3.0))
     end function neutron_potential
-
 
     subroutine structure_factor_phonon(n,x,h,y,dy,lrpar,rpar,lipar,ipar,ierr)
         ! integrand for eq. (16), Deibel et al. (2017)
