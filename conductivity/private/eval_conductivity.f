@@ -343,7 +343,9 @@ contains
     end function eQ_page
 
     function sPh(nn, nion, temperature, ionic)
-        ! neutron superfluid phonon conductivity, following Aguilera et al. (2009), PRL
+        ! neutron superfluid phonon conductivity
+        ! Implements formalism described in
+        ! Aguilera et al. (2009), PRL 102: 091101
         !
         use nucchem_def, only: composition_info_type
         use constants_def
@@ -468,8 +470,8 @@ contains
     end function freefree
 
     function Rosseland_kappa(rho,T,mu_e,ionic) result(kap)
-        ! implements Rosseland mean for free-free and Thompson scattering according to the fit of
-        ! Potekhin and Chabrier (2001, A&A)
+        ! implements Rosseland mean for free-free and Thompson scattering 
+        ! according to the fit of Potekhin and Chabrier (2001, A&A)
         use nucchem_def, only: composition_info_type
         use constants_def
         real(dp), intent(in) :: rho,T,mu_e ! mu_e is in MeV
@@ -498,7 +500,9 @@ contains
 
 
     function n_imp(nn, nion, temperature, ionic, ierr) result(nu)
-        ! neutron-impurity scattering, following S. Reddy's notes
+        ! neutron-impurity scattering
+        ! implements formalism described in Appendix of
+        ! Deibel et al. (2017), ApJ 839: 95
         use, intrinsic :: iso_fortran_env, only: error_unit
         use nucchem_def, only: composition_info_type
         use constants_def
@@ -597,8 +601,9 @@ contains
     end function n_imp
 
     function n_phonon(nn, nion, temperature, ionic, ierr) result(nu)
-        ! neutron-phonon scattering, following S. Reddy's notes
-        !
+        ! neutron-phonon scattering
+        ! implements formalism described in Appendix of
+        ! Deibel et al. (2017), ApJ 839: 95
         use, intrinsic :: iso_fortran_env, only: error_unit
         use nucchem_def, only: composition_info_type
         use constants_def
@@ -606,12 +611,12 @@ contains
     
         real(dp), intent(in) :: nn, nion, temperature
         type(composition_info_type), intent(in) :: ionic
-        real(dp) :: ne      ! electron number density
-        real(dp) :: kFn     ! neutron Fermi wavevector 
-        real(dp) :: EFn     ! neutron Fermi energy
-        real(dp) :: nu      ! neutron-impurity scattering frequency
-        real(dp) :: V       ! effective neutron-impurity potential 
-        real(dp) :: Lambda_n_phonon     ! Coulomb logarithm (Potekhin et al. 1999)
+        real(dp) :: ne              ! electron number density
+        real(dp) :: kFn             ! neutron Fermi wavevector 
+        real(dp) :: EFn             ! neutron Fermi energy
+        real(dp) :: nu              ! neutron-impurity scattering frequency
+        real(dp) :: V               ! effective neutron-impurity potential 
+        real(dp) :: Lambda_n_phonon ! Coulomb logarithm (Potekhin et al. 1999)
         real(dp) :: fac, sf_frac, Tc, xFn
         real(dp) :: kfe, xr_e, eta, R_a, mnstar
         real(dp) :: qD, qi, ktf, beta, qs, wf, sf, L2, eta_n_0, G_k, Tp, eta_n
@@ -695,6 +700,7 @@ contains
     end function n_phonon
 
     function neutron_potential(nn,n_in,Z,A) result(V)
+        ! eq. (23), Deibel et al. (2017)
         use constants_def
         real(dp), intent(in) :: nn, n_in, Z, A
         real(dp) :: V
@@ -704,6 +710,7 @@ contains
 
 
     subroutine structure_factor_phonon(n,x,h,y,dy,lrpar,rpar,lipar,ipar,ierr)
+        ! integrand for eq. (16), Deibel et al. (2017)
         use constants_def
 
         integer, intent(in) :: n, lrpar, lipar
@@ -749,6 +756,7 @@ contains
     end subroutine structure_factor_phonon
 
     subroutine structure_factor_impurity(n,x,h,y,dy,lrpar,rpar,lipar,ipar,ierr)
+        ! integrand for eq. (20), Deibel et al. (2017)
         use constants_def
 
         integer, intent(in) :: n, lrpar, lipar

@@ -3,13 +3,14 @@ module conductivity_def
 
     ! used for mask array to control which components are included
     integer, parameter :: &
-    &       icond_ee    = 1,     &
-    &       icond_ei    = 2,     &
-    &       icond_eQ    = 3,     &
-    &       icond_sf    = 5,     &
-    &       icond_nn    = 4,     &
-    &       icond_nQ    = 6,     &
-    &       icond_kap   = 7
+    &       icond_ee    = 1,     &  ! electron conduction, electron scattering
+    &       icond_ei    = 2,     &  ! electron conduction, ion scattering
+    &       icond_eQ    = 3,     &  ! electron conduction, impurity scattering
+    &       icond_sf    = 5,     &  ! neutron superfluid conduction
+    &       icond_nn    = 4,     &  ! neutron conduction, ion scattering
+    &       icond_nQ    = 6,     &  ! neutron conduction, impurity scattering
+    &       icond_kap   = 7         ! radiative, electron scatt. & free-free
+    
     integer, parameter :: num_conductivity_channels = 7
     logical, dimension(num_conductivity_channels), parameter ::  &
     &   cond_use_all = [ .TRUE., .TRUE., .TRUE., .TRUE., .TRUE., .TRUE., .TRUE.]
