@@ -1,97 +1,87 @@
 module eval_conductivity
     use conductivity_def
-    use superfluid_def, only: max_number_sf_types, neutron_1S0
-    use superfluid_lib, only: sf_get_results    
-    
+
     integer, parameter :: int_default_max_steps = 1000
     real(dp), parameter :: int_default_max_step_size = 0.0
-    real(dp), parameter :: int_default_starting_step = 1.0e-3
-    
+    real(dp), parameter :: int_default_starting_step = 1.0e-3    
     
 contains
     
-    subroutine conductivity(rho,T,chi,Gamma,eta,mu_e,ionic,kappa, &
-        & which_ee,which_eQ,K_components)
+    subroutine conductivity(rho,T,chi,Gamma,eta,mu_e,ionic,Tns, &
+    &   kappa,which_ee,which_eQ,K_components)
+        use iso_fortran_env, only : error_unit
         use constants_def
         use nucchem_def, only: composition_info_type
         real(dp), intent(in) :: rho, T, chi, Gamma, eta, mu_e   ! mu_e is in MeV
         type(composition_info_type), intent(in) :: ionic
+        real(dp), intent(in) :: Tns ! superfluid critical temperature, neutrons
         type(conductivity_components), intent(out) :: kappa
         integer, intent(in) :: which_ee, which_eQ
+        logical, dimension(num_conductivity_channels), intent(in) :: &
+        &   K_components
+        real(dp) :: nn, nion, ne, kF, xF, eF, Gamma_e, kappa_e_pre
+        real(dp) :: kappa_n_pre, kfn, mnstar, tau, v, R
+        real(dp) :: nu, nu_c, K_opacity
         integer :: ierr
-        logical, dimension(num_conductivity_channels), intent(in) :: K_components
-        real(dp) :: nn,nion, nu, nu_c, kappa_pre, ne, kF, xF, eF, Gamma_e, K_opacity
-        real(dp) :: kappa_n_pre, nu_n, kfn, mnstar, tau, v, R, Tns
-        real(dp) :: Tc(max_number_sf_types)
-    
-        ne = rho/amu*ionic%Ye
-        kF = (threepisquare*ne)**onethird
-        xF = hbar*kF/Melectron/clight
-        eF = sqrt(1.0_dp+xF**2)
-        Gamma_e = Gamma/ionic%Z53
-        kappa_pre = onethird*pi**2*boltzmann**2*T*ne/Melectron/eF
-    
+
         call clear_kappa
-        nu_c = 0.0_dp
-        nu = 0.0_dp
-        K_opacity = 0.0_dp
-        if (K_components(icond_ee)) then 
-            if (which_ee == icond_sy06) then
-                nu_c = ee_SY06(ne,T)
-            else
-                nu_c = ee_PCY(ne,T)
+        
+        ! electrons
+        if (any(K_components(icond_ee:icond_eQ))) then
+            ne = rho/amu*ionic%Ye
+            kF = (threepisquare*ne)**onethird
+            xF = hbar*kF/Melectron/clight
+            eF = sqrt(1.0_dp+xF**2)
+            Gamma_e = Gamma/ionic%Z53
+            kappa_e_pre = onethird*pi**2*boltzmann**2*T*ne/Melectron/eF
+            nu = 0.0_dp
+            nu_c = 0.0_dp
+            if (K_components(icond_ee)) then
+                select case (which_ee)
+                case(icond_sy06)
+                    nu_c = ee_SY06(ne,T)
+                case(icond_pcy)
+                    nu_c = ee_PCY(ne,T)
+                case default
+                    write(error_unit,*)  &
+                    &   'unknown option for ee scattering: using SY06'
+                    nu_c = ee_SY06(ne,T)
+                end select
+                nu = nu + nu_c
+                kappa% ee = kappa_e_pre/nu_c
             end if
-            nu = nu + nu_c
-            kappa% ee = kappa_pre/nu_c
-        end if
-        if (K_components(icond_ei)) then
-            nu_c = eion(kF,Gamma_e,eta,ionic%Ye,ionic%Z,ionic%Z2,ionic%Z53,ionic%A)
-            nu = nu + nu_c
-            if (nu_c > tiny(1.0_dp)) kappa% ei = kappa_pre/nu_c
-        end if
-        if (K_components(icond_eQ)) then
-           if (which_eQ == icond_eQ_potekhin) then
-               nu_c = eQ(kF,T,ionic%Ye,ionic%Z,ionic%Z2,ionic%A,ionic%Q)
-            else
-               nu_c = eQ_page(kF,T,ionic%Ye,ionic%Z,ionic%Z2,ionic%A,ionic%Q)
-           end if
-            nu = nu + nu_c
-            if (ionic%Q > 1.0e-8_dp) then
-                kappa% eQ = kappa_pre/nu_c
-            else
-                kappa% eQ = -1.0_dp
+            if (K_components(icond_ei)) then
+                nu_c = eion( &
+                &   kF,Gamma_e,eta,ionic%Ye,ionic%Z,ionic%Z2,ionic%Z53,ionic%A)
+                nu = nu + nu_c
+                if (nu_c > tiny(1.0_dp)) kappa% ei = kappa_e_pre/nu_c
             end if
+            if (K_components(icond_eQ)) then
+                select case(which_eQ)
+                case(icond_eQ_potekhin)
+                    nu_c = eQ(kF,T,ionic%Ye,ionic%Z,ionic%Z2,ionic%A,ionic%Q)
+                case(icond_eQ_page)
+                    nu_c = eQ_page( &
+                    &    kF,T,ionic%Ye,ionic%Z,ionic%Z2,ionic%A,ionic%Q)
+                end select
+                nu = nu + nu_c
+                if (ionic%Q > 1.0e-8_dp) kappa% eQ = kappa_e_pre/nu_c
+            end if
+            kappa% electron_total = kappa_e_pre/nu
         end if
-        kappa% electron_total = kappa_pre/nu
-        if (K_components(icond_sf) .and. ionic% Yn > 0.0) then
-            ! what if the neutrons aren't SF?
-            nn = rho*ionic% Yn/(1.0_dp-chi)/Mneutron / density_n
-            nion = (1.0_dp-ionic%Yn)*rho/Mneutron/ionic% A /density_n
-            kappa% sf =  sPh(nn,nion,T,ionic)
-        end if
-        if (K_components(icond_kap)) then
-            kappa% kap = Rosseland_kappa(rho,T,mu_e,ionic)
-            K_opacity = 4.0_dp*onethird*arad*clight*T**3/rho/kappa% kap
-        end if
-        kappa% total = kappa% sf + K_opacity
-        if (nu > 0.0_dp) kappa% total = kappa% total + kappa_pre/nu
 
         ! neutrons
-        nu_n = 0.0_dp
-        nu_c = 0.0_dp
-        kappa_n_pre = 0.0_dp
-    
-        if (ionic% Yn > 0.0) then
+        if (any(K_components(icond_sf:icond_nQ)) .and. ionic% Yn > 0) then
+            nu = 0.0_dp
+            nu_c = 0.0_dp
             nn = rho/amu*ionic% Yn/(1.0-chi)
             kFn = (threepisquare*nn)**onethird
             nion = rho/amu*(1.0-ionic%Yn)/ionic%A   
             mnstar = Mneutron
-            kappa_n_pre = onethird*pi**2*boltzmann**2*T*nn/mnstar    
-
-            call sf_get_results(0.0_dp,kfn/cm_to_fm,Tc)
-            ! Now set the superfluid reduction factor
+            kappa_n_pre = onethird*pi**2*boltzmann**2*T*nn/mnstar
+            
+            ! superfluid reduction factor
             R = 1.0
-            Tns = Tc(neutron_1S0)
             if (T < Tns) then
                 tau = T/Tns
                 v = sqrt(1.0-tau)*(1.456-0.157/sqrt(tau) + 1.764/tau)
@@ -99,23 +89,35 @@ contains
                 &   exp(1.456-sqrt(1.456**2+v**2))
                 if (R < 1.0E-10) R = 0.0
             end if
-
+            
             if (K_components(icond_nQ)) then
                 nu_c = n_imp(nn,nion,T,ionic,ierr)
                 kappa% nQ = kappa_n_pre/nu_c*R
-                nu_n = nu_n + nu_c
+                nu = nu + nu_c
             end if
-            if (K_components(icond_np)) then
+            if (K_components(icond_nn)) then
                 nu_c = n_phonon(nn,nion,T,ionic, ierr)
                 kappa% np = kappa_n_pre/nu_c*R
-                nu_n = nu_n + nu_c
+                nu = nu + nu_c
             end if
+            kappa% neutron_total = kappa_n_pre/nu*R
 
-            kappa % neutron_total = kappa_n_pre/nu_n*R
+            ! superfluid phonons
+            if (K_components(icond_sf) .and. T < Tns) then
+                kappa% sf =  sPh(nn/density_n,nion/density_n,T,ionic)
+            end if
+        end if
 
-        end if     
-
-        kappa % total = kappa% total + kappa % neutron_total
+        ! photons
+        K_opacity = 0.0_dp
+        if (K_components(icond_kap)) then
+            kappa% kap = Rosseland_kappa(rho,T,mu_e,ionic)
+            K_opacity = 4.0_dp*onethird*arad*clight*T**3/rho/kappa% kap
+        end if
+        
+        kappa% total = kappa% electron_total  &
+        &   + kappa% neutron_total + kappa% sf &
+        &   + K_opacity
 
         contains
         subroutine clear_kappa()
@@ -258,7 +260,7 @@ contains
         Gk1 = 1.0 + beta*v**3
         GkZ = 1.0-1.0/Z
         Gk = Gs + 0.0105*GkZ*Gk1*Gk0*eta
-    
+        
         a0 = 4.0*kF2/qD2/eta
         D1 = exp(-9.1*eta)
         D = exp(-a0*um1*D1*0.25)
@@ -267,11 +269,15 @@ contains
         w = 4.0*um2*kF2/qD2*w1
     
         sw = s*w
-        fac = exp(sw)*(eone(sw)-eone(sw+w))
-    
-        L1 = 0.5*(log(1.0+1.0/s) + (1.0-exp(-w))*s/(s+1.0) - fac*(1.0+sw))
-        L2 = 0.5*(1.0-(1.0-exp(-w))/w + s*(s/(1.0+s)*(1.0-exp(-w))  &
-                    & - 2.0*log(1.0+1.0/s)  +fac*(2.0+sw)))
+        if (w < 1.0e4) then
+            fac = exp(sw)*(eone(sw)-eone(sw+w))
+            L1 = 0.5*(log(1.0+1.0/s) + (1.0-exp(-w))*s/(s+1.0) - fac*(1.0+sw))
+            L2 = 0.5*(1.0-(1.0-exp(-w))/w + s*(s/(1.0+s)*(1.0-exp(-w))  &
+            & - 2.0*log(1.0+1.0/s)  +fac*(2.0+sw)))
+        else
+            L1 = 0.5*(log((s+1.0)/s) - 1.0/(s+1.0))
+            L2 = (2.0*s+1.0)/(2.0*s+2.0) - s*log((s+1.0)/s)
+        end if
         Lei = (Z2/A)*(L1-v2*L2)*Gk*D
         nu = eifac*eF*Lei*A/Z
     
@@ -499,6 +505,8 @@ contains
 
         real(dp), intent(in) :: nn, nion, temperature
         type(composition_info_type), intent(in) :: ionic
+        integer, intent(out) :: ierr
+    
         real(dp) :: ne      ! number density of electrons
         real(dp) :: kFn     ! neutron Fermi wavevector 
         real(dp) :: EFn     ! neutron Fermi energy
@@ -511,7 +519,6 @@ contains
         real(dp) :: R_a, mnstar
         real(dp) :: isospin, n_0, n_2, n_l, n_in    
         real(dp), dimension(:), pointer :: y
-        integer, intent(out) :: ierr
         integer ,dimension(:), pointer :: iwork => null()
         real(dp), dimension(:), pointer :: work => null()
         real(dp), dimension(1) :: rtol, atol
@@ -565,7 +572,7 @@ contains
 
         call dop853(n,structure_factor_impurity,kn_start,y,kn_end,h, &
         &   int_default_max_step_size,int_default_max_steps, &
-        & rtol,atol,itol, solout, iout, work, lwork, iwork, liwork,  &
+        & rtol,atol,itol, null_solout, iout, work, lwork, iwork, liwork,  &
         &   num_rpar, rpar, num_ipar, ipar, lout, idid)
 
         deallocate(work, iwork)
@@ -658,7 +665,7 @@ contains
 
         call dop853(n,structure_factor_phonon,kn_start,y,kn_end,h, &
         &   int_default_max_step_size,int_default_max_steps, &
-        &   rtol,atol,itol, solout, iout, work, lwork, iwork, liwork,  &
+        &   rtol,atol,itol, null_solout, iout, work, lwork, iwork, liwork,  &
         &   num_rpar, rpar, num_ipar, ipar, lout, idid)
 
         deallocate(work, iwork)
@@ -691,7 +698,7 @@ contains
         integer, intent(in) :: n, lrpar, lipar
         real(dp), intent(in) ::  x,h
         real(dp), intent(inout) :: y(:)
-        real(dp), intent(out) :: dy(:)
+        real(dp), intent(inout) :: dy(:)
         real(dp), intent(inout), pointer :: rpar(:)
         integer, intent(inout), pointer :: ipar(:)
         integer, intent(out) :: ierr
@@ -736,7 +743,7 @@ contains
         integer, intent(in) :: n, lrpar, lipar
         real(dp), intent(in) ::  x,h
         real(dp), intent(inout) :: y(:)
-        real(dp), intent(out) :: dy(:)
+        real(dp), intent(inout) :: dy(:)
         real(dp), intent(inout), pointer :: rpar(:)
         integer, intent(inout), pointer :: ipar(:)
         integer, intent(out) :: ierr
@@ -773,33 +780,6 @@ contains
         formfac = abs(3.0*(dsin(x)-(x)*dcos(x))/(x)**3)
         
         dy(1) = x**3*formfac**2
-        
     end subroutine structure_factor_impurity
-
-    subroutine solout(nr, xold, x, n, y, rwork_y, iwork_y, interp_y, lrpar, rpar, lipar, ipar, irtrn)
-        use dStar_crust_lib
-        
-        integer, intent(in) :: nr, n, lrpar, lipar
-        real(dp), intent(in) :: xold, x
-        real(dp), intent(inout) :: y(:)
-        real(dp), intent(inout), target :: rwork_y(*)
-        integer, intent(inout), target :: iwork_y(*)
-        integer, intent(inout), pointer :: ipar(:) ! (lipar)
-        real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
-        integer, intent(out) :: irtrn
-        interface
-            double precision function interp_y(i, s, rwork_y, iwork_y, ierr)
-            integer, intent(in) :: i ! result is interpolated approximation of y(i) at x=s.
-            double precision, intent(in) :: s ! interpolation x value (between xold and x).
-            double precision, intent(inout), target :: rwork_y(*)
-            integer, intent(inout), target :: iwork_y(*)
-            integer, intent(out) :: ierr
-         end function interp_y
-        end interface ! 
-        integer :: ierr, i
-
-   !     if (ierr /= 0) irtrn = -1
-    end subroutine solout
-
 
 end module eval_conductivity

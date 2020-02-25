@@ -45,7 +45,7 @@ program test_cond
 
     contains
     subroutine do_one(rho)
-		use superfluid_def, only: max_number_sf_types
+		use superfluid_def, only: max_number_sf_types, neutron_1S0
 		use superfluid_lib
         real(dp), intent(in) :: rho
         real(dp) :: Gamma,eta,f,u,p,s,cv,chi_rho,chi_T
@@ -67,7 +67,8 @@ program test_cond
             eta = res(i_Theta) !1.0/TpT
             Gamma = res(i_Gamma)
             mu_e = res(i_mu_e)
-            call get_thermal_conductivity(rho,T,chi,Gamma,eta,mu_e,ionic,kappa)
+            call get_thermal_conductivity(rho,T,chi,Gamma,eta,mu_e,ionic, &
+            &   Tcs(neutron_1S0),kappa)
             write (output_unit, '(5f6.2,10es14.6)') &
                 & lgr,lgT,ionic%Z,ionic%A,ionic%Yn, &
                 & Gamma,mu_e*mev_to_ergs/boltzmann/T, &
