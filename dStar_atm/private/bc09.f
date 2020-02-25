@@ -346,7 +346,7 @@ contains
        ! returns with ierr = 0 if was able to evaluate f and df/dx at x
        ! if df/dx not available, it is okay to set it to 0
        use constants_def
-       use superfluid_def, only: max_number_sf_types
+       use superfluid_def, only: max_number_sf_types, neutron_1S0
        use nucchem_def
        use nucchem_lib
        use dStar_eos_lib
@@ -403,7 +403,8 @@ contains
        mu_e = res(i_mu_e)
        Gamma = res(i_Gamma)
        call get_thermal_conductivity(rho,Teff,chi, &
-           & Gamma,eta,mu_e,ionic,K,which_components=cond_exclude_sf) !cond_use_only_kap)
+           & Gamma,eta,mu_e,ionic,Tcs(neutron_1S0), &
+           & K,which_components=cond_exclude_sf) !cond_use_only_kap)
        kappa = 4.0*onethird*arad*clight*Teff**3/rho/K% total
        rpar(ikappa) = kappa
        rpar(ipres) = P
@@ -453,7 +454,7 @@ contains
 
     subroutine get_coefficients(P,T,rho,lrpar,rpar,lipar,ipar,kappa,del_ad,ierr)
         use constants_def
-        use superfluid_def, only: max_number_sf_types
+        use superfluid_def, only: max_number_sf_types, neutron_1S0
         use nucchem_def, only: composition_info_type
         use dStar_eos_lib
         use conductivity_lib
@@ -515,7 +516,8 @@ contains
         mu_e = res(i_mu_e)
         del_ad = res(i_grad_ad)
         call get_thermal_conductivity(rho,T,chi, &
-            & Gamma,eta,mu_e,ionic,K,which_components=cond_exclude_sf)
+            & Gamma,eta,mu_e,ionic,Tcs(neutron_1S0), &
+            & K,which_components=cond_exclude_sf)
         kappa = 4.0*onethird*arad*clight*T**3/rho/K% total
         
 !         if (dbg) then

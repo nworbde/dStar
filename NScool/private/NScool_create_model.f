@@ -263,11 +263,19 @@ contains
         if (ierr /= 0) return
         
         ! set up the conductivity and neutrino channels
-        nu_channels = [ s% use_crust_nu_pair, s% use_crust_nu_photo, s% use_crust_nu_plasma, &
-        & s% use_crust_nu_bremsstrahlung, s% use_crust_nu_pbf ]
+        nu_channels = [ s% use_crust_nu_pair,  &
+        &               s% use_crust_nu_photo,  &
+        &               s% use_crust_nu_plasma, &
+        &               s% use_crust_nu_bremsstrahlung,  &
+        &               s% use_crust_nu_pbf ]
         
         cond_channels = [ s% use_ee_conductivity, &
-        & s% use_ei_conductivity, s% use_eQ_conductivity, s% use_sf_conductivity, s% use_rad_opacity ]
+        &                 s% use_ei_conductivity,  &
+        &                 s% use_eQ_conductivity,  &
+        &                 s% use_sf_conductivity,  &
+        &                 s% use_nph_conductivity, &
+        &                 s% use_nQ_conductivity, &
+        &                 s% use_rad_opacity ]
         
         s% tab_lnT(1:s% n_tab) = [(lgT_tab_min*ln10 + (lgT_tab_max-lgT_tab_min)*ln10*real(itemp-1,dp)/real(s% n_tab-1,dp), &
         &   itemp = 1, s% n_tab)]
@@ -365,7 +373,7 @@ contains
                                 
                 call get_thermal_conductivity(s% rho_bar(iz), Ttab, chi, &
                 &   eos_results(i_Gamma), eos_results(i_Theta), &
-                &   eos_results(i_mu_e), s% ionic_bar(iz), &
+                &   eos_results(i_mu_e), s% ionic_bar(iz), Tc(neutron_1S0), &
                 &   Kcomponents, use_pcy=s% use_pcy_for_ee_scattering, &
                 &   use_page=s% use_page_for_eQ_scattering, &
                 &   which_components=cond_channels)

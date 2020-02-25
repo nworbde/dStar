@@ -114,11 +114,13 @@
     ! controls for the conductivity: setting these = .TRUE. means don't use the defaults
     use_pcy_for_ee_scattering = .FALSE.
     use_page_for_eQ_scattering = .FALSE.
-    ! set which channels to include; we don't include neutron SF by default just yet
+    ! set which channels to include; we only include electrons by default
     use_ee_conductivity = .TRUE.
     use_ei_conductivity = .TRUE.
     use_eQ_conductivity = .TRUE.
     use_sf_conductivity = .FALSE.
+    use_nph_conductivity = .FALSE.
+    use_nQ_conductivity = .FALSE.
     use_rad_opacity = .FALSE.
     
     ! EOS controls: set to < 0 to use defaults

@@ -64,14 +64,20 @@
     character(len=32) :: which_neutron_3P2_gap
     real(dp), dimension(3) :: scale_sf_critical_temperatures
     
-    ! controls for the conductivity: setting these = .TRUE. means don't use the defaults
+    ! controls for the thermal conductivity
+    
+    ! select formalism for electron-electron, electron-impurity scattering
+    ! setting these = .TRUE. means don't use the defaults
     logical :: use_pcy_for_ee_scattering
     logical :: use_page_for_eQ_scattering
+    
     ! set which channels to include
     logical :: use_ee_conductivity
     logical :: use_ei_conductivity
     logical :: use_eQ_conductivity
     logical :: use_sf_conductivity
+    logical :: use_nph_conductivity
+    logical :: use_nQ_conductivity
     logical :: use_rad_opacity
     
     ! EOS controls: set to < 0 to use defaults
