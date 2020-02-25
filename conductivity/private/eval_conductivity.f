@@ -228,6 +228,7 @@ contains
         !   end function eone
         ! end interface
         real(dp), parameter :: um1 = 2.8, um2 = 12.973, onesixth = 1.0/6.0, fourthird = 4.0*onethird
+        real(dp), parameter :: sw_max = log(huge(1.0_dp))
         real(dp) :: electroncompton
         real(dp) :: aB
         real(dp) :: eifac
@@ -269,7 +270,7 @@ contains
         w = 4.0*um2*kF2/qD2*w1
     
         sw = s*w
-        if (w < 1.0e4) then
+        if (sw < sw_max) then
             fac = exp(sw)*(eone(sw)-eone(sw+w))
             L1 = 0.5*(log(1.0+1.0/s) + (1.0-exp(-w))*s/(s+1.0) - fac*(1.0+sw))
             L2 = 0.5*(1.0-(1.0-exp(-w))/w + s*(s/(1.0+s)*(1.0-exp(-w))  &
@@ -561,7 +562,7 @@ contains
         y(1) = 0.0
         kn_start = 1.0E-10 
         kn_end = 2.0*kFn*R_a
-        h = -0.1
+        h = 0.0
 
         rpar(1) = temperature
         rpar(2) = ionic% Z
@@ -574,6 +575,11 @@ contains
         &   int_default_max_step_size,int_default_max_steps, &
         & rtol,atol,itol, null_solout, iout, work, lwork, iwork, liwork,  &
         &   num_rpar, rpar, num_ipar, ipar, lout, idid)
+
+        if (idid < 0) then
+            write(error_unit,*) 'n_imp: dop853 returned with error',idid
+            ierr = idid
+        end if
 
         deallocate(work, iwork)
     
@@ -655,7 +661,7 @@ contains
     
         kn_start = 1.0E-10 
         kn_end = 2.0*kFn*R_a
-        h = -0.1
+        h = 0.0
         rpar(1) = temperature
         rpar(2) = ionic% Z
         rpar(3) = ionic% A
@@ -667,6 +673,11 @@ contains
         &   int_default_max_step_size,int_default_max_steps, &
         &   rtol,atol,itol, null_solout, iout, work, lwork, iwork, liwork,  &
         &   num_rpar, rpar, num_ipar, ipar, lout, idid)
+        
+        if (idid < 0) then
+            write(error_unit,*) 'n_phonon: dop853 returned with error',idid
+            ierr = idid
+        end if
 
         deallocate(work, iwork)
     
