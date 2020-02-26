@@ -5,11 +5,11 @@ A collection of modules for computing neutron star structure and evolution.
 ## What's new
 
 ### Neutron thermal conductivity
-Alex Deibel coded up routines to compute the thermal conductivity of normal neutrons (Deibel et al. [2017], Astrophys. Jour. 839: 95). In addition, the thermal conductivity via phonons in the superfluid phase is computed following Aguilera et al. (2009), Phys. Rev. Lett. 102: 091101. This conductivity is not included by default, but can be added by setting 
+Alex Deibel wrote routines to compute the thermal conductivity of normal neutrons (Deibel et al. [2017], Astrophys. Jour. 839: 95). In addition, the thermal conductivity via phonons in the superfluid phase (Aguilera et al. [2009], Phys. Rev. Lett. 102: 091101) is computed. The neutron conductivity is not included by default, but can be activated by setting 
 
-    use_sf_conductivity = .FALSE.
-    use_nph_conductivity = .FALSE.
-    use_nQ_conductivity = .FALSE.
+    use_sf_conductivity = .TRUE.
+    use_nph_conductivity = .TRUE.
+    use_nQ_conductivity = .TRUE.
 
 in the inlist.
 
