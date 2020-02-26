@@ -4,16 +4,16 @@ A collection of modules for computing neutron star structure and evolution.
 
 ## What's new
 
-### The code has been updated to use `mesa` version 10398.
-This required (finally) getting rid of tabs, explicity specifying `dp` in a few places, and changing `INTENT()` on a few interfaces. 
+### Neutron thermal conductivity
+Alex Deibel coded up routines to compute the thermal conductivity of normal neutrons (Deibel et al. [2017], Astrophys. Jour. 839: 95). In addition, the thermal conductivity via phonons in the superfluid phase is computed following Aguilera et al. (2009), Phys. Rev. Lett. 102: 091101. This conductivity is not included by default, but can be added by setting 
 
-### A tutorial on crust cooling
-Look in the `examples/INT-16-2b-demo` directory for a demonstration of using this code that was presented in a talk given at the INT workshop 16-2b, "Phases of Dense Matter".  See the `README.md` file in that directory for instructions.
+    use_sf_conductivity = .FALSE.
+    use_nph_conductivity = .FALSE.
+    use_nQ_conductivity = .FALSE.
 
-### Total mass, radius are now reported
-Both the `history.data` and `profile` datafiles now list the total mass (solar units) and radius (kilometers) in the header.  By total, I mean the value at the top of the domain, not the photosphere.
+in the inlist.
 
-### Multiple accretion epochs can be specified
+### Multiple accretion epochs
 You can specify a run with a number of accretion "epochs": distinct periods of time with a different accretion rate.  For example, suppose you wish to accrete at 1.5e17 g/s for 1000 d (starting at t = 0 d) and then cool for 5000 d (that is, from t = 1000 d to t = 6000 d).  In the inlist, you would set the following flags.
 
       number_epochs = 2
@@ -52,6 +52,12 @@ The header ends with a line
 
 Subsequent lines are assumed to contain two columns of time and accretion rate. These columns are read into a temporary buffer, scaled by `Mdot_scale` and `time_scale`, repeated `number_cycles` times, and then used to integrate in time.  See the example `accretion` for an example.
 
+### A tutorial on crust cooling
+Look in the `examples/INT-16-2b-demo` directory for a demonstration of using this code that was presented in a talk given at the INT workshop 16-2b, "Phases of Dense Matter".  See the `README.md` file in that directory for instructions.
+
+### Total mass, radius are now reported
+Both the `history.data` and `profile` datafiles now list the total mass (solar units) and radius (kilometers) in the header.  By total, I mean the value at the top of the domain, not the photosphere.
+
 ### Time, observed effective temperature are stored
 The structure pointer now contains arrays `t_monitor` and `Teff_monitor` that contain the epoch end times (in days) and the observer-frame effective temperature (in K) at the end of each epoch.  This facilitates comparison with observations.
 
@@ -66,7 +72,7 @@ Check out `tools/reader.py`. This contains a python class for reading the output
   * [MESA](http://mesa.sourceforge.net): `dStar` makes use of the `MESA` numerical, utility, and equation of state libraries.
   * [MESA SDK](http://www.astro.wisc.edu/~townsend/static.php?ref=mesasdk): the compilation of both `MESA` and `dStar` has been tested using a specific build environment.
 
-This version of `dStar` has been tested with `MESA` version 10398 and the 2018 January 27 (or later) version of the `MESA SDK`.
+This version of `dStar` has been tested with `MESA` version 10398 and 11701 and the 2018 January 27 (or later) version of the `MESA SDK`.
 
 ## How to install
   1. Follow the instructions on the MESA website to build a working version of `MESA`, and ensure that the environment variable `MESA_DIR` points to that directory.
@@ -92,8 +98,7 @@ If you do use `dStar`, we'd appreciate a citation! `dStar` is listed in the Astr
 
 A bibliographic entry can be obtained from [ADS](http://adsabs.harvard.edu/abs/2015ascl.soft05034B).
 
-
-## Upcoming improvements
+## Planned improvements
   1. add load/save options for models
   2. ability to generate an atmosphere model with an arbitrary composition.
   3. Add environment variable pointer to root directory and allow cache directories to be in a user-specified location.
