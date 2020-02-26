@@ -31,9 +31,9 @@ for d in datafiles:
     info = parse_one(d)
     known_sf[sftype][attr] = info
 
-print '!   {0:>8}    {1:<}'.format('attr','reference notes')
+print('!   {0:>8}    {1:<}'.format('attr','reference notes'))
 
 for sftype in ['p1','n1','n3']:
-    print '\n!   {0:^16}\n!   ================'.format(headers[sftype])
+    print('\n!   {0:^16}\n!   ================'.format(headers[sftype]))
     for entry in iter(known_sf[sftype]):
-            print '!   {0:>8}    {1:<}'.format(entry,known_sf[sftype][entry])
+            print('!   {0:>8}    {1:<}'.format(entry,known_sf[sftype][entry]))

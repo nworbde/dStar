@@ -28,9 +28,13 @@ module NScool_ctrls_io
         make_inner_boundary_insulating, &
         fix_atmosphere_temperature_when_accreting, & 
         atmosphere_temperature_when_accreting, &
+        load_epochs, &
+        epoch_datafile, &
+        epoch_time_scale, &
+        epoch_Mdot_scale, &
         number_epochs, &
-        epoch_Mdots, &
-        epoch_boundaries, &
+        basic_epoch_Mdots, &
+        basic_epoch_boundaries, &
         core_mass, &
         core_radius, &
         lgPcrust_bot, &
@@ -46,6 +50,7 @@ module NScool_ctrls_io
         lgP_min_heating_shallow, &
         lgP_max_heating_shallow, &
         Q_heating_shallow, &
+        use_other_set_heating, &
         which_proton_1S0_gap, &
         which_neutron_1S0_gap, &
         which_neutron_3P2_gap, &
@@ -56,6 +61,8 @@ module NScool_ctrls_io
         use_ei_conductivity, &
         use_eQ_conductivity, &
         use_sf_conductivity, &
+        use_nph_conductivity, &
+        use_nQ_conductivity, &
         use_rad_opacity, &
         eos_gamma_melt_pt, &
         eos_rsi_melt_pt, &
@@ -132,8 +139,11 @@ contains
     end subroutine set_default_controls
 
     subroutine store_controls(s,ierr)
+        use iso_fortran_env, only : error_unit
         use constants_def, only : Msun, julian_day
         use num_lib, only : solver_option
+        use storage, only: allocate_NScool_epoch_arrays
+        use NScool_epochs, only: do_load_epochs
         type(NScool_info), pointer :: s
         integer, intent(out) :: ierr
 
@@ -142,7 +152,8 @@ contains
         s% load_model_file = load_model_file
         s% model_file = model_file
         s% write_interval_for_terminal = write_interval_for_terminal
-        s% write_interval_for_terminal_header = write_interval_for_terminal_header
+        s% write_interval_for_terminal_header = &
+        &   write_interval_for_terminal_header
         s% write_interval_for_history = write_interval_for_history
         s% write_interval_for_profile = write_interval_for_profile
         s% starting_number_for_profile = starting_number_for_profile
@@ -170,9 +181,6 @@ contains
         s% make_inner_boundary_insulating = make_inner_boundary_insulating
         s% fix_atmosphere_temperature_when_accreting = fix_atmosphere_temperature_when_accreting
         s% atmosphere_temperature_when_accreting = atmosphere_temperature_when_accreting
-        s% number_epochs = number_epochs
-        s% epoch_Mdots = epoch_Mdots
-        s% epoch_boundaries = epoch_boundaries*julian_day
 
         s% Mcore = core_mass
         s% Rcore = core_radius
@@ -190,6 +198,7 @@ contains
         s% lgP_min_heating_shallow = lgP_min_heating_shallow
         s% lgP_max_heating_shallow = lgP_max_heating_shallow
         s% Q_heating_shallow = Q_heating_shallow
+        s% use_other_set_heating = use_other_set_heating
 
         s% which_proton_1S0_gap = which_proton_1S0_gap
         s% which_neutron_1S0_gap = which_neutron_1S0_gap
@@ -203,6 +212,8 @@ contains
         s% use_ei_conductivity = use_ei_conductivity
         s% use_eQ_conductivity = use_eQ_conductivity
         s% use_sf_conductivity = use_sf_conductivity
+        s% use_nph_conductivity = use_nph_conductivity
+        s% use_nQ_conductivity = use_nQ_conductivity
         s% use_rad_opacity = use_rad_opacity
 
         s% eos_gamma_melt_pt = eos_gamma_melt_pt
@@ -229,7 +240,35 @@ contains
         s% atm_model = atm_model
         s% fix_Qimp = fix_Qimp
         s% Qimp = Qimp
-
+        
+        ! epochs and mass accretion rates
+        s% load_epochs = load_epochs
+        s% epoch_datafile = epoch_datafile
+        s% epoch_time_scale = epoch_time_scale
+        s% epoch_Mdot_scale = epoch_Mdot_scale
+        if (s% load_epochs) then
+            call do_load_epochs(s, ierr)
+            if (failed('unable to load epochs')) return
+        else
+            s% number_epochs = number_epochs
+            call allocate_NScool_epoch_arrays(s, ierr)
+            if (failed('unable to allocate epochs')) return
+            s% epoch_Mdots(1:number_epochs) = &
+            &   basic_epoch_Mdots(1:number_epochs) * s% epoch_Mdot_scale
+            s% epoch_boundaries(0:number_epochs) = &
+            &   basic_epoch_boundaries(0:number_epochs) *  &
+            &   s% epoch_time_scale*julian_day
+        end if
+        
+    contains
+        function failed(msg)
+            character(len=*), intent(in) :: msg
+            logical :: failed
+            failed = .FALSE.
+            if (ierr == 0) return
+            write (error_unit,*) 'store_controls: ' // msg
+            failed = .TRUE.
+        end function failed
    end subroutine store_controls
    
    subroutine write_controls(io,ierr)

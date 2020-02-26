@@ -30,11 +30,14 @@
     fix_atmosphere_temperature_when_accreting = .TRUE.
     atmosphere_temperature_when_accreting = 1.0d8
     
+    load_epochs = .FALSE.
+    epoch_datafile = 'accretion_history'
+    epoch_time_scale = 1.0
+    epoch_Mdot_scale = 1.0
     number_epochs = 1
-    epoch_Mdots = 0.0_dp ! g/s
-    ! days
-    epoch_boundaries = 0.0_dp
-    epoch_boundaries(1) = 365.0_dp
+    basic_epoch_Mdots = 0.0_dp ! g/s
+    basic_epoch_boundaries = 0.0_dp  ! days
+    basic_epoch_boundaries(1) = 365.0_dp
     
     ! other routines
     use_other_set_Qimp = .FALSE.
@@ -49,7 +52,7 @@
     core_mass = 1.6     ! Msun
     core_radius = 11.0    ! km
     
-    lgPcrust_bot = 32.5 ! cgs
+    lgPcrust_bot = 32.5 ! cgs ... 32.8 is better (Will Newton)
     lgPcrust_top = 27.0 ! cgs; this is also used to set the bottom of the atmosphere for bc09
     
     target_resolution_lnP = 0.1
@@ -64,8 +67,8 @@
     lgP_min_heating_shallow = 27.0
     lgP_max_heating_shallow = 28.0
     Q_heating_shallow = 3.0! MeV
-    
-    
+    use_other_set_heating = .FALSE.
+
 !   selection of superfluid gaps, courtesy Dany Page
 !
 !       attr    reference notes
@@ -111,11 +114,13 @@
     ! controls for the conductivity: setting these = .TRUE. means don't use the defaults
     use_pcy_for_ee_scattering = .FALSE.
     use_page_for_eQ_scattering = .FALSE.
-    ! set which channels to include; we don't include neutron SF by default just yet
+    ! set which channels to include; we only include electrons by default
     use_ee_conductivity = .TRUE.
     use_ei_conductivity = .TRUE.
     use_eQ_conductivity = .TRUE.
     use_sf_conductivity = .FALSE.
+    use_nph_conductivity = .FALSE.
+    use_nQ_conductivity = .FALSE.
     use_rad_opacity = .FALSE.
     
     ! EOS controls: set to < 0 to use defaults

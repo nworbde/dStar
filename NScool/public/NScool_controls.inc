@@ -25,9 +25,13 @@
     logical :: fix_atmosphere_temperature_when_accreting
     real(dp) :: atmosphere_temperature_when_accreting
     
+    logical :: load_epochs
+    character(len=256) :: epoch_datafile
+    real(dp) :: epoch_time_scale
+    real(dp) :: epoch_Mdot_scale
     integer :: number_epochs
-    real(dp), dimension(max_number_epochs) :: epoch_Mdots
-    real(dp), dimension(0:max_number_epochs) :: epoch_boundaries
+    real(dp), dimension(max_number_basic_epochs) :: basic_epoch_Mdots
+    real(dp), dimension(0:max_number_basic_epochs) :: basic_epoch_boundaries
     
     real(dp) :: core_mass
     real(dp) :: core_radius
@@ -48,7 +52,10 @@
     logical  :: turn_on_extra_heating
     real(dp) :: lgP_min_heating_shallow
     real(dp) :: lgP_max_heating_shallow
-    real(dp) :: Q_heating_shallow ! MeV
+    real(dp) :: Q_heating_shallow ! MeV    
+    ! user-supplied routine to compute heating; this will overwrite the 
+    ! built-in routines, but both may be used together
+    logical :: use_other_set_heating
     
     ! controls for the superfluidity
     logical :: use_other_sf_critical_temperatures
@@ -57,14 +64,20 @@
     character(len=32) :: which_neutron_3P2_gap
     real(dp), dimension(3) :: scale_sf_critical_temperatures
     
-    ! controls for the conductivity: setting these = .TRUE. means don't use the defaults
+    ! controls for the thermal conductivity
+    
+    ! select formalism for electron-electron, electron-impurity scattering
+    ! setting these = .TRUE. means don't use the defaults
     logical :: use_pcy_for_ee_scattering
     logical :: use_page_for_eQ_scattering
+    
     ! set which channels to include
     logical :: use_ee_conductivity
     logical :: use_ei_conductivity
     logical :: use_eQ_conductivity
     logical :: use_sf_conductivity
+    logical :: use_nph_conductivity
+    logical :: use_nQ_conductivity
     logical :: use_rad_opacity
     
     ! EOS controls: set to < 0 to use defaults

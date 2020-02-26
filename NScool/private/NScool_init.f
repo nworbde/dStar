@@ -124,9 +124,10 @@ contains
         nullify(s% tab_lnGamma)
         nullify(s% tab_lnK)   ! (4*n_tab, nz) coefficients for ln(Kcond)
         
-        ! storage for Teff(t)
+        ! storage for Teff(t), F(t), Qb(t)
         nullify(s% t_monitor)
         nullify(s% Teff_monitor)
+        nullify(s% Qb_monitor)
     end function alloc_NScool_data
     
     subroutine dealloc_NScool_data(id, ierr)

@@ -21,8 +21,8 @@ This directory contains an example run of an accretion outburst/quiescent coolin
     
         ! integration epochs
         number_epochs = 9
-        epoch_Mdots = 1.0e17,8*0.0
-        epoch_boundaries = -4383.0,0.0,65.1,235.7,751.6,929.5,1500.5,1570.4,1595.4,3039.7
+        basic_epoch_Mdots = 1.0e17,8*0.0
+        basic_epoch_boundaries = -4383.0,0.0,65.1,235.7,751.6,929.5,1500.5,1570.4,1595.4,3039.7
         
     We modify `run.f` to compute a metric for how well the model fits the observed lightcurve.
     

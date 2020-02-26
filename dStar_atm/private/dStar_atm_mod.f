@@ -8,17 +8,17 @@ contains
         character(len=*), intent(in) :: prefix
         real(dp), intent(in) :: grav,Plight,Pb
         integer, intent(out) :: ierr
-		type(atm_table_type), pointer :: tab
+        type(atm_table_type), pointer :: tab
         character(len=atm_filename_length) :: table_name, cache_filename
         logical :: have_cache
         integer :: unitno
         
         tab => atm_table
-		! if the table is already allocated, issue a warning and scrub the table
-		if (tab% is_loaded) then
-			write(error_unit,'(a)') 'do_load_atm_table: overwriting already loaded table'
-			call do_free_atm_table(tab)
-		end if
+        ! if the table is already allocated, issue a warning and scrub the table
+        if (tab% is_loaded) then
+            write(error_unit,'(a)') 'do_load_atm_table: overwriting already loaded table'
+            call do_free_atm_table(tab)
+        end if
 
         call generate_atm_filename(prefix,grav,Plight,Pb,table_name)
         cache_filename = trim(atm_datadir)//'/cache/'//trim(table_name)//'.bin'
@@ -51,7 +51,7 @@ contains
         character(len=*), intent(in) :: prefix
         real(dp), intent(in) :: grav,Plight,Pb
         type(atm_table_type), pointer :: tab
-		real(dp), dimension(:), pointer :: work=>null()
+        real(dp), dimension(:), pointer :: work=>null()
         real(dp), pointer, dimension(:,:) :: lgTeff_val, lgflux_val
         real(dp) :: lgTbmin, delta_lgTb, lgTeffmin, delta_lgTeff
         integer :: N, i, ierr
@@ -150,35 +150,35 @@ contains
         integer, intent(in) :: n
         integer, intent(out) :: ierr
         
-		allocate(tab% lgTb(n),tab% lgTeff(4*n), tab% lgflux(4*n),stat=ierr)
+        allocate(tab% lgTb(n),tab% lgTeff(4*n), tab% lgflux(4*n),stat=ierr)
         if (ierr /= 0) return
         tab% nv = n
     end subroutine do_allocate_atm_table
     
-	subroutine generate_atm_filename(prefix,grav,Plight,Pb,filename)
-		! naming convention for flies is prefix_gggg_pppp_bbbb
-		! where gggg = 100*log10(g), pppp = 100*log10(Plight), 
+    subroutine generate_atm_filename(prefix,grav,Plight,Pb,filename)
+        ! naming convention for flies is prefix_gggg_pppp_bbbb
+        ! where gggg = 100*log10(g), pppp = 100*log10(Plight), 
         ! and bbbb = 100*log10(Pb), to 4 significant digits
-		character(len=*), intent(in) :: prefix
-		real(dp), intent(in) :: grav,Plight,Pb
-		character(len=atm_filename_length), intent(out) :: filename
-		
-		write (filename,'(a,3("_",i0.4))') trim(prefix), &
-				& int(100.0*log10(grav)), int(100.0*log10(Plight)), int(100.0*log10(Pb))
-	end subroutine generate_atm_filename
+        character(len=*), intent(in) :: prefix
+        real(dp), intent(in) :: grav,Plight,Pb
+        character(len=atm_filename_length), intent(out) :: filename
+        
+        write (filename,'(a,3("_",i0.4))') trim(prefix), &
+                & int(100.0*log10(grav)), int(100.0*log10(Plight)), int(100.0*log10(Pb))
+    end subroutine generate_atm_filename
 
-	subroutine do_free_atm_table(tab)
-		type(atm_table_type), pointer :: tab
-		tab% nv = 0
-		tab% lgTb_min = 0.0
-		tab% lgTb_max = 0.0
-		if (allocated(tab% lgTb)) deallocate(tab% lgTb)
-		if (associated(tab% lgTeff)) deallocate(tab% lgTeff)
-		if (associated(tab% lgflux)) deallocate(tab% lgflux)
+    subroutine do_free_atm_table(tab)
+        type(atm_table_type), pointer :: tab
+        tab% nv = 0
+        tab% lgTb_min = 0.0
+        tab% lgTb_max = 0.0
+        if (allocated(tab% lgTb)) deallocate(tab% lgTb)
+        if (associated(tab% lgTeff)) deallocate(tab% lgTeff)
+        if (associated(tab% lgflux)) deallocate(tab% lgflux)
         nullify(tab% lgTeff)
         nullify(tab% lgflux)
-		tab% is_loaded = .FALSE.
-	end subroutine do_free_atm_table
+        tab% is_loaded = .FALSE.
+    end subroutine do_free_atm_table
         
     function failure(msg,ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit

@@ -23,16 +23,16 @@ program test_crust
     
     call nucchem_init('../../data',ierr)
     call check_okay('nucchem_init',ierr)
-	
+    
     call sf_startup('../../data',ierr)
     call check_okay('sf_startup',ierr)
-	
+    
     call sf_load_gaps('ns','gc','t72',ierr)
     call check_okay('sf_load_gaps',ierr)
-	
+    
     call dStar_eos_startup('../../data')
     call check_okay('dStar_eos_startup',ierr)
-	
+    
     eos_handle = alloc_dStar_eos_handle(ierr)
     call check_okay('alloc_dStar_eos_handle',ierr)
     
@@ -73,14 +73,14 @@ program test_crust
     call nucchem_shutdown
 
 contains
-	subroutine check_okay(msg,ierr)
-		use iso_fortran_env, only : error_unit
-		character(len=*), intent(in) :: msg
-		integer, intent(inout) :: ierr
-		if (ierr /= 0) then
-			write (error_unit,*) trim(msg)//': ierr = ',ierr
-			if (ierr < 0) stop
-		end if
-	end subroutine check_okay
+    subroutine check_okay(msg,ierr)
+        use iso_fortran_env, only : error_unit
+        character(len=*), intent(in) :: msg
+        integer, intent(inout) :: ierr
+        if (ierr /= 0) then
+            write (error_unit,*) trim(msg)//': ierr = ',ierr
+            if (ierr < 0) stop
+        end if
+    end subroutine check_okay
 
 end program test_crust

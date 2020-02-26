@@ -1,7 +1,7 @@
 include $(MESA_DIR)/utils/makefile_header
 
 LIB = libnscool.a
-LIB_OBJS = NScool_def.o NScool_private_def.o NScool_storage.o NScool_crust_tov.o NScool_ctrls_io.o NScool_create_model.o  NScool_init.o NScool_profile.o NScool_history.o NScool_terminal.o NScool_evolve.o NScool_lib.o argparse.o
+LIB_OBJS = NScool_def.o NScool_private_def.o NScool_storage.o NScool_crust_tov.o NScool_epochs.o NScool_ctrls_io.o NScool_create_model.o  NScool_init.o NScool_profile.o NScool_history.o NScool_terminal.o NScool_evolve.o NScool_lib.o argparse.o
 
 MOD_JOB_DIR=../job
 VPATH = $(MOD_PUBLIC_DIR):$(MOD_PRIVATE_DIR):$(MOD_JOB_DIR)

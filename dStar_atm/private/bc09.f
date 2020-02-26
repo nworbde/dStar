@@ -41,16 +41,16 @@ module bc09
     
 contains
     
-	subroutine do_get_bc09_Teff(grav, Plight, Pb, lgTb, lgTeff, lgflux, ierr)
-		use constants_def
+    subroutine do_get_bc09_Teff(grav, Plight, Pb, lgTb, lgTeff, lgflux, ierr)
+        use constants_def
         use dStar_eos_lib
         
-		real(dp), intent(in) :: grav	! surface gravity, in the local frame
-		real(dp), intent(in) :: Plight	! pressure at which layer of light elements terminates
+        real(dp), intent(in) :: grav    ! surface gravity, in the local frame
+        real(dp), intent(in) :: Plight  ! pressure at which layer of light elements terminates
         real(dp), intent(in) :: Pb      ! pressure at base of layer
-		real(dp), intent(out), dimension(:) :: lgTb	! temperature at a base column
-		real(dp), intent(in), dimension(:) :: lgTeff    ! effective temperature
-        real(dp), intent(out), dimension(:) :: lgflux	! flux
+        real(dp), intent(out), dimension(:) :: lgTb ! temperature at a base column
+        real(dp), intent(in), dimension(:) :: lgTeff    ! effective temperature
+        real(dp), intent(out), dimension(:) :: lgflux   ! flux
         integer, intent(out) :: ierr
         integer :: i, n
         integer :: eos_handle
@@ -204,7 +204,7 @@ contains
         
         if (idid < 0) then
             write (error_unit,*) 'error in integration'
-            write (error_unit,'(2(a,f8.4))'), 'lnP = ',lnP,'; lnT4 = ',lnT4(1)
+            write (error_unit,'(2(a,f8.4))') 'lnP = ',lnP,'; lnT4 = ',lnT4(1)
             ierr = idid 
             return
         end if
@@ -264,8 +264,8 @@ contains
         use iso_fortran_env, only: error_unit
         use constants_def
         use nucchem_def
-    	use nucchem_lib
-    	use num_lib
+        use nucchem_lib
+        use num_lib
         integer, parameter :: default_maximum_iterations_photosphere = 20
         real(dp), parameter :: default_tolerance_photosphere_lnrho = 1.0e-6_dp
         real(dp), parameter :: default_tolerance_photosphere_condition = 1.0e-8_dp
@@ -289,7 +289,7 @@ contains
         
         ierr = 0
 
-     	! set iteration count, tolerances
+        ! set iteration count, tolerances
         maximum_iterations = default_maximum_iterations_photosphere
         eps_lnrho = default_tolerance_photosphere_lnrho
         eps_ph = default_tolerance_photosphere_condition
@@ -327,7 +327,7 @@ contains
             return
         end if
 
-		lnrho_ph = safe_root_with_initial_guess(photosphere,lnrho_guess,lnrho1,lnrho3,ph1,ph3, &
+        lnrho_ph = safe_root_with_initial_guess(photosphere,lnrho_guess,lnrho1,lnrho3,ph1,ph3, &
             &   maximum_iterations,eps_lnrho,eps_ph,lrpar,rpar,lipar,ipar,ierr)
 
         if (ierr /= 0) then
@@ -346,7 +346,7 @@ contains
        ! returns with ierr = 0 if was able to evaluate f and df/dx at x
        ! if df/dx not available, it is okay to set it to 0
        use constants_def
-	   use superfluid_def, only: max_number_sf_types
+       use superfluid_def, only: max_number_sf_types, neutron_1S0
        use nucchem_def
        use nucchem_lib
        use dStar_eos_lib
@@ -363,10 +363,10 @@ contains
        type(composition_info_type) :: ionic
        type(conductivity_components) :: K
        real(dp), dimension(num_dStar_eos_results) :: res
-	   integer, pointer, dimension(:) :: charged_ids=>null()
+       integer, pointer, dimension(:) :: charged_ids=>null()
        real(dp), pointer, dimension(:) :: Yion=>null()
-	   real(dp), dimension(max_number_sf_types) :: Tcs
-	       
+       real(dp), dimension(max_number_sf_types) :: Tcs
+           
        ierr = 0
        ! unpack the arguments       
        rho = exp(lnrho)
@@ -393,9 +393,9 @@ contains
        Yion(1:ncharged)=>rpar(number_base_rpar+1:number_base_rpar+ncharged)
        chi = use_default_nuclear_size
 
-	   Tcs = 0.0_dp
+       Tcs = 0.0_dp
        call eval_crust_eos(eos_handle,rho,Teff,ionic,ncharged,charged_ids, &
-       	&	Yion, Tcs, res,phase,chi)
+        &   Yion, Tcs, res,phase,chi)
        
        P = exp(res(i_lnP))
        rpar(ipres) = P
@@ -403,11 +403,12 @@ contains
        mu_e = res(i_mu_e)
        Gamma = res(i_Gamma)
        call get_thermal_conductivity(rho,Teff,chi, &
-           & Gamma,eta,mu_e,ionic,K,which_components=cond_exclude_sf) !cond_use_only_kap)
+           & Gamma,eta,mu_e,ionic,Tcs(neutron_1S0), &
+           & K,which_components=cond_exclude_sf) !cond_use_only_kap)
        kappa = 4.0*onethird*arad*clight*Teff**3/rho/K% total
        rpar(ikappa) = kappa
        rpar(ipres) = P
-	   dfdlnrho = 0.0
+       dfdlnrho = 0.0
        photosphere = P - tau_ph*gravity/kappa
     end function photosphere
     
@@ -422,7 +423,7 @@ contains
        integer, intent(in) :: n, lrpar, lipar
        real(dp), intent(in) :: lnP, h
        real(dp), intent(inout) :: lnT4(:)   ! 4.0*ln(T/Teff)
-       real(dp), intent(out) :: dlnT4dlnP(:)
+       real(dp), intent(inout) :: dlnT4dlnP(:)
        integer, intent(inout), pointer :: ipar(:) ! (lipar)
        real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
        integer, intent(out) :: ierr ! nonzero means retry with smaller timestep.
@@ -453,7 +454,7 @@ contains
 
     subroutine get_coefficients(P,T,rho,lrpar,rpar,lipar,ipar,kappa,del_ad,ierr)
         use constants_def
-		use superfluid_def, only: max_number_sf_types
+        use superfluid_def, only: max_number_sf_types, neutron_1S0
         use nucchem_def, only: composition_info_type
         use dStar_eos_lib
         use conductivity_lib
@@ -471,7 +472,7 @@ contains
         integer, dimension(:), pointer :: charged_ids=>null()
         real(dp), dimension(:), pointer :: Yion=>null()
         real(dp) :: lnrho,lnrho_guess, Gamma, eta, mu_e, chi
-		real(dp), dimension(max_number_sf_types) :: Tcs
+        real(dp), dimension(max_number_sf_types) :: Tcs
         real(dp), dimension(num_dStar_eos_results) :: res
         integer :: phase
         type(conductivity_components) :: K
@@ -500,7 +501,7 @@ contains
         ncharged = ipar(iNcharged)
         charged_ids(1:ncharged) => ipar(number_base_ipar+1:number_base_ipar+ncharged)
         Yion(1:ncharged) => rpar(number_base_rpar+1:number_base_rpar+ncharged)
-		Tcs = 0.0_dp
+        Tcs = 0.0_dp
         call eval_crust_eos(eos_handle,rho,T,ionic,ncharged,charged_ids,Yion, &
                 &   Tcs, res,phase,chi)
                 
@@ -515,7 +516,8 @@ contains
         mu_e = res(i_mu_e)
         del_ad = res(i_grad_ad)
         call get_thermal_conductivity(rho,T,chi, &
-            & Gamma,eta,mu_e,ionic,K,which_components=cond_exclude_sf)
+            & Gamma,eta,mu_e,ionic,Tcs(neutron_1S0), &
+            & K,which_components=cond_exclude_sf)
         kappa = 4.0*onethird*arad*clight*T**3/rho/K% total
         
 !         if (dbg) then
@@ -564,7 +566,7 @@ contains
             return
         end if
         
-		lnrho = safe_root_with_initial_guess(eval_pressure,lnrho_guess,lnrho1,lnrho3,p1,p3, &
+        lnrho = safe_root_with_initial_guess(eval_pressure,lnrho_guess,lnrho1,lnrho3,p1,p3, &
             &   maximum_iterations,eps_rho,eps_p,lrpar,rpar,lipar,ipar,ierr)
 
         if (ierr /= 0) then
@@ -583,7 +585,7 @@ contains
     real(dp) function eval_pressure(lnrho, dlnPdlnrho, lrpar, rpar, lipar, ipar, ierr)
        ! returns with ierr = 0 if was able to evaluate lnP and dlnP/dlnrho at rho
        use constants_def
-	   use superfluid_def, only: max_number_sf_types
+       use superfluid_def, only: max_number_sf_types
        use nucchem_def
        use nucchem_lib
        use dStar_eos_lib
@@ -598,7 +600,7 @@ contains
        real(dp) :: rho, T, chi, Pwant
        integer :: eos_handle, ncharged, phase
        type(composition_info_type) :: ionic
-	   real(dp), dimension(max_number_sf_types) :: Tcs
+       real(dp), dimension(max_number_sf_types) :: Tcs
        real(dp), dimension(num_dStar_eos_results) :: res
        integer, pointer, dimension(:) :: charged_ids=>null()
        real(dp), pointer, dimension(:) :: Yion=>null()
@@ -629,7 +631,7 @@ contains
            stop
        end if
        
-	   Tcs = 0.0_dp
+       Tcs = 0.0_dp
        call eval_crust_eos(eos_handle,rho,T,ionic,ncharged,charged_ids,Yion, &
                &   Tcs, res,phase,chi)
        if (is_bad_num(res(i_lnP))) then

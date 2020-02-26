@@ -44,12 +44,12 @@ module eval_crust_neutrino
         
         contains
         subroutine clear_epsilon()
-            eps% total = 0.0
-            eps% pair = 0.0
-            eps% photo = 0.0
-            eps% plasma = 0.0
-            eps% brems = 0.0
-            eps% pbf = 0.0
+            eps% total = 0.0_dp
+            eps% pair = 0.0_dp
+            eps% photo = 0.0_dp
+            eps% plasma = 0.0_dp
+            eps% brems = 0.0_dp
+            eps% pbf = 0.0_dp
         end subroutine clear_epsilon
     end subroutine emissivity
     
@@ -69,15 +69,16 @@ module eval_crust_neutrino
         real(dp), parameter :: cvd = cn_cv**2 + cn_dn*cn_cvp**2
 
         ! equations (4.9)-(4.10)
-        rdouble = log10(2.0*r)
-        x = (  17.5 + rdouble - 3.0*t )/6.0
-        y = ( -24.5 + rdouble + 3.0*t )/6.0
-        enum = min(0.0,y-1.6+1.25*x)
-        if (abs(x)>0.7 .or. y < 0.0) then
-            fxy = 1.0
+        rdouble = log10(2.0_dp*r)
+        x = (  17.5_dp + rdouble - 3.0_dp*t )/6.0_dp
+        y = ( -24.5_dp + rdouble + 3.0_dp*t )/6.0_dp
+        enum = min(0.0_dp,y-1.6_dp+1.25_dp*x)
+        if (abs(x)>0.7_dp .or. y < 0.0_dp) then
+            fxy = 1.0_dp
         else
-            fxy = 1.05 + (0.39 -1.25*x - 0.35*sin(4.5*x) -0.3*exp(-(4.5*x + 0.9)**2)) &
-                                & * exp(-(enum/(0.57-0.25*x))**2)
+            fxy = 1.05_dp + (0.39_dp -1.25_dp*x - 0.35_dp*sin(4.5_dp*x) &
+            & -0.3_dp*exp(-(4.5_dp*x + 0.9_dp)**2)) &
+            & * exp(-(enum/(0.57-0.25*x))**2)
         end if
 
         ! equation (2.10)
@@ -223,14 +224,15 @@ module eval_crust_neutrino
       endif
 
         do j = 0, 2
-            a(j)  = 0.5*cc(j,0) + 0.5*cc(j,6)*cos(10.0*pi*tau)
+            a(j)  = 0.5_dp*cc(j,0) + 0.5_dp*cc(j,6)*cos(10.0_dp*pi*tau)
           do k = 1, 5
             pjt = pi*real(k,dp)*tau
-            a(j)= a(j) + cc(j,k)*cos(5.0/3.0*pjt)+d(j,k)*sin( 5.0/3.0*pjt )
+            a(j)= a(j) + cc(j,k)*cos(5.0_dp/3.0_dp*pjt) &
+                & +d(j,k)*sin( 5.0_dp/3.0_dp*pjt )
             end do
         end do
 
-        if ( c*xi > 100.0 ) then 
+        if ( c*xi > 100.0_dp ) then 
             fp = 0.d0
         endif
 
@@ -250,19 +252,19 @@ module eval_crust_neutrino
         real(dp) :: mstar, xF, eF, R, tau, v, v2, F1, F2, F3, F, reduct
         
         tau = T/Tns
-        qpbf = 0.0
-        if (kF == 0.0 .or. tau > 1.0 .or. tau < 0.01 ) return
+        qpbf = 0.0_dp
+        if (kF == 0.0_dp .or. tau > 1.0_dp .or. tau < 0.01_dp ) return
         xF = kF*hbarc_n/Mn_n
-        eF = sqrt(1.0+xF**2)
+        eF = sqrt(1.0_dp+xF**2)
         mstar = eF
-        v = sqrt(1.0-tau)*(1.456-0.157/sqrt(tau)+1.764/tau)
+        v = sqrt(1.0_dp-tau)*(1.456_dp-0.157_dp/sqrt(tau)+1.764_dp/tau)
         v2 = v**2
-        F1 = v2*(0.602 + v2*(0.5942 + 0.288*v2))
-        F2 = sqrt(0.5547+sqrt(0.4453**2+0.01130*v2))
-        F3 = exp(-sqrt(4.0*v2+2.245**2)+2.245)
+        F1 = v2*(0.602_dp + v2*(0.5942_dp + 0.288_dp*v2))
+        F2 = sqrt(0.5547+sqrt(0.4453_dp**2+0.01130_dp*v2))
+        F3 = exp(-sqrt(4.0_dp*v2+2.245_dp**2)+2.245_dp)
         F = F1*F2*F3
         reduct = (xF/eF)**2
-        qpbf = qpbf_pre *(cn_dn+1)* mstar*xF*(T/1.0e9)**7 * F*reduct
+        qpbf = qpbf_pre *(cn_dn+1)* mstar*xF*(T/1.0e9_dp)**7 * F*reduct
     end subroutine pbf
     
     subroutine bremsstrahlung(rho,T,ionic,qbrems)
@@ -271,20 +273,24 @@ module eval_crust_neutrino
         real(dp), intent(in) :: rho,T
         type(composition_info_type), intent(in) :: ionic
         real(dp), intent(out) :: qbrems
-        real(dp), parameter :: threefourth = 3.0/4.0, GF = 1.436d-49, Cp2 = 1.675
+        real(dp), parameter :: threefourth = 3.0_dp/4.0_dp,  &
+        & GF = 1.436d-49, Cp2 = 1.675_dp
         real(dp) :: qbrems_pre
         real(dp) :: re, kF, tau, eta, Zbareta, A, B, L
         
-        qbrems_pre =  8.0*pi*GF**2*finestructure**2*Cp2*(boltzmann/hbar/clight)**6/567.0/hbar/amu
+        qbrems_pre =  8.0_dp*pi*GF**2*finestructure**2* &
+            & Cp2*(boltzmann/hbar/clight)**6/567.0_dp/hbar/amu
         re = (threefourth/pi*amu/rho/ionic%Ye)**onethird
         kF = (threepisquare*rho*ionic%Ye/amu)**onethird
-        tau = 0.5*boltzmann*T/hbar/clight/kF
+        tau = 0.5_dp*boltzmann*T/hbar/clight/kF
         eta = (ionic%A/ionic%Z)**onethird/re/cm_to_fm
         Zbareta = ionic%Z * eta
-        A = 0.269 + 20.0*tau + 0.0168*ionic%Z + 0.00121*eta - 0.0356*Zbareta + 0.0137*ionic%Z2*tau + 1.54*Zbareta*tau
-        B = 1.0 + 180.0*tau**2 + 0.483*tau*ionic%Z + 20.0*tau*Zbareta*eta + 4.31e-5*ionic%Z2
+        A = 0.269_dp + 20.0_dp*tau + 0.0168_dp*ionic%Z + 0.00121_dp*eta &
+            & - 0.0356_dp*Zbareta + 0.0137_dp*ionic%Z2*tau + 1.54_dp*Zbareta*tau
+        B = 1.0_dp + 180.0_dp*tau**2 + 0.483_dp*tau*ionic%Z  &
+            & + 20.0_dp*tau*Zbareta*eta + 4.31e-5_dp*ionic%Z2
         L = A/B**threefourth
-        qbrems = qbrems_pre*T**6*ionic%Z2*rho*L*(1.0-ionic%Yn)/ionic%A
+        qbrems = qbrems_pre*T**6*ionic%Z2*rho*L*(1.0_dp-ionic%Yn)/ionic%A
     end subroutine bremsstrahlung
     
 end module eval_crust_neutrino

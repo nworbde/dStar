@@ -12,7 +12,7 @@ contains
         real(dp), intent(in) :: nn,np,mneff,mpeff,T,Tcs(max_number_sf_types)
         real(dp) :: Kn
         real(dp) :: T8,tps,tns,tnt,istps,istns,vps,vns,vnt,yn,yp
-        real(dp), parameter :: n0 = 0.16  ! fm**-3
+        real(dp), parameter :: n0 = 0.16_dp  ! fm**-3
         real(dp) :: y, Sn1, Sn2, Sp1, Sp2
         real(dp) :: kFn, kFp, kFn2, kFp2
         real(dp) :: Kn1, Kn2, Kp1, Kp2, un1, un2, up1, up2
@@ -61,13 +61,13 @@ contains
         ! Kp2 = mpeffinv2 * (0.0001313+1.248*up2**2+0.2403*up2**3 &
         !    & +0.3257*kFp+0.5536*up2*kFp-0.3237*up2**4+0.09786*up2**2*kFp)
 
-        Kn1 = 1.0
-        Kn2 = 1.0
-        Kp1 = 1.0
-        Kp2 = 1.0
+        Kn1 = 1.0_dp
+        Kn2 = 1.0_dp
+        Kp1 = 1.0_dp
+        Kp2 = 1.0_dp
 
         ! put the whole thing together
-        T8 = T*1.0e-8
+        T8 = T*1.0e-8_dp
         nu_nn = 3.48e15*T8**2 *mneff**3 * (Sn2*Kn2*Rn2(yn)+3.0*Sn1*Kn1*(Rn1(yn)-Rn2(yn)))
         nu_np = 3.48e15*T8**2*mneff*mpeff**2* &
         & (Sp2*Kp2*Rp2(yn,yp)+0.5*Kp1*Sp1*(3.0*Rp1(yn,yp)-Rp2(yn,yp)))

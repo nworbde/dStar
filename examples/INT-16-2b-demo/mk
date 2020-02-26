@@ -1,0 +1,27 @@
+#!/bin/bash
+
+DSTAR_DIR='../../'
+
+function check_okay {
+	if [ $? -ne 0 ]
+	then
+		echo
+		pwd
+		echo "FAILED"
+		echo
+		exit 1
+	fi
+}
+
+cd make
+make
+check_okay
+cd ..
+for d in Q100-H0 Q4-H0 Q4-H1.7; do
+    logdir=LOGS-$d
+    if  [ ! -d $logdir ]; then
+        mkdir -p $logdir
+    fi
+done
+
+cp $DSTAR_DIR/tools/reader.py .

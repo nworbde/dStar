@@ -13,7 +13,7 @@ contains
         integer, intent(out) :: ierr
         logical, parameter :: dbg = .FALSE.
         type(crust_table_type), pointer :: tab
-        real(dp), pointer, dimension(:,:) :: lgRho_val
+        real(dp), pointer, dimension(:,:) :: lgRho_val    
         character(len=crust_filename_length) :: table_name, cache_filename
         logical :: have_cache
         integer :: unitno
@@ -253,30 +253,32 @@ contains
         allocate(tab% lgP(n),tab% lgEps(4*n), tab% lgRho(4*n), &
         &   tab% network(nisos), &
         &   tab% Y(4*n,nisos), stat=ierr)
+                
+        allocate(tab% lgP(n), tab% lgRho(4*n), tab% lgEps(4*n), stat=ierr)
         if (ierr /= 0) return
         tab% nv = n
         tab% nisos = nisos
     end subroutine do_allocate_crust_table
     
-	subroutine generate_crust_filename(prefix,Tref,filename)
-		! naming convention for flies is prefix_ttt
-		! where ttt = 100*log10(Tref), to 3 significant digits
-		character(len=*), intent(in) :: prefix
-		real(dp), intent(in) :: Tref
-		character(len=crust_filename_length), intent(out) :: filename
-		
-		write (filename,'(a,"_",i0.3)') trim(prefix), int(100.0*log10(Tref))
-	end subroutine generate_crust_filename
+    subroutine generate_crust_filename(prefix,Tref,filename)
+        ! naming convention for flies is prefix_ttt
+        ! where ttt = 100*log10(Tref), to 3 significant digits
+        character(len=*), intent(in) :: prefix
+        real(dp), intent(in) :: Tref
+        character(len=crust_filename_length), intent(out) :: filename
+        
+        write (filename,'(a,"_",i0.3)') trim(prefix), int(100.0*log10(Tref))
+    end subroutine generate_crust_filename
 
-	subroutine do_free_crust_table(tab)
-		type(crust_table_type), pointer :: tab
-		tab% nv = 0
+    subroutine do_free_crust_table(tab)
+        type(crust_table_type), pointer :: tab
+        tab% nv = 0
         tab% nisos = 0
-		tab% lgP_min = 0.0
-		tab% lgP_max = 0.0
+        tab% lgP_min = 0.0
+        tab% lgP_max = 0.0
         tab% T = 0.0
         
-		if (allocated(tab% lgP)) deallocate(tab% lgP)
+        if (allocated(tab% lgP)) deallocate(tab% lgP)
         if (allocated(tab% network)) deallocate(tab% network)
         if (associated(tab% Y)) deallocate(tab% Y)
         if (associated(tab% lgRho)) deallocate(tab% lgRho)
@@ -285,8 +287,8 @@ contains
         nullify(tab% lgRho)
         nullify(tab% lgEps)
 
-		tab% is_loaded = .FALSE.
-	end subroutine do_free_crust_table
+        tab% is_loaded = .FALSE.
+    end subroutine do_free_crust_table
 
     subroutine find_densities(eos_handle,lgP,lgRho,lgEps, &
             & Yion,ncharged,charged_ids,ionic,Tref)
@@ -302,7 +304,7 @@ contains
         integer, intent(in) :: ncharged
         integer, dimension(:), intent(in) :: charged_ids
         type(composition_info_type), dimension(:), intent(in) :: ionic
-		real(dp), intent(in) :: Tref
+        real(dp), intent(in) :: Tref
         real(dp) :: Pfac
         real(dp), dimension(:), pointer :: rpar=>null()
         integer, dimension(:), pointer :: ipar=>null()
@@ -374,8 +376,8 @@ contains
        ! returns with ierr = 0 if was able to evaluate f and df/dx at x
        ! if df/dx not available, it is okay to set it to 0
        use constants_def
-	   use superfluid_def, only: max_number_sf_types
-	   use superfluid_lib, only: sf_get_results
+       use superfluid_def, only: max_number_sf_types
+       use superfluid_lib, only: sf_get_results
        use nucchem_def
        use dStar_eos_def
        use dStar_eos_lib
@@ -416,11 +418,11 @@ contains
        rho = 10.0**lgRho
        T = rpar(ncharged+13)
        chi = nuclear_volume_fraction(rho,ionic,default_nuclear_radius)
-	   kFp = 0.0_dp
-	   kFn = neutron_wavenumber(rho,ionic,chi)
-	   call sf_get_results(kFp,kFn,Tcs)
+       kFp = 0.0_dp
+       kFn = neutron_wavenumber(rho,ionic,chi)
+       call sf_get_results(kFp,kFn,Tcs)
        call eval_crust_eos(eos_handle,rho,T,ionic,ncharged, &
-       &	charged_ids,Yion,Tcs,res,phase,chi)
+       &    charged_ids,Yion,Tcs,res,phase,chi)
        Eint = res(i_lnE)
        
        lgPwant = rpar(ncharged+12)

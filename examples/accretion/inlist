@@ -1,0 +1,54 @@
+&controls
+    !   used for loading an existing structure model
+    load_model_file = .TRUE.
+    model_file = ''
+    
+    ! controls for output
+    write_interval_for_terminal = 1
+    write_interval_for_terminal_header = 5
+    write_interval_for_history = 1
+    write_interval_for_profile = 1
+    starting_number_for_profile = 0
+    suppress_first_step_output = .FALSE.
+    output_directory = 'LOGS'
+    
+    ! controls for the solver
+    which_solver = 'rodasp_solver'
+    maximum_number_of_models = 10000
+    maximum_timestep = 0.0
+        ! implies that max = tend-t
+    integration_tolerance = 1.0d-4
+    ! limits on temperature: if a zone goes outside these bounds, reduce stepsize
+    min_lg_temperature_integration = 7.0
+    max_lg_temperature_integration = 9.5
+
+    ! macroscopic NS parameters
+    fix_core_temperature = .TRUE.
+    core_temperature = 3.0d8
+    fix_atmosphere_temperature_when_accreting = .TRUE.
+    atmosphere_temperature_when_accreting = 5.0d8
+
+    ! load the accretion history from a file
+    load_epochs = .TRUE.
+    epoch_datafile = 'accretion_history'
+    
+    ! extra controls for hook routines
+    extra_real_controls(:) = 0.0
+    extra_integer_controls(:) = 0
+    extra_logical_controls(:) = .FALSE.
+
+    ! core properties
+    core_mass = 1.6     ! Msun
+    core_radius = 11.0    ! km
+    
+    lgPcrust_bot = 32.5 ! cgs
+    lgPcrust_top = 27.0 ! cgs
+    
+    target_resolution_lnP = 0.05
+    
+    lg_atm_light_element_column = 8.0
+    fix_Qimp = .TRUE.
+    Qimp = 100.0
+    
+    turn_on_shell_Urca = .TRUE.
+/
