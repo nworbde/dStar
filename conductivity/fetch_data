@@ -1,0 +1,91 @@
+#!/bin/bash
+
+function check_okay {
+    if [ $? -ne 0 ]; then
+        echo
+        pwd
+        echo "FAILED"
+        echo
+        exit 1
+    fi
+}
+
+function fetch_and_verify {
+    # if file exists and is verified, then no need to unpack
+    need_to_fetch=1
+    lib=$1
+    chks=$2
+    arxv=$3
+    if [ -f $lib ]; then
+        echo "$lib exists...verifying"
+        verify_datafile $lib $chks
+        if [ $? -ne 0 ]; then
+            echo "verification failed"
+            need_to_fetch=1
+        else
+            echo "verification okay"
+            need_to_fetch=0
+        fi
+    fi
+
+    if [ $need_to_fetch -eq 1 ]; then        
+        echo "unpacking $lib from $arxv..."
+        get_datafile $lib $arxv
+        echo "verifying $lib..."
+        verify_datafile $lib $chks
+        check_okay
+    fi
+}
+
+function get_datafile {
+    zip='.xz'
+    db=$1
+    tmpfile="tmp_$db"
+    arxv=$2
+    unzip=`which xzcat`
+    $unzip $arxv > $tmpfile
+    check_okay
+    mv -i $tmpfile $db
+    check_okay
+}
+
+function verify_datafile {
+    db=$1
+    key_cksm=$2
+    chk=""
+    if [ `which md5` ]; then
+        chk=`which md5`
+        echo "using $chk"
+        this_cksm=( `$chk -q $db` )
+    elif [ `which md5sum` ]; then
+        chk=`which md5sum`
+        echo "using $chk"
+        this_cksm=( `$chk $db` )
+    else
+        echo "no md5 or md5sum available, skipping verification"
+        return 0
+    fi
+    echo "checksum is  ${this_cksm[0]}"
+    echo "compare with $key_cksm"
+    if [ ${this_cksm[0]} !=  $key_cksm ]; then
+        echo "FAILED"
+        return 1
+    fi
+    return 0
+}
+
+LIB=condall06.dat
+MD5=7b4c54a84b8943a890f55b6df848bb34
+LIB_ZIP=condall06.dat.xz
+
+echo
+echo "Installing electron conductivity table"
+echo "-------------------------------------------------"
+
+cd data
+fetch_and_verify $LIB $MD5 $LIB_ZIP
+check_okay
+
+echo "done"
+echo
+cd ..

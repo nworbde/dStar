@@ -30,3 +30,5 @@ dStar_eos/data/helm_table.dat
 
 nucchem/data/nuclib_db
 condall06.dat
+conductivity/test/make/test_P3_tab
+conductivity/test/test_P3_tab
