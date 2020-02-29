@@ -13,6 +13,9 @@ default: install
 $(TEST) : $(TEST_OBJS)
 	$(LOADER) $(FCopenmp) -o $@ $(TEST_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
 
+test_P3_tab: test_P3_tab.o
+	$(LOADER) $(FCopenmp) -o $@ test_P3_tab.o -L$(DSTAR_LIB_DIR) -lconstants -L$(MESA_LIB_DIR) -lconst -lutils $(LOAD_MESA_NUMERICS)
+
 %.o: $(TEST_SRC_DIR)/%.f
 	$(TEST_COMPILE) $(FCfree) $(FCimpno) -I$(DSTAR_INC) $<
 
