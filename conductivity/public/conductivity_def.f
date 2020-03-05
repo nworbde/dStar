@@ -51,5 +51,5 @@ module conductivity_def
         real(dp) :: electron_total
         real(dp) :: neutron_total
     end type conductivity_components
-
+    
 end module conductivity_def
