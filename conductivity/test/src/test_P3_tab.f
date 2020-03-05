@@ -6,10 +6,9 @@ program test_P3_tab
     
     implicit none
     character(len=*), parameter :: datadir = '../../data/conductivity'
-    character(len=*), parameter :: minmaxfmt = '(a,f6.3,"; ",a,f6.3)'
-!     real(dp) :: Ztest
-!     real(dp),dimension(1) :: Rhotest, Ttest, Ktest
+    character(len=*), parameter :: minmaxfmt = '(a,es10.3,"; ",a,es10.3)'
     type(electron_conductivity_tbl), pointer :: tab
+    real(dp) :: rho, T, Z, K
     integer :: ierr
     
     tab => PPP_tbl
@@ -18,63 +17,20 @@ program test_P3_tab
     if (ierr /= 0) stop
     
     write(output_unit,minmaxfmt)  &
-    &   'min(lgT) = ',tab% lgTmax,'max(T) = ',tab% lgTmin
+    &   'min(T) = ',tab% Tmin,'max(T) = ',tab% Tmax
     write(output_unit,minmaxfmt)  &
-    &   'min(lgrho) = ',tab% lgrhomin,'max(Rho) = ',tab% lgrhomax
+    &   'min(rho) = ',tab% rhomin,'max(rho) = ',tab% rhomax
     write(output_unit,minmaxfmt)  &
     &   'min(K) = ',minval(tab% lgK),'max(K) = ',maxval(tab% lgK)
-!
-!     Ztest = log10(26.5_dp)
-!     Rhotest = 6.1_dp
-!     Ttest = 7.5_dp
-!
-!     lZ = binary_search(nZ,Zs,-1,Ztest)
-!     lRho = binary_search(nRho,Rhos,-1,Rhotest(1))
-!     lT = binary_search(nT,Ts,-1,Ttest(1))
-!
-!     call interpolate(Ztest,Rhotest,Ttest,Ktest,ierr)
-!
-!     write(output_unit,'(f7.3,tr7,f7.3)') lgK(lT:lT+1,lRho,lZ)
-!     write(output_unit,'(f7.3,tr7,f7.3)') lgK(lT:lT+1,lRho+1,lZ)
-!
-!     write(output_unit,'(tr7,f7.3)') Ktest(1)
-!
-!     write(output_unit,'(f7.3,tr7,f7.3)') lgK(lT:lT+1,lRho,lZ+1)
-!     write(output_unit,'(f7.3,tr7,f7.3)') lgK(lT:lT+1,lRho+1,lZ+1)
-!
-! contains
-!     subroutine interpolate(Z,Rho,T,K,ierr)
-!         use interp_2d_lib_db, only: interp_RGBI3P_db
-!         real(dp), intent(in) :: Z
-!         real(dp), intent(in), dimension(:) :: Rho, T
-!         real(dp), dimension(:), intent(out) :: K
-!         integer, intent(out) :: ierr
-!         real(dp), dimension(3,nT,nRho) :: wk
-!         real(dp), dimension(nT,nRho) :: lgK_Z
-!         integer, save :: loc = -1
-!         integer, parameter :: md = 1
-!         real(dp) :: wp, wm, norm
-!         integer :: dout
-!
-!         loc = binary_search(nZ,Zs,loc,Z)
-!         wp = Z-Zs(loc); wm = Zs(loc+1)-Z
-!         norm = Zs(loc+1)-Zs(loc)
-!         lgK_Z = (wm*lgK(:,:,loc) + wp*lgK(:,:,loc+1))/norm
-!
-!         dout = size(Rho)
-!
-!         call interp_RGBI3P_db(md,nT,nRho,Ts,Rhos,lgK_Z,dout,T,Rho,K,ierr,wk)
-!     end subroutine interpolate
-!
-!     function failure(ierr,msg)
-!         integer, intent(in) :: ierr
-!         character(len=*), intent(in) :: msg
-!         logical :: failure
-!
-!         failure = .FALSE.
-!         if (ierr /= 0) then
-!             write(error_unit,*) 'FAILURE: '//msg
-!             failure = .TRUE.
-!         end if
-!     end function failure
+    
+    call construct_interpolation_coefficients(ierr)
+    if (ierr /= 0) stop
+    
+    rho = 2.0e6_dp
+    T = 3.0e7_dp
+    Z = 26.5_dp
+    call eval_PPP_electron_table(rho,T,Z,K,ierr)
+    
+    write(output_unit,'(f4.1,tr1,3(f5.2,tr1))')  &
+    &   Z, log10(rho), log10(T), log10(K)
 end program test_P3_tab
