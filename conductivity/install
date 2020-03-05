@@ -12,6 +12,9 @@ function check_okay {
 }
 
 this_module=${PWD##*/}
+mkdir -p ../data/conductivity/cache
+cp data/condall06.dat ../data/conductivity/
+check_okay
 ./build_and_test
 check_okay
 cd make
