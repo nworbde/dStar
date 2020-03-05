@@ -3,7 +3,7 @@ module PPP_electron
     use conductivity_def
 
     implicit none
-    logical, parameter :: dbg = .TRUE.
+    logical, parameter :: dbg = .FALSE.
     integer, parameter :: NZ = 15, Nrho = 64, NT = 19
     logical :: conductivity_is_initialized = .FALSE.
     integer, parameter :: conductivity_filename_length = 256

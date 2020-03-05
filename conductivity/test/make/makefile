@@ -9,6 +9,9 @@ TEST = tester
 TEST_OBJS = test_cond.o
 
 default: install
+	
+tabletest: test_P3_tab
+	cp $< ..
 
 $(TEST) : $(TEST_OBJS)
 	$(LOADER) $(FCopenmp) -o $@ $(TEST_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
