@@ -62,7 +62,7 @@ contains
         ionQ = sqrt(ionQ2)
         if (phase == liquid_phase .and. ionQ2 > Q2_threshold) then
             err = strong_quantum_effects
-            if (.not. rq% suppress_warnings) write(error_unit,*) = &
+            if (.not. rq% suppress_warnings) write(error_unit,*) &
             &   'ion_mixture: neglecting quantum corrections in liquid phase'
         end if
 
