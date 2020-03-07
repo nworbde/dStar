@@ -1,47 +1,94 @@
 program test_P3_tab
     use iso_fortran_env, only: output_unit, error_unit
+    use utils_lib, only: StrUpCase
     use constants_lib
+    use nucchem_def
+    use nucchem_lib
+	use superfluid_def, only: max_number_sf_types, neutron_1S0
+	use superfluid_lib
+    use dStar_eos_lib
+    use conductivity_lib
     use PPP_electron
     use num_lib, only: binary_search
     
     implicit none
+    
+    integer :: eos_handle,ierr,i,j,k
+    integer :: Z(2), N(2)
+    real(dp) :: A(2), X(2)
+    integer, dimension(2) :: chem_ids, charged_ids
+    real(dp), dimension(2) :: Y, Yion
+    integer :: ncharged
+    type(composition_info_type) :: ionic
+    real(dp) :: chi, Xsum
+    real(dp), dimension(num_dStar_eos_results) :: res
     character(len=*), parameter :: datadir = '../../data/conductivity'
     type(electron_conductivity_tbl), pointer :: tab
-    real(dp) :: Z, lgrho
-    real(dp), dimension(5) :: lgT
-    integer :: ierr, i, j
+    real(dp) :: lgrho, lgT, rho, T, eta, Gamma, mu_e, K_e, diff
+    type(conductivity_components) :: kappa
+    type(crust_eos_component), dimension(num_crust_eos_components) :: &
+    &   eos_components
+    integer :: phase
+	real(dp), dimension(max_number_sf_types) :: Tcs
+    character(len=iso_name_length) :: name(2)
     
-    lgT(:) = [ (real(j-1,dp)*0.5_dp + 7.0_dp, j=1,5) ]
-
+    call constants_init('',ierr)
+    call nucchem_init('../../data',ierr)
+    call dStar_eos_startup('../../data')
+    eos_handle = alloc_dStar_eos_handle(ierr)
     tab => PPP_tbl
-    call load_PPP_electron_table(datadir,ierr)
-    
-    if (ierr /= 0) stop
-    
+    call load_PPP_electron_table(datadir,ierr)    
     call construct_interpolation_coefficients(ierr)
-    if (ierr /= 0) stop
     
-    Z = 26.0_dp
-    write(output_unit,'(tr11,5f8.3)') lgT(:)
-    write(output_unit,'(tr11,40("-"))')
-    do i = 1, 16
-        lgrho = real(i-1,dp)/3.0_dp + 4.0_dp
-        call do_one(10.0_dp**lgrho)
+    Tcs = 1.0e9_dp
+    Z = [ 2, 26 ]
+    N = [ 2, 30 ]
+    A = real(Z+N,dp)
+    chem_ids = [ (get_nuclide_index_from_ZN(Z(k),N(k)),k=1,2) ]
+    name = [ (nuclib% name(chem_ids(j)), j=1,2) ]
+    do j = 1,2
+        name(j)(1:1) = StrUpCase(name(j)(1:1))
     end do
-    
-contains
-    subroutine do_one(rho)
-        real(dp), intent(in) :: rho
-        real(dp) :: T, K
-        real(dp), dimension(5) :: lgK
-        integer :: j, ierr
+    composition: do k = 1, 11
+        X(1) = 0.1_dp*real(k-1,dp)
+        X(2) = 1.0_dp -X(1)
+        Y = X/A
+        call compute_composition_moments(2,chem_ids,Y,ionic,Xsum, &
+            & ncharged, charged_ids, Yion, exclude_neutrons=.TRUE.)
         
-        do j = 1, 5
-            T = 10.0_dp**lgT(j)
-            call eval_PPP_electron_table(rho,T,Z,K,ierr)
-            if (ierr/= 0) stop
-            lgK(j) = log10(K)
-        end do
-        write(output_unit,'(f8.3," | ",5f8.3)') log10(rho), lgK(:)
-    end subroutine do_one
+        write(output_unit,'(/,2("X(",a,") = ",f3.1,tr4))') &
+        &   (trim(name(j)),X(j),j=1,2)
+        write (output_unit, &
+        &   '(3a6,6a11,a7/,3("======"),6("==========="),"=======")') &
+            & 'lg(r)','lg(T)','<Z>','Gamma','eta_e', &
+            & 'K_ee','K_ei','K_tot','K_table','diff'
+            
+        temperature: do j = 1, 5
+            lgT = real(j-1,dp)*0.5_dp + 7.0_dp
+            T = 10.0_dp**lgT
+            
+            density: do i = 1, 13
+                lgrho = real(i-1,dp)/3.0_dp + 5.0_dp
+                rho = 10.0_dp**lgrho
+                chi = use_default_nuclear_size
+                call eval_crust_eos(eos_handle,rho,T,ionic, &
+                    & ncharged, charged_ids, Yion, Tcs,  &
+                    & res, phase, chi, eos_components)
+                eta = res(i_Theta) !1.0/TpT
+                Gamma = res(i_Gamma)
+                mu_e = res(i_mu_e)
+                call get_thermal_conductivity(rho,T,chi,Gamma,eta,mu_e,ionic, &
+                &   Tcs(neutron_1S0),kappa)
+                call eval_PPP_electron_table(rho,T,sqrt(ionic% Z2),K_e,ierr)
+                diff = (K_e - kappa% electron_total)/kappa% electron_total
+                write (output_unit, '(3f6.2,6es11.3,f7.3)') &
+                    & lgrho,lgT,ionic%Z, &
+                    & Gamma,mu_e*mev_to_ergs/boltzmann/T, &
+                    & kappa%ee,kappa%ei,kappa%electron_total, K_e, diff
+            end do density
+        end do temperature
+    end do composition
+    call clear_composition(ionic)
+    call nucchem_shutdown
+    
 end program test_P3_tab
