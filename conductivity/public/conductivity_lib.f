@@ -45,12 +45,12 @@ contains
         ! T   := temperature (K)
         ! Tcs := critical temperatures (K)
         ! K   := thermal conductivity (cgs)
-        use eval_core_conductivity
+        use neutron_conductivity, only: core_neutron_conductivity
         use superfluid_def, only: max_number_sf_types
         real(dp), intent(in) :: nn,np,mneff,mpeff,T,Tcs(max_number_sf_types)
         real(dp), intent(out) :: K
 
-        K = neutron_conductivity(nn,np,mneff,mpeff,T,Tcs)
+        K = core_neutron_conductivity(nn,np,mneff,mpeff,T,Tcs)
     end subroutine get_core_thermal_conductivity
 
 end module conductivity_lib
