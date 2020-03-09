@@ -75,6 +75,10 @@ contains
         call write_PPP_electron_table_cache(cache_filename,tab,ierr)
         if (failure(this_routine//': unable to write cache',ierr)) return
     end subroutine load_PPP_electron_table
+    
+    subroutine free_PPP_electron_table()
+        PPP_tbl% is_loaded = .FALSE.
+    end subroutine free_PPP_electron_table
 
     subroutine construct_interpolation_coefficients(ierr)
         use interp_2d_lib_db, only: interp_mkbicub_db
