@@ -121,11 +121,11 @@ contains
         end if
     end function do_alloc_conductivity
     
-    subroutine do_free_conductvity(handle)
+    subroutine do_free_conductivity(handle)
         integer, intent(in) :: handle
         if (handle >= 1 .or. handle <= max_conductivity_handles) &
         &   conductivity_handles(handle)% in_use = .FALSE.
-    end subroutine do_free_conductvity
+    end subroutine do_free_conductivity
     
     subroutine get_conductivity_ptr(handle,rq,ierr)
         integer, intent(in) :: handle
