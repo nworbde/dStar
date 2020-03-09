@@ -13,7 +13,7 @@ program test_P3_tab
     
     implicit none
     
-    integer :: eos_handle,ierr,i,j,k
+    integer :: eos_handle,cond_handle,ierr,i,j,k
     integer :: Z(2), N(2)
     real(dp) :: A(2), X(2)
     integer, dimension(2) :: chem_ids, charged_ids
@@ -35,10 +35,12 @@ program test_P3_tab
     call constants_init('',ierr)
     call nucchem_init('../../data',ierr)
     call dStar_eos_startup('../../data')
+    call conductivity_startup('../../data')
     eos_handle = alloc_dStar_eos_handle(ierr)
-    tab => PPP_tbl
-    call load_PPP_electron_table(datadir,ierr)    
-    call construct_interpolation_coefficients(ierr)
+    cond_handle = alloc_conductivity_handle(ierr)
+!     tab => PPP_tbl
+!     call load_PPP_electron_table(datadir,ierr)
+!     call construct_interpolation_coefficients(ierr)
     
     Tcs = 1.0e9_dp
     Z = [ 2, 26 ]
@@ -77,8 +79,8 @@ program test_P3_tab
                 eta = res(i_Theta) !1.0/TpT
                 Gamma = res(i_Gamma)
                 mu_e = res(i_mu_e)
-                call get_thermal_conductivity(rho,T,chi,Gamma,eta,mu_e,ionic, &
-                &   Tcs(neutron_1S0),kappa)
+                call get_thermal_conductivity(cond_handle,rho,T, &
+                &   chi,Gamma,eta,mu_e,ionic,Tcs(neutron_1S0),kappa)
                 call eval_PPP_electron_table(rho,T,sqrt(ionic% Z2),K_e,ierr)
                 diff = (K_e - kappa% electron_total)/kappa% electron_total
                 write (output_unit, '(3f6.2,6es11.3,f7.3)') &
@@ -89,6 +91,8 @@ program test_P3_tab
         end do temperature
     end do composition
     call clear_composition(ionic)
+    call conductivity_shutdown
+    call dStar_eos_shutdown
     call nucchem_shutdown
     
 end program test_P3_tab

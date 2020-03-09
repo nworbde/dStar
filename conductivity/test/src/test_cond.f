@@ -6,7 +6,7 @@ program test_cond
     use dStar_eos_lib
     use conductivity_lib
     
-    integer :: eos_handle,ierr,i,j
+    integer :: eos_handle,cond_handle,ierr,i,j
     ! composition taken from HZ090 for Fe-chain accreted crust
     integer, dimension(2:14), parameter ::  zz = [2,2,2,2,26,26,26,26,24,20,14,24,24], &
     &   aa = [4,4,4,4,56,56,56,56,56,56,46,96,96]
@@ -21,7 +21,9 @@ program test_cond
     call constants_init('',ierr)
     call nucchem_init('../../data',ierr)
     call dStar_eos_startup('../../data')
+    call conductivity_startup('../../data')
     eos_handle = alloc_dStar_eos_handle(ierr)
+    cond_handle = alloc_conductivity_handle(ierr)
     
     write (output_unit, '(5a6,10a14,/,5("======"),10("=============="))') &
         & 'lg(r)','lg(T)','<Z>','<A>','Y_n', &
@@ -42,6 +44,8 @@ program test_cond
         call do_one(10.0_dp**i)
     end do
     call clear_composition(ionic)
+    call conductivity_shutdown()
+    call dStar_eos_shutdown()
     call nucchem_shutdown
 
     contains
@@ -70,8 +74,8 @@ program test_cond
             eta = res(i_Theta) !1.0/TpT
             Gamma = res(i_Gamma)
             mu_e = res(i_mu_e)
-            call get_thermal_conductivity(rho,T,chi,Gamma,eta,mu_e,ionic, &
-            &   Tcs(neutron_1S0),kappa)
+            call get_thermal_conductivity(cond_handle,rho,T, &
+            &   chi,Gamma,eta,mu_e,ionic,Tcs(neutron_1S0),kappa)
             write (output_unit, '(5f6.2,10es14.6)') &
                 & lgr,lgT,ionic%Z,ionic%A,ionic%Yn, &
                 & Gamma,mu_e*mev_to_ergs/boltzmann/T, &

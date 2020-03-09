@@ -8,10 +8,8 @@ module PPP_electron
     integer, parameter :: unable_to_compute_interpolation = -2
     integer, parameter :: unable_to_write_cache = -3
     integer, parameter :: unable_to_evaluate_conductivity = -4
-    
-    logical, parameter, private :: dbg = .FALSE.
+    integer, parameter :: table_is_not_loaded = 1
     integer, parameter, private :: NZ = 15, Nrho = 64, NT = 19
-    logical :: conductivity_is_initialized = .FALSE.
     integer, parameter, private :: conductivity_filename_length = 256
     character(len=conductivity_filename_length) :: conductivity_datadir    
     
@@ -48,8 +46,6 @@ contains
         character(len=*), parameter :: this_routine = 'load_PPP_electron_table'
         character(len=256) :: data_filename, cache_filename
         logical :: have_cache
-        
-        if (dbg) print *,this_routine
         
         ierr = 0
         tab => PPP_tbl
@@ -105,8 +101,6 @@ contains
         real(dp), dimension(NT) :: bcrhomin, bcrhomax
         real(dp), dimension(Nrho) :: bcTmin, bcTmax
         
-        if (dbg) print *, this_routine
-
         tab => PPP_tbl
         workspace(1,:,:,:) = tab% lgK
         bcrhomin = 0.0_dp; bcrhomax= 0.0_dp
@@ -122,6 +116,7 @@ contains
             
             if (failure(this_routine//': unable to construct interpolation', ierr)) then
                 ierr = unable_to_compute_interpolation
+                tab% is_loaded = .FALSE.
                 return
             end if
         end do
@@ -136,8 +131,6 @@ contains
         character(len=*), parameter :: this_routine='read_PPP_electron_table'
         integer :: unitno, iZ, irho
         real(dp), dimension(NZ) :: Zs
-        
-        if (dbg) print *,this_routine
         
         open(newunit=unitno,file=datafile,status='old',action='read', &
         &   iostat = ierr)
@@ -177,8 +170,6 @@ contains
         &   this_routine='read_PPP_electron_table_cache'
         integer :: unitno
         
-        if (dbg) print *,this_routine
-        
         open(newunit=unitno,file=trim(cache_filename),action='read', &
         &   form='unformatted',iostat=ierr)
         if (failure(this_routine//': unable to open '//cache_filename, ierr)) &
@@ -200,8 +191,6 @@ contains
         character(len=*), parameter :: this_routine = &
         &   'write_PPP_electron_table_cache'        
         integer :: unitno
-        
-        if (dbg) print *,this_routine
         
         open(newunit=unitno,file=trim(cache_filename),action='write', &
         &   form='unformatted',iostat=ierr)
@@ -229,6 +218,7 @@ contains
     end subroutine set_table_limits
     
     subroutine eval_PPP_electron_table(rho,T,Z,K,ierr)
+        use iso_fortran_env, only: error_unit
         use num_lib, only: binary_search
         use interp_2d_lib_db, only: interp_evbicub_db
         implicit none
@@ -242,11 +232,22 @@ contains
         integer, dimension(6) :: ict
         real(dp), dimension(6) :: lgK
         integer :: lZ
-        
-        if (dbg) print *, this_routine
+        integer, parameter :: max_warnings = 3
+        integer, save :: warning_count = 0
         
         ierr = 0
+        K = 0.0_dp
         tab => PPP_tbl
+        if (.not.tab% is_loaded) then
+            warning_count = warning_count + 1
+            ierr = table_is_not_loaded
+            write(error_unit,'(a)') this_routine//': table is not loaded'
+            if (warning_count >= max_warnings) then
+                write(error_unit,'(a)') 'further warnings will be suppressed'
+            end if
+            return
+        end if
+            
         lgrho = log10(clip_to_table(rho, tab% rhomin, tab% rhomax))
         lgT = log10(clip_to_table(T, tab% Tmin, tab% Tmax))
         lgZ = log10(clip_to_table(Z, tab% Zmin, tab% Zmax))

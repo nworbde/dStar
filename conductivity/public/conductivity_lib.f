@@ -15,18 +15,21 @@ contains
         cond_datadir = trim(datadir) // '/conductivity'
         call load_PPP_electron_table(cond_datadir,ierr)
         if (ierr == unable_to_load_table) then
-            write(error_unit, *) 'low-density electron conduction will not be computed correctly'
+            write(error_unit, *)  &
+            &   'low-density electron conduction will be computed using analytical fmla.'
         end if
         call construct_interpolation_coefficients(ierr)
         if (ierr == unable_to_compute_interpolation) then
-            write(error_unit, *) 'low-density electron conduction will not be computed correctly'
-            PPP_tbl% is_loaded = .FALSE.
+            write(error_unit, *)  &
+            &   'low-density electron conduction will be computed using analytical fmla.'
         end if
+        conductivity_is_initialized = .TRUE.
     end subroutine conductivity_startup
     
     subroutine conductivity_shutdown()
         use PPP_electron
         call free_PPP_electron_table
+        conductivity_is_initialized = .FALSE.
     end subroutine conductivity_shutdown
     
     function alloc_conductivity_handle(ierr) result(handle)
@@ -37,9 +40,9 @@ contains
         if (ierr /= 0) then
             select case(ierr)
             case(-1)
-                write(error_unit,*) 'unable to allocate conductivty: no free handles'
+                write(error_unit,*) 'unable to allocate conductivity: no free handles'
             case(-2)
-                write(error_unit,*) 'unable to allocate conductivty: bad handle'
+                write(error_unit,*) 'unable to allocate conductivity: bad handle'
             end select
         end if
     end function alloc_conductivity_handle
@@ -99,35 +102,34 @@ contains
         if (present(min_lgrho_table)) rq% tab_on_lgrho = min_lgrho_table
     end subroutine conductivity_set_controls
 
-    subroutine get_thermal_conductivity( &
-    &   rho,T,chi,Gamma,eta,mu_e,ionic,Tcn,K,which_components, &
-    &   use_pcy,use_page)
+    subroutine get_thermal_conductivity(handle, &
+    &   rho,T,chi,Gamma,eta,mu_e,ionic,Tcn,K)
+!     which_components, &
+!     &   use_pcy,use_page)
         use nucchem_def, only: composition_info_type
         use eval_conductivity
+        integer, intent(in) :: handle
         real(dp), intent(in) :: rho,T,Gamma,eta, mu_e, chi
         type(composition_info_type), intent(in) :: ionic
         real(dp), intent(in) :: Tcn ! neutron critical temperature
         type(conductivity_components), intent(out) :: K
-        logical, intent(in), optional :: use_pcy
-        logical, intent(in), optional :: use_page 
-        logical, intent(in), optional :: &
-        &   which_components(num_conductivity_channels)
-        integer :: which_ee, which_eQ
+        type(conductivity_general_info), pointer :: rq
+!         logical, intent(in), optional :: use_pcy
+!         logical, intent(in), optional :: use_page
+!         logical, intent(in), optional :: &
+!         &   which_components(num_conductivity_channels)
+        integer :: which_ee, which_eQ, ierr
         logical, dimension(num_conductivity_channels) :: K_components
 
-        which_ee = icond_sy06
-        which_eQ = icond_eQ_potekhin
-        K_components = cond_use_all
+        call get_conductivity_ptr(handle,rq,ierr)
+        if (ierr /= 0) return
 
-        if (present(use_pcy)) then
-            if (use_pcy) which_ee = icond_pcy
-        end if
-
-        if (present(use_page)) then
-            if (use_page) which_eQ = icond_eQ_page
-        end if
-
-        if (present(which_components)) K_components = which_components
+        if (rq% include_electrons) K_components(icond_ee:icond_eQ) = .TRUE.
+        if (rq% include_neutrons) K_components(icond_nn:icond_nQ) = .TRUE.
+        if (rq% include_superfluid_phonons) K_components(icond_sf) = .TRUE.
+        if (rq% include_photons) K_components(icond_kap) = .TRUE.
+        which_ee = rq% ee_scattering_fmla
+        which_eQ = rq% eQ_scattering_fmla
 
         call conductivity(rho,T,chi,Gamma,eta,mu_e,ionic,Tcn,K, &
         &   which_ee,which_eQ,K_components)

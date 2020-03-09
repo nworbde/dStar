@@ -1,8 +1,6 @@
 module conductivity_def
     use constants_def, only: dp
 
-!     logical :: conductivity_is_initialized = .FALSE.
-
     ! used for mask array to control which components are included
     ! in regions where a tabulated electron conduction is used, 
     ! only the total can be used. May need to rethink this control.
@@ -80,6 +78,8 @@ module conductivity_def
     real(dp), parameter :: default_tab_on_lgrho = 9.0
     real(dp), parameter :: default_tab_off_lgrho = 9.0
     
+    logical, save :: conductivity_is_initialized = .FALSE.
+    
 contains
     
     subroutine conductivity_def_init()
@@ -95,7 +95,7 @@ contains
             conductivity_handles(i)% tab_on_lgrho = default_tab_on_lgrho
             conductivity_handles(i)% handle = i
             conductivity_handles(i)% in_use = .FALSE.
-        end do        
+        end do    
     end subroutine conductivity_def_init
     
     function do_alloc_conductivity(ierr) result(conductivity_id)
