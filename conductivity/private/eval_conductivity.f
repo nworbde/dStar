@@ -22,6 +22,8 @@ contains
         real(dp) :: nn, nion, ne, kF, xF, eF, Gamma_e, kappa_e_pre
         real(dp) :: kappa_n_pre, kfn, mnstar, tau, v, R
         real(dp) :: nu, nu_c, K_opacity
+        real(dp), parameter :: eQ_threshold = 1.0e-8_dp
+        real(dp), parameter :: sf_reduction_threshold = 1.0e-10_dp
         integer :: ierr
 
         call clear_kappa
@@ -48,7 +50,7 @@ contains
                     nu_c = ee_SY06(ne,T)
                 end select
                 nu = nu + nu_c
-                kappa% ee = kappa_e_pre/nu_c
+                if (nu_c > tiny(1.0_dp)) kappa% ee = kappa_e_pre/nu_c
             end if
             if (K_components(icond_ei)) then
                 nu_c = eion( &
@@ -63,9 +65,13 @@ contains
                 case(icond_eQ_page)
                     nu_c = eQ_page( &
                     &    kF,T,ionic%Ye,ionic%Z,ionic%Z2,ionic%A,ionic%Q)
+                case default
+                    write(error_unit,*)  &
+                    &   'unknown option for eQ scattering: using Potekhin'
+                    nu_c = eQ(kF,T,ionic%Ye,ionic%Z,ionic%Z2,ionic%A,ionic%Q)
                 end select
                 nu = nu + nu_c
-                if (ionic%Q > 1.0e-8_dp) kappa% eQ = kappa_e_pre/nu_c
+                if (ionic%Q > eQ_threshold) kappa% eQ = kappa_e_pre/nu_c
             end if
             kappa% electron_total = kappa_e_pre/nu
         end if
@@ -87,7 +93,7 @@ contains
                 v = sqrt(1.0-tau)*(1.456-0.157/sqrt(tau) + 1.764/tau)
                 R = (0.4186+sqrt(1.007**2+(0.5010*v)**2))**2.5 * &
                 &   exp(1.456-sqrt(1.456**2+v**2))
-                if (R < 1.0E-10) R = 0.0
+                if (R < sf_reduction_threshold) R = 0.0
             end if
             
             if (K_components(icond_nQ)) then
