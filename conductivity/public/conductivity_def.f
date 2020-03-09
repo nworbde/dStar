@@ -1,7 +1,7 @@
 module conductivity_def
     use constants_def, only: dp
 
-    logical :: conductivity_is_initialized = .FALSE.
+!     logical :: conductivity_is_initialized = .FALSE.
 
     ! used for mask array to control which components are included
     ! in regions where a tabulated electron conduction is used, 
