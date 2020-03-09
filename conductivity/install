@@ -12,6 +12,7 @@ function check_okay {
 }
 
 this_module=${PWD##*/}
+./fetch_data
 mkdir -p ../data/conductivity/cache
 cp data/condall06.dat ../data/conductivity/
 check_okay

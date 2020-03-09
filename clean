@@ -59,6 +59,7 @@ clean_data_caches nucchem
 clean_data_caches eos
 clean_data_caches atm_data
 clean_data_caches crust_data
+clean_data_caches conductivity
 #clean_data_caches core_data
 
 echo
