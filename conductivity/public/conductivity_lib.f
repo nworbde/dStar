@@ -3,6 +3,94 @@ module conductivity_lib
 
 contains
 
+    subroutine conductivity_startup(datadir)
+        use PPP_electron
+        implicit none
+        character(len=*), intent(in) :: datadir
+        character(len=256) :: cond_datadir
+        integer :: ierr
+        call conductivity_def_init
+        
+        cond_datadir = trim(datadir) // '/conductivity'
+        call load_PPP_electron_table(cond_datadir,ierr)
+        call construct_interpolation_coefficients(ierr)
+    end subroutine conductivity_startup
+    
+    subroutine conductivity_shutdown()
+        use PPP_electron
+        call free_PPP_electron_table
+    end subroutine conductivity_shutdown
+    
+    function alloc_conductivity_handle(ierr) result(handle)
+        use, intrinsic :: iso_fortran_env, only: error_unit
+        integer, intent(out) :: ierr
+        integer :: handle
+        handle = do_alloc_conductivity(ierr)
+        if (ierr /= 0) then
+            select case(ierr)
+            case(-1)
+                write(error_unit,*) 'unable to allocate conductivty: no free handles'
+            case(-2)
+                write(error_unit,*) 'unable to allocate conductivty: bad handle'
+            end select
+        end if
+    end function alloc_conductivity_handle
+    
+    subroutine free_conductivity_handle(handle)
+        integer, intent(in) :: handle
+        call do_free_conductivity(handle)
+    end subroutine free_conductivity_handle
+    
+    subroutine conductivity_set_controls(handle,include_electrons, include_neutrons, &
+    &   include_superfluid_phonons, include_photons, which_ee_scattering, which_eQ_scattering, &
+    &   max_lgrho_table, min_lgrho_table)
+        use iso_fortran_env, only: error_unit
+        implicit none
+        integer, intent(in) :: handle
+        logical, intent(in), optional :: include_electrons
+        logical, intent(in), optional :: include_neutrons
+        logical, intent(in), optional :: include_superfluid_phonons
+        logical, intent(in), optional :: include_photons
+        integer, intent(in), optional :: which_ee_scattering
+        integer, intent(in), optional :: which_eQ_scattering
+        real(dp), intent(in), optional :: max_lgrho_table
+        real(dp), intent(in), optional :: min_lgrho_table
+        type(conductivity_general_info), pointer :: rq
+        integer :: ierr
+        
+        call get_conductivity_ptr(handle,rq,ierr)
+        if (ierr /= 0) then
+            write(error_unit,*) 'conductivity_set_controls: bad handle'
+            return
+        end if
+        if (.not. rq% in_use) then
+            write(error_unit,*) 'conductivity_set_controls: handle is not in use'
+            return
+        end if
+        
+        if (present(include_electrons)) rq% include_electrons = include_electrons
+        if (present(include_neutrons)) rq% include_neutrons = include_neutrons
+        if (present(include_superfluid_phonons)) rq% include_superfluid_phonons = &
+        &   include_superfluid_phonons
+        if (present(include_photons)) rq% include_photons = include_photons
+        if (present(which_ee_scattering)) then
+            if (which_ee_scattering==icond_sy06 .or. which_ee_scattering==icond_pcy) then
+                rq% ee_scattering_fmla = which_ee_scattering
+            else
+                write(error_unit,'(a,i0,a)') 'unknown flag ',which_ee_scattering,' for ee scattering'
+            end if
+        end if
+        if (present(which_eQ_scattering)) then
+            if (which_eQ_scattering==icond_eQ_potekhin .or. which_eQ_scattering==icond_eQ_page) then
+                rq% eQ_scattering_fmla = which_eQ_scattering
+            else
+                write(error_unit,'(a,i0,a)') 'unknown flag ',which_eQ_scattering,' for eQ scattering'
+            end if
+        end if
+        if (present(max_lgrho_table)) rq% tab_off_lgrho = max_lgrho_table
+        if (present(min_lgrho_table)) rq% tab_on_lgrho = min_lgrho_table
+    end subroutine conductivity_set_controls
+
     subroutine get_thermal_conductivity( &
     &   rho,T,chi,Gamma,eta,mu_e,ionic,Tcn,K,which_components, &
     &   use_pcy,use_page)
