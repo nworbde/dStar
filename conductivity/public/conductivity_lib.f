@@ -4,6 +4,7 @@ module conductivity_lib
 contains
 
     subroutine conductivity_startup(datadir)
+        use iso_fortran_env, only: error_unit
         use PPP_electron
         implicit none
         character(len=*), intent(in) :: datadir
@@ -13,7 +14,14 @@ contains
         
         cond_datadir = trim(datadir) // '/conductivity'
         call load_PPP_electron_table(cond_datadir,ierr)
+        if (ierr == unable_to_load_table) then
+            write(error_unit, *) 'low-density electron conduction will not be computed correctly'
+        end if
         call construct_interpolation_coefficients(ierr)
+        if (ierr == unable_to_compute_interpolation) then
+            write(error_unit, *) 'low-density electron conduction will not be computed correctly'
+            PPP_tbl% is_loaded = .FALSE.
+        end if
     end subroutine conductivity_startup
     
     subroutine conductivity_shutdown()

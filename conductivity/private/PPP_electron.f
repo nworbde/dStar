@@ -3,16 +3,22 @@ module PPP_electron
     use conductivity_def
 
     implicit none
-    logical, parameter :: dbg = .FALSE.
-    integer, parameter :: NZ = 15, Nrho = 64, NT = 19
+    ! error codes
+    integer, parameter :: unable_to_load_table = -1
+    integer, parameter :: unable_to_compute_interpolation = -2
+    integer, parameter :: unable_to_write_cache = -3
+    integer, parameter :: unable_to_evaluate_conductivity = -4
+    
+    logical, parameter, private :: dbg = .FALSE.
+    integer, parameter, private :: NZ = 15, Nrho = 64, NT = 19
     logical :: conductivity_is_initialized = .FALSE.
-    integer, parameter :: conductivity_filename_length = 256
+    integer, parameter, private :: conductivity_filename_length = 256
     character(len=conductivity_filename_length) :: conductivity_datadir    
     
     character(len=*), parameter :: tablename = 'condall06'
     
     type electron_conductivity_tbl
-        logical :: is_loaded
+        logical :: is_loaded = .FALSE.
         integer :: linear_T
         integer :: linear_rho
         real(dp) :: Zmin
@@ -27,9 +33,9 @@ module PPP_electron
         real(dp), dimension(NT,Nrho,NZ) :: lgK    ! table and coeff.
     end type electron_conductivity_tbl
 
-    type(electron_conductivity_tbl), target :: PPP_tbl
+    type(electron_conductivity_tbl), target, save :: PPP_tbl
     ! can't put this in the table because of the target attribute
-    real(dp), dimension(4,NT,Nrho,NZ), target :: workspace
+    real(dp), dimension(4,NT,Nrho,NZ), target, private, save :: workspace
 
 contains
     
@@ -69,11 +75,17 @@ contains
         data_filename =  &
         &   trim(datadir)//'/'//trim(tablename)//'.dat'
         call read_PPP_electron_table(data_filename,tab,ierr)
-        if (failure(this_routine//': unable to load table',ierr)) return        
+        if (failure(this_routine//': unable to load table',ierr)) then
+            ierr = unable_to_load_table
+            return
+        end if
         tab% is_loaded = .TRUE.
 
         call write_PPP_electron_table_cache(cache_filename,tab,ierr)
-        if (failure(this_routine//': unable to write cache',ierr)) return
+        if (failure(this_routine//': unable to write cache',ierr)) then
+            ierr = unable_to_write_cache
+            return
+        end if
     end subroutine load_PPP_electron_table
     
     subroutine free_PPP_electron_table()
@@ -108,9 +120,10 @@ contains
             &   not_a_knot,bcrhomin,not_a_knot,bcrhomax, &
             &   tab% linear_T,tab% linear_rho,ierr)
             
-            if (failure( &
-            &   this_routine//': unable to construct interpolation', &
-            &   ierr)) return
+            if (failure(this_routine//': unable to construct interpolation', ierr)) then
+                ierr = unable_to_compute_interpolation
+                return
+            end if
         end do
 
     end subroutine construct_interpolation_coefficients
@@ -245,7 +258,10 @@ contains
         ftab(1:4*Nrho*NT) => workspace(:,:,:,lZ)
         call interp_evbicub_db(lgT,lgrho,tab% lgTs,NT,tab% lgrhos,Nrho, &
         &   tab% linear_T,tab% linear_rho,ftab,NT,ict,lgK,ierr)
-        if (failure(this_routine//': interpolation Z0',ierr)) return
+        if (failure(this_routine//': interpolation Z0',ierr)) then
+            ierr = unable_to_evaluate_conductivity
+            return
+        end if
         lgK0 = lgK(1)
         ! catch the edge case
         if (lZ == NZ) then
@@ -257,7 +273,10 @@ contains
         ftab(1:4*Nrho*NT) => workspace(:,:,:,lZ)
         call interp_evbicub_db(lgT,lgrho,tab% lgTs,NT,tab% lgrhos,Nrho, &
         &   tab% linear_T,tab% linear_rho,ftab,NT,ict,lgK,ierr)
-        if (failure(this_routine//': interpolation Z1',ierr)) return
+        if (failure(this_routine//': interpolation Z1',ierr)) then
+            ierr = unable_to_evaluate_conductivity
+            return
+        end if
         lgK1 = lgK(1)
         
         ! linear interpolate in Z
