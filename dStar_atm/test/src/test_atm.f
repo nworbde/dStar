@@ -15,6 +15,8 @@ program test_atm
     call nucchem_init('../../data',ierr)
 	call check_okay('nucchem_init',ierr)
     call dStar_eos_startup('../../data')
+    call conductivity_startup('../../data')
+    call check_okay('conductivity_startup',ierr)
 	call dStar_atm_startup('../../data',ierr)
 	call check_okay('dStar_atm_startup',ierr)
 	
@@ -32,6 +34,7 @@ program test_atm
     call do_one('pcy97')    
     
 	call dStar_atm_shutdown
+    call conductivity_shutdown
     call dStar_eos_shutdown
     call nucchem_shutdown
     

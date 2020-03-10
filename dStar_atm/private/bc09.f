@@ -26,8 +26,9 @@ module bc09
     integer, parameter :: number_base_rpar = ikappa
     ! further storage can be tacked on at end of rpar for Yion's
     
-    integer, parameter :: ihandle = 1
-    integer, parameter :: iNcharged = ihandle + 1
+    integer, parameter :: ieoshandle = 1
+    integer, parameter :: icondhandle = ieoshandle + 1
+    integer, parameter :: iNcharged = icondhandle + 1
     integer, parameter :: number_base_ipar = iNcharged
     ! further storage can be tacked on at end of ipar for charged id's
     
@@ -44,6 +45,7 @@ contains
     subroutine do_get_bc09_Teff(grav, Plight, Pb, lgTb, lgTeff, lgflux, ierr)
         use constants_def
         use dStar_eos_lib
+        use conductivity_lib
         
         real(dp), intent(in) :: grav    ! surface gravity, in the local frame
         real(dp), intent(in) :: Plight  ! pressure at which layer of light elements terminates
@@ -53,11 +55,18 @@ contains
         real(dp), intent(out), dimension(:) :: lgflux   ! flux
         integer, intent(out) :: ierr
         integer :: i, n
-        integer :: eos_handle
+        integer :: eos_handle, cond_handle
         real(dp) :: lgyb, lgy_light, rho_ph
         
         ! constants, nucchem, and dStar_eos must be initialized
         eos_handle = alloc_dStar_eos_handle(ierr)
+        cond_handle = alloc_conductivity_handle(ierr)
+        call conductivity_set_controls(cond_handle, &
+        &   include_electrons=.TRUE., &
+        &   include_photons=.TRUE., &
+        &   include_neutrons=.FALSE., &
+        &   include_superfluid_phonons=.FALSE.)
+        
         lgyb = log10(Pb/grav)
         lgy_light = log10(Plight/grav)
         
@@ -65,19 +74,23 @@ contains
         ! start at the highest temperature and work down; array is assumed to be in ascending order
         n = size(lgTeff)
         do i = n,1,-1
-            call do_integrate_bc09_atm(grav,lgyb,lgy_light,lgTeff(i),lgTb(i),rho_ph,eos_handle,ierr)
+            call do_integrate_bc09_atm( &
+            &   grav,lgyb,lgy_light,lgTeff(i),lgTb(i),rho_ph, &
+            &   eos_handle,cond_handle,ierr)
             if (ierr < 0) then
-                print *,'error in atmosphere integration with lgTeff = ', lgTeff(i)
+                print *,'error in atmosphere integration with lgTeff = ', &
+                &    lgTeff(i)
                 return
             end if
             lgflux(i) = 4.0_dp*lgTeff(i)+log10(sigma_SB)
         end do
         
+        call free_conductivity_handle(cond_handle)
         call free_dStar_eos_handle(eos_handle)
     end subroutine do_get_bc09_Teff
     
     subroutine do_integrate_bc09_atm( &
-    &   grav,lgyb,lgy_light,lgTeff,lgTb,rho,eos_handle,ierr)
+    &   grav,lgyb,lgy_light,lgTeff,lgTb,rho,eos_handle,cond_handle,ierr)
         use iso_fortran_env, only: error_unit
         use constants_def
         use nucchem_def
@@ -90,7 +103,7 @@ contains
         real(dp), intent(in) :: lgTeff  ! log_10(K)
         real(dp), intent(out) :: lgTb   ! log_10(K)
         real(dp), intent(inout) :: rho  ! set < 0 to compute a guess, on output, contains rho_photosphere
-        integer, intent(in) :: eos_handle
+        integer, intent(in) :: eos_handle, cond_handle
         integer, intent(out) :: ierr
         ! composition
         integer, parameter :: number_species = 2
@@ -155,7 +168,8 @@ contains
         rpar(iTeff) = Teff
         rpar(number_base_rpar + 1:number_base_rpar+ncharged) = Yion(:)
         
-        ipar(ihandle) = eos_handle
+        ipar(ieoshandle) = eos_handle
+        ipar(icondhandle) = cond_handle
         ipar(iNcharged) = ncharged
         ipar(number_base_ipar+1:number_base_ipar+ncharged) = charged_ids(:)
         
@@ -359,7 +373,7 @@ contains
        real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
        integer, intent(out) :: ierr
        real(dp) :: rho, gravity, tau_ph, Teff, P, kappa, Gamma, eta, mu_e, Xsum, chi
-       integer :: eos_handle, ncharged, phase
+       integer :: eos_handle, cond_handle, ncharged, phase
        type(composition_info_type) :: ionic
        type(conductivity_components) :: K
        real(dp), dimension(num_dStar_eos_results) :: res
@@ -387,7 +401,8 @@ contains
        tau_ph = rpar(itau)
        Teff = rpar(iTeff)
        
-       eos_handle = ipar(ihandle)
+       eos_handle = ipar(ieoshandle)
+       cond_handle = ipar(icondhandle)
        ncharged = ipar(iNcharged)
        charged_ids(1:ncharged)=>ipar(number_base_ipar+1:number_base_ipar+ncharged)
        Yion(1:ncharged)=>rpar(number_base_rpar+1:number_base_rpar+ncharged)
@@ -402,9 +417,9 @@ contains
        eta = res(i_Theta) !1.0/TpT
        mu_e = res(i_mu_e)
        Gamma = res(i_Gamma)
-       call get_thermal_conductivity(rho,Teff,chi, &
+       call get_thermal_conductivity(cond_handle,rho,Teff,chi, &
            & Gamma,eta,mu_e,ionic,Tcs(neutron_1S0), &
-           & K,which_components=cond_exclude_sf) !cond_use_only_kap)
+           & K)
        kappa = 4.0*onethird*arad*clight*Teff**3/rho/K% total
        rpar(ikappa) = kappa
        rpar(ipres) = P
@@ -468,7 +483,7 @@ contains
         real(dp), intent(out) :: del_ad
         integer, intent(out) :: ierr
         type(composition_info_type) :: ionic
-        integer :: ncharged, eos_handle
+        integer :: ncharged, eos_handle, cond_handle
         integer, dimension(:), pointer :: charged_ids=>null()
         real(dp), dimension(:), pointer :: Yion=>null()
         real(dp) :: lnrho,lnrho_guess, Gamma, eta, mu_e, chi
@@ -497,7 +512,8 @@ contains
         &    Ye = rpar(icomp_Ye), &
         &    Yn = rpar(icomp_Yn), &
         &    Q = rpar(icomp_Q) )
-        eos_handle = ipar(ihandle)
+        eos_handle = ipar(ieoshandle)
+        cond_handle = ipar(icondhandle)
         ncharged = ipar(iNcharged)
         charged_ids(1:ncharged) => ipar(number_base_ipar+1:number_base_ipar+ncharged)
         Yion(1:ncharged) => rpar(number_base_rpar+1:number_base_rpar+ncharged)
@@ -515,9 +531,9 @@ contains
         Gamma = res(i_Gamma)
         mu_e = res(i_mu_e)
         del_ad = res(i_grad_ad)
-        call get_thermal_conductivity(rho,T,chi, &
+        call get_thermal_conductivity(cond_handle,rho,T,chi, &
             & Gamma,eta,mu_e,ionic,Tcs(neutron_1S0), &
-            & K,which_components=cond_exclude_sf)
+            & K)
         kappa = 4.0*onethird*arad*clight*T**3/rho/K% total
         
 !         if (dbg) then
@@ -609,7 +625,7 @@ contains
        rho = exp(lnrho)
        T = rpar(itemp)
        Pwant = rpar(ipres)
-       eos_handle = ipar(ihandle)
+       eos_handle = ipar(ieoshandle)
        ncharged = ipar(iNcharged)
        charged_ids(1:ncharged)=>ipar(number_base_ipar+1:number_base_ipar+ncharged)
        Yion(1:ncharged)=>rpar(number_base_rpar+1:number_base_rpar+ncharged)
