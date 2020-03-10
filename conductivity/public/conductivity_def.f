@@ -59,12 +59,15 @@ module conductivity_def
     end type conductivity_components
     
     type conductivity_general_info
-        logical :: include_electrons
+        ! flags to turn off some of the more exploratory transport mechanisms
         logical :: include_neutrons
         logical :: include_superfluid_phonons
-        logical :: include_photons
         integer :: ee_scattering_fmla
         integer :: eQ_scattering_fmla
+        ! radiative opacity ramps up linearly between full_off and full_on
+        real(dp) :: rad_full_off_lgrho
+        real(dp) :: rad_full_on_lgrho
+        ! defines region where we linearly blend from the table to analytical treatment
         real(dp) :: tab_off_lgrho
         real(dp) :: tab_on_lgrho
         integer :: handle
@@ -75,8 +78,10 @@ module conductivity_def
     type (conductivity_general_info), target :: &
     &   conductivity_handles(max_conductivity_handles)
     
-    real(dp), parameter :: default_tab_on_lgrho = 9.0
-    real(dp), parameter :: default_tab_off_lgrho = 9.0
+    real(dp), parameter :: default_rad_full_off_lgrho = 9.0_dp
+    real(dp), parameter :: default_rad_full_on_lgrho = 8.0_dp
+    real(dp), parameter :: default_tab_on_lgrho = 9.0_dp
+    real(dp), parameter :: default_tab_off_lgrho = 9.0_dp
     
     logical, save :: conductivity_is_initialized = .FALSE.
     
@@ -85,12 +90,12 @@ contains
     subroutine conductivity_def_init()
         integer :: i
         do i = 1, max_conductivity_handles
-            conductivity_handles(i)% include_electrons = .TRUE.
             conductivity_handles(i)% include_neutrons = .TRUE.
             conductivity_handles(i)% include_superfluid_phonons = .TRUE.
-            conductivity_handles(i)% include_photons = .TRUE.
             conductivity_handles(i)% ee_scattering_fmla = icond_sy06
             conductivity_handles(i)% eQ_scattering_fmla = icond_eQ_potekhin
+            conductivity_handles(i)% rad_full_off_lgrho = default_rad_full_off_lgrho
+            conductivity_handles(i)% rad_full_on_lgrho = default_rad_full_on_lgrho
             conductivity_handles(i)% tab_off_lgrho = default_tab_off_lgrho
             conductivity_handles(i)% tab_on_lgrho = default_tab_on_lgrho
             conductivity_handles(i)% handle = i

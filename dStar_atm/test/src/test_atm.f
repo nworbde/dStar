@@ -7,17 +7,18 @@ program test_atm
 	use dStar_atm_def
 	use dStar_atm_lib
 	
+    character(len=*), parameter :: datadir
 	real(dp) :: lgTb,g,Plight,Pb,lgTeff,dlgTeff,lgflux,dlgflux
 	integer :: ierr,i
     
     call constants_init('',ierr)
 	call check_okay('constants_init',ierr)
-    call nucchem_init('../../data',ierr)
+    call nucchem_init(datadir,ierr)
 	call check_okay('nucchem_init',ierr)
-    call dStar_eos_startup('../../data')
-    call conductivity_startup('../../data')
+    call dStar_eos_startup(datadir)
+    call conductivity_startup(datadir)
     call check_okay('conductivity_startup',ierr)
-	call dStar_atm_startup('../../data',ierr)
+	call dStar_atm_startup(datadir,ierr)
 	call check_okay('dStar_atm_startup',ierr)
 	
 	write (*,'(5(a9,tr2),/,5("=========",tr2))') 'lgTb','lgTeff','dlgTeff','lgflux','dlgflux'

@@ -62,10 +62,7 @@ contains
         eos_handle = alloc_dStar_eos_handle(ierr)
         cond_handle = alloc_conductivity_handle(ierr)
         call conductivity_set_controls(cond_handle, &
-        &   include_electrons=.TRUE., &
-        &   include_photons=.TRUE., &
-        &   include_neutrons=.FALSE., &
-        &   include_superfluid_phonons=.FALSE.)
+        &   include_neutrons=.FALSE., include_superfluid_phonons=.FALSE.)
         
         lgyb = log10(Pb/grav)
         lgy_light = log10(Plight/grav)
@@ -432,7 +429,6 @@ contains
        use nucchem_def
        use nucchem_lib
        use dStar_eos_lib
-       use conductivity_lib
        use utils_lib
 
        integer, intent(in) :: n, lrpar, lipar

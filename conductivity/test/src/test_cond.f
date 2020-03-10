@@ -6,6 +6,7 @@ program test_cond
     use dStar_eos_lib
     use conductivity_lib
     
+    character(len=*), parameter :: datadir = '../../data'
     integer :: eos_handle,cond_handle,ierr,i,j
     ! composition taken from HZ090 for Fe-chain accreted crust
     integer, dimension(2:14), parameter ::  zz = [2,2,2,2,26,26,26,26,24,20,14,24,24], &
@@ -19,16 +20,15 @@ program test_cond
     real(dp), dimension(num_dStar_eos_results) :: res
     
     call constants_init('',ierr)
-    call nucchem_init('../../data',ierr)
-    call dStar_eos_startup('../../data')
-    call conductivity_startup('../../data')
+    call nucchem_init(datadir,ierr)
+    call dStar_eos_startup(datadir)
+    call conductivity_startup(datadir)
     eos_handle = alloc_dStar_eos_handle(ierr)
     cond_handle = alloc_conductivity_handle(ierr)
+    ! for this test, we include neutrons and keep the rad'n on
     call conductivity_set_controls(cond_handle, &
-    &   include_electrons=.TRUE., &
-    &   include_neutrons=.TRUE., &
-    &   include_superfluid_phonons=.TRUE., &
-    &   include_photons=.TRUE.)
+    &   include_neutrons=.TRUE., include_superfluid_phonons=.TRUE., &
+    &   lgrho_rad_off = 14.5_dp, lgrho_rad_on = 14.5_dp )
     
     write (output_unit, '(5a6,10a14,/,5("======"),10("=============="))') &
         & 'lg(r)','lg(T)','<Z>','<A>','Y_n', &
@@ -48,6 +48,7 @@ program test_cond
         ionic% Q = 4.0
         call do_one(10.0_dp**i)
     end do
+    
     call clear_composition(ionic)
     call conductivity_shutdown()
     call dStar_eos_shutdown()

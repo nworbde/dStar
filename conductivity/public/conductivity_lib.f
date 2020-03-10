@@ -52,20 +52,19 @@ contains
         call do_free_conductivity(handle)
     end subroutine free_conductivity_handle
     
-    subroutine conductivity_set_controls(handle,include_electrons, include_neutrons, &
-    &   include_superfluid_phonons, include_photons, which_ee_scattering, which_eQ_scattering, &
+    subroutine conductivity_set_controls(handle, include_neutrons, &
+    &   include_superfluid_phonons, which_ee_scattering, which_eQ_scattering, &
+    &   lgrho_rad_off, lgrho_rad_on, &
     &   max_lgrho_table, min_lgrho_table)
         use iso_fortran_env, only: error_unit
         implicit none
         integer, intent(in) :: handle
-        logical, intent(in), optional :: include_electrons
         logical, intent(in), optional :: include_neutrons
         logical, intent(in), optional :: include_superfluid_phonons
-        logical, intent(in), optional :: include_photons
         integer, intent(in), optional :: which_ee_scattering
         integer, intent(in), optional :: which_eQ_scattering
-        real(dp), intent(in), optional :: max_lgrho_table
-        real(dp), intent(in), optional :: min_lgrho_table
+        real(dp), intent(in), optional :: lgrho_rad_off, lgrho_rad_on
+        real(dp), intent(in), optional :: max_lgrho_table, min_lgrho_table
         type(conductivity_general_info), pointer :: rq
         integer :: ierr
         
@@ -79,11 +78,9 @@ contains
             return
         end if
         
-        if (present(include_electrons)) rq% include_electrons = include_electrons
         if (present(include_neutrons)) rq% include_neutrons = include_neutrons
         if (present(include_superfluid_phonons)) rq% include_superfluid_phonons = &
         &   include_superfluid_phonons
-        if (present(include_photons)) rq% include_photons = include_photons
         if (present(which_ee_scattering)) then
             if (which_ee_scattering==icond_sy06 .or. which_ee_scattering==icond_pcy) then
                 rq% ee_scattering_fmla = which_ee_scattering
@@ -98,6 +95,8 @@ contains
                 write(error_unit,'(a,i0,a)') 'unknown flag ',which_eQ_scattering,' for eQ scattering'
             end if
         end if
+        if (present(lgrho_rad_off)) rq% rad_full_off_lgrho = lgrho_rad_off
+        if (present(lgrho_rad_on)) rq% rad_full_on_lgrho = lgrho_rad_on
         if (present(max_lgrho_table)) rq% tab_off_lgrho = max_lgrho_table
         if (present(min_lgrho_table)) rq% tab_on_lgrho = min_lgrho_table
     end subroutine conductivity_set_controls
@@ -118,22 +117,11 @@ contains
 !         logical, intent(in), optional :: use_page
 !         logical, intent(in), optional :: &
 !         &   which_components(num_conductivity_channels)
-        integer :: which_ee, which_eQ, ierr
-        logical, dimension(num_conductivity_channels) :: K_components
+        integer :: ierr
 
         call get_conductivity_ptr(handle,rq,ierr)
         if (ierr /= 0) return
-        
-        K_components = .FALSE.
-        if (rq% include_electrons) K_components(icond_ee:icond_eQ) = .TRUE.
-        if (rq% include_neutrons) K_components(icond_nn:icond_nQ) = .TRUE.
-        if (rq% include_superfluid_phonons) K_components(icond_sf) = .TRUE.
-        if (rq% include_photons) K_components(icond_kap) = .TRUE.
-        which_ee = rq% ee_scattering_fmla
-        which_eQ = rq% eQ_scattering_fmla
-
-        call conductivity(rho,T,chi,Gamma,eta,mu_e,ionic,Tcn,K, &
-        &   which_ee,which_eQ,K_components)
+        call conductivity(rq,rho,T,chi,Gamma,eta,mu_e,ionic,Tcn,K)
     end subroutine get_thermal_conductivity
 
     subroutine get_core_thermal_conductivity(nn,np,mneff,mpeff,T,Tcs,K)
