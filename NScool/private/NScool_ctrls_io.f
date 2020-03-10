@@ -57,12 +57,9 @@ module NScool_ctrls_io
         scale_sf_critical_temperatures, &
         use_pcy_for_ee_scattering, &
         use_page_for_eQ_scattering, &
-        use_ee_conductivity, &
-        use_ei_conductivity, &
-        use_eQ_conductivity, &
-        use_sf_conductivity, &
-        use_nph_conductivity, &
-        use_nQ_conductivity, &
+        use_electron_conductivity, &
+        use_neutron_conductivity, &
+        use_superfluid_phonon_conductivity, &
         use_rad_opacity, &
         eos_gamma_melt_pt, &
         eos_rsi_melt_pt, &
@@ -208,12 +205,10 @@ contains
         s% use_pcy_for_ee_scattering = use_pcy_for_ee_scattering
         s% use_page_for_eQ_scattering = use_page_for_eQ_scattering
 
-        s% use_ee_conductivity = use_ee_conductivity
-        s% use_ei_conductivity = use_ei_conductivity
-        s% use_eQ_conductivity = use_eQ_conductivity
-        s% use_sf_conductivity = use_sf_conductivity
-        s% use_nph_conductivity = use_nph_conductivity
-        s% use_nQ_conductivity = use_nQ_conductivity
+        s% use_electron_conductivity = use_electron_conductivity
+        s% use_neutron_conductivity = use_neutron_conductivity
+        s% use_superfluid_phonon_conductivity = &
+        &    use_superfluid_phonon_conductivity
         s% use_rad_opacity = use_rad_opacity
 
         s% eos_gamma_melt_pt = eos_gamma_melt_pt

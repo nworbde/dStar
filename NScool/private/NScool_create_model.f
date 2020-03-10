@@ -51,6 +51,8 @@ contains
         use nucchem_lib
         use superfluid_lib
         use dStar_eos_lib
+        use conductivity_def
+        use conductivity_lib
         use dStar_crust_def
         use dStar_crust_lib
         use NScool_private_def, only: dStar_data_dir
@@ -82,19 +84,44 @@ contains
     
         s% eos_handle = alloc_dStar_eos_handle(ierr)
         if (failure('alloc_dStar_eos_handle')) return
+        
+        call conductivity_startup(trim(dStar_data_dir))
+        if (failure('conductivity_startup')) return
+        
+        s% cond_handle = alloc_conductivity_handle(ierr)
+        if (failure('alloc_conductivity_handle')) return
     
         ! switch off the warnings about quantum effects
         call dStar_eos_set_controls(s% eos_handle,suppress_warnings=.TRUE.)
         if (s% eos_gamma_melt_pt > 0.0)  &
-        & call dStar_eos_set_controls(s% eos_handle,gamma_melt_pt=s% eos_gamma_melt_pt)
+        &   call dStar_eos_set_controls(s% eos_handle, &
+        &   gamma_melt_pt=s% eos_gamma_melt_pt)
         if (s% eos_rsi_melt_pt > 0.0)  &
-        & call dStar_eos_set_controls(s% eos_handle,rsi_melt_pt=s% eos_rsi_melt_pt)
+        &   call dStar_eos_set_controls(s% eos_handle, &
+        &   rsi_melt_pt=s% eos_rsi_melt_pt)
         if (s% eos_nuclide_abundance_threshold > 0.0)  &
-        & call dStar_eos_set_controls(s% eos_handle,nuclide_abundance_threshold=s% eos_nuclide_abundance_threshold)
+        & call dStar_eos_set_controls(s% eos_handle, &
+        &   nuclide_abundance_threshold=s% eos_nuclide_abundance_threshold)
         if (s% eos_pasta_transition_in_fm3 > 0.0)  &
-        & call dStar_eos_set_controls(s% eos_handle,pasta_transition_in_fm3=s% eos_pasta_transition_in_fm3)
+        & call dStar_eos_set_controls(s% eos_handle, &
+        &   pasta_transition_in_fm3=s% eos_pasta_transition_in_fm3)
         if (s% eos_cluster_transition_in_fm3 > 0.0)  &
-        & call dStar_eos_set_controls(s% eos_handle,cluster_transition_in_fm3=s% eos_cluster_transition_in_fm3)
+        & call dStar_eos_set_controls(s% eos_handle, &
+        &   cluster_transition_in_fm3=s% eos_cluster_transition_in_fm3)
+        
+        ! set conductivity channels
+        call conductivity_set_controls(s% cond_handle, &
+        &   include_electrons=s% use_electron_conductivity, &
+        &   include_neutrons=s% use_neutron_conductivity, &
+        &   include_superfluid_phonons=s% use_superfluid_phonon_conductivity, &
+        &   include_photons=s% use_rad_opacity)
+        ! set ee, eQ scattering
+        if (s% use_pcy_for_ee_scattering)  &
+        &   call conductivity_set_controls(s% cond_handle, &
+        &   which_ee_scattering=icond_pcy)
+        if (s% use_page_for_eQ_scattering)  &
+        &   call conductivity_set_controls(s% cond_handle, &
+        &   which_eQ_scattering=icond_eQ_page)
             
         write (error_unit,*) 'loading crust model...'
         call dStar_crust_startup(trim(dStar_data_dir),ierr)
@@ -241,7 +268,7 @@ contains
         type(NScool_info), pointer :: s
         integer, intent(out) :: ierr
         logical, dimension(num_crust_nu_channels) :: nu_channels
-        logical, dimension(num_conductivity_channels) :: cond_channels
+!         logical, dimension(num_conductivity_channels) :: cond_channels
         type(crust_neutrino_emissivity_channels) :: eps_nu
         integer :: iz, itemp, ieos
         integer :: eos_phase
@@ -269,13 +296,13 @@ contains
         &               s% use_crust_nu_bremsstrahlung,  &
         &               s% use_crust_nu_pbf ]
         
-        cond_channels = [ s% use_ee_conductivity, &
-        &                 s% use_ei_conductivity,  &
-        &                 s% use_eQ_conductivity,  &
-        &                 s% use_sf_conductivity,  &
-        &                 s% use_nph_conductivity, &
-        &                 s% use_nQ_conductivity, &
-        &                 s% use_rad_opacity ]
+!         cond_channels = [ s% use_ee_conductivity, &
+!         &                 s% use_ei_conductivity,  &
+!         &                 s% use_eQ_conductivity,  &
+!         &                 s% use_sf_conductivity,  &
+!         &                 s% use_nph_conductivity, &
+!         &                 s% use_nQ_conductivity, &
+!         &                 s% use_rad_opacity ]
         
         s% tab_lnT(1:s% n_tab) = [(lgT_tab_min*ln10 + (lgT_tab_max-lgT_tab_min)*ln10*real(itemp-1,dp)/real(s% n_tab-1,dp), &
         &   itemp = 1, s% n_tab)]
@@ -371,12 +398,11 @@ contains
                 if (itemp == 1)  &
                 &   delP(iz) = abs(1.0 - exp(eos_results(i_lnP))/s% P_bar(iz))
                                 
-                call get_thermal_conductivity(s% rho_bar(iz), Ttab, chi, &
+                call get_thermal_conductivity(s% cond_handle, &
+                &   s% rho_bar(iz), Ttab, chi, &
                 &   eos_results(i_Gamma), eos_results(i_Theta), &
                 &   eos_results(i_mu_e), s% ionic_bar(iz), Tc(neutron_1S0), &
-                &   Kcomponents, use_pcy=s% use_pcy_for_ee_scattering, &
-                &   use_page=s% use_page_for_eQ_scattering, &
-                &   which_components=cond_channels)
+                &   Kcomponents)
                 lnKcond_val(1,itemp) = log(Kcomponents% total)
 
             end do

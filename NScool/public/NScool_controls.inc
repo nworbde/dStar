@@ -71,13 +71,10 @@
     logical :: use_pcy_for_ee_scattering
     logical :: use_page_for_eQ_scattering
     
-    ! set which channels to include
-    logical :: use_ee_conductivity
-    logical :: use_ei_conductivity
-    logical :: use_eQ_conductivity
-    logical :: use_sf_conductivity
-    logical :: use_nph_conductivity
-    logical :: use_nQ_conductivity
+    ! set which conductivity channels to include
+    logical :: use_electron_conductivity
+    logical :: use_neutron_conductivity
+    logical :: use_superfluid_phonon_conductivity
     logical :: use_rad_opacity
     
     ! EOS controls: set to < 0 to use defaults
