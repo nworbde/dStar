@@ -88,7 +88,7 @@ contains
             conductivity_handles(i)% include_electrons = .TRUE.
             conductivity_handles(i)% include_neutrons = .TRUE.
             conductivity_handles(i)% include_superfluid_phonons = .TRUE.
-            conductivity_handles(i)% include_photons = .FALSE.
+            conductivity_handles(i)% include_photons = .TRUE.
             conductivity_handles(i)% ee_scattering_fmla = icond_sy06
             conductivity_handles(i)% eQ_scattering_fmla = icond_eQ_potekhin
             conductivity_handles(i)% tab_off_lgrho = default_tab_off_lgrho

@@ -123,7 +123,8 @@ contains
 
         call get_conductivity_ptr(handle,rq,ierr)
         if (ierr /= 0) return
-
+        
+        K_components = .FALSE.
         if (rq% include_electrons) K_components(icond_ee:icond_eQ) = .TRUE.
         if (rq% include_neutrons) K_components(icond_nn:icond_nQ) = .TRUE.
         if (rq% include_superfluid_phonons) K_components(icond_sf) = .TRUE.

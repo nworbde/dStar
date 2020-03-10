@@ -24,6 +24,11 @@ program test_cond
     call conductivity_startup('../../data')
     eos_handle = alloc_dStar_eos_handle(ierr)
     cond_handle = alloc_conductivity_handle(ierr)
+    call conductivity_set_controls(cond_handle, &
+    &   include_electrons=.TRUE., &
+    &   include_neutrons=.TRUE., &
+    &   include_superfluid_phonons=.TRUE., &
+    &   include_photons=.TRUE.)
     
     write (output_unit, '(5a6,10a14,/,5("======"),10("=============="))') &
         & 'lg(r)','lg(T)','<Z>','<A>','Y_n', &
