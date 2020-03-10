@@ -7,7 +7,7 @@ program test_atm
 	use dStar_atm_def
 	use dStar_atm_lib
 	
-    character(len=*), parameter :: datadir
+    character(len=*), parameter :: datadir = '../../data'
 	real(dp) :: lgTb,g,Plight,Pb,lgTeff,dlgTeff,lgflux,dlgflux
 	integer :: ierr,i
     
