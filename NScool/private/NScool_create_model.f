@@ -12,9 +12,12 @@ module create_model
     use dStar_atm_lib
     use NScool_crust_tov
 
+    ! for tabulation of coefficients as a fcn of temprerature
     integer, parameter :: number_table_pts = 128
     real(dp), parameter :: lgT_tab_min = 7.0
     real(dp), parameter :: lgT_tab_max = 10.0
+    
+    character(len=*), parameter, private :: indent1 = '(tr4,"* ",a)'
     
 contains
     
@@ -24,6 +27,10 @@ contains
         type(NScool_info), pointer :: s
         
         call get_NScool_info_ptr(id,s,ierr)
+        
+        call do_startup_microphysics(s, ierr)
+        if (failed('do_startup_microphysics')) return
+        
         call do_setup_crust_zones(s, ierr)
         if (failed('do_setup_crust_zones')) return
         
@@ -45,6 +52,90 @@ contains
         end function failed
     end subroutine do_create_crust_model
     
+    subroutine do_startup_microphysics(s, ierr)
+        use, intrinsic :: iso_fortran_env, only: error_unit, output_unit
+        use constants_def
+        use nucchem_lib
+        use superfluid_lib
+        use dStar_eos_lib
+        use conductivity_def
+        use conductivity_lib
+        use NScool_private_def, only: dStar_data_dir
+
+        type(NScool_info), pointer :: s
+        integer, intent(out) :: ierr
+        
+        write (error_unit,*) 'initializing microphysics...'
+        
+        write (error_unit,indent1) 'nuclides'
+        call nucchem_init(trim(dStar_data_dir),ierr)
+        if (failure('nucchem_init')) return
+
+        write (error_unit,indent1) 'superfluidity'
+        call sf_startup(trim(dStar_data_dir),ierr)
+        if (failure('sf_startup')) return
+        call sf_load_gaps( &
+        &   trim(s% which_proton_1S0_gap),  &
+        &   trim(s% which_neutron_1S0_gap), &
+        &   trim(s% which_neutron_3P2_gap), ierr)
+        if (failure('sf_load_gaps')) return
+        sf_scale(1:max_number_sf_types) = s% scale_sf_critical_temperatures
+    
+        write (error_unit,indent1) 'equation of state'
+        call dStar_eos_startup(trim(dStar_data_dir))
+        if (failure('dStar_eos_startup')) return    
+        s% eos_handle = alloc_dStar_eos_handle(ierr)
+        if (failure('alloc_dStar_eos_handle')) return
+        ! switch off the warnings about quantum effects
+        call dStar_eos_set_controls(s% eos_handle,suppress_warnings=.TRUE.)
+        if (s% eos_gamma_melt_pt > 0.0)  &
+        &   call dStar_eos_set_controls(s% eos_handle, &
+        &   gamma_melt_pt=s% eos_gamma_melt_pt)
+        if (s% eos_rsi_melt_pt > 0.0)  &
+        &   call dStar_eos_set_controls(s% eos_handle, &
+        &   rsi_melt_pt=s% eos_rsi_melt_pt)
+        if (s% eos_nuclide_abundance_threshold > 0.0)  &
+        & call dStar_eos_set_controls(s% eos_handle, &
+        &   nuclide_abundance_threshold=s% eos_nuclide_abundance_threshold)
+        if (s% eos_pasta_transition_in_fm3 > 0.0)  &
+        & call dStar_eos_set_controls(s% eos_handle, &
+        &   pasta_transition_in_fm3=s% eos_pasta_transition_in_fm3)
+        if (s% eos_cluster_transition_in_fm3 > 0.0)  &
+        & call dStar_eos_set_controls(s% eos_handle, &
+        &   cluster_transition_in_fm3=s% eos_cluster_transition_in_fm3)
+
+        write (error_unit,indent1) 'thermal conductivity'
+        call conductivity_startup(trim(dStar_data_dir))
+        if (failure('conductivity_startup')) return
+        s% cond_handle = alloc_conductivity_handle(ierr)
+        if (failure('alloc_conductivity_handle')) return
+        call conductivity_set_controls(s% cond_handle, &
+        &   include_neutrons=s% use_neutron_conductivity, &
+        &   include_superfluid_phonons=s% use_superfluid_phonon_conductivity)
+        if (s% rad_full_off_lgrho > 0.0) &
+        &   call conductivity_set_controls(s% cond_handle, &
+        &   lgrho_rad_off=s% rad_full_off_lgrho)
+        if (s% rad_full_on_lgrho > 0.0) &
+        &   call conductivity_set_controls(s% cond_handle, &
+        &   lgrho_rad_on=s% rad_full_on_lgrho)
+        if (s% use_pcy_for_ee_scattering)  &
+        &   call conductivity_set_controls(s% cond_handle, &
+        &   which_ee_scattering=icond_pcy)
+        if (s% use_page_for_eQ_scattering)  &
+        &   call conductivity_set_controls(s% cond_handle, &
+        &   which_eQ_scattering=icond_eQ_page)
+        
+    contains
+        function failure(str)
+            character(len=*), intent(in) :: str
+            logical :: failure
+            failure = .FALSE.
+            if (ierr == 0) return
+            write (error_unit,*) 'do_startup_microphysics failure in ',trim(str)
+            failure = .TRUE.
+        end function failure
+    end subroutine do_startup_microphysics
+    
     subroutine do_setup_crust_zones(s, ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit, output_unit
         use constants_def
@@ -64,93 +155,34 @@ contains
         integer, intent(out) :: ierr
         real(dp), dimension(:), pointer :: y
         real(dp) :: Plight
-        
+
         write (error_unit,*) 'establishing crust zones...'
-        
-        write (error_unit,*) 'initializing microphysics...'
-        call nucchem_init(trim(dStar_data_dir),ierr)
-        if (failure('nucchem_init')) return
-    
-        call sf_startup(trim(dStar_data_dir),ierr)
-        if (failure('sf_startup')) return
-    
-        call sf_load_gaps(trim(s% which_proton_1S0_gap), trim(s% which_neutron_1S0_gap), &
-            & trim(s% which_neutron_3P2_gap), ierr)
-        if (failure('sf_load_gaps')) return
-        sf_scale(1:max_number_sf_types) = s% scale_sf_critical_temperatures
-    
-        call dStar_eos_startup(trim(dStar_data_dir))
-        if (failure('dStar_eos_startup')) return
-    
-        s% eos_handle = alloc_dStar_eos_handle(ierr)
-        if (failure('alloc_dStar_eos_handle')) return
-        
-        call conductivity_startup(trim(dStar_data_dir))
-        if (failure('conductivity_startup')) return
-        
-        s% cond_handle = alloc_conductivity_handle(ierr)
-        if (failure('alloc_conductivity_handle')) return
-    
-        ! switch off the warnings about quantum effects
-        call dStar_eos_set_controls(s% eos_handle,suppress_warnings=.TRUE.)
-        if (s% eos_gamma_melt_pt > 0.0)  &
-        &   call dStar_eos_set_controls(s% eos_handle, &
-        &   gamma_melt_pt=s% eos_gamma_melt_pt)
-        if (s% eos_rsi_melt_pt > 0.0)  &
-        &   call dStar_eos_set_controls(s% eos_handle, &
-        &   rsi_melt_pt=s% eos_rsi_melt_pt)
-        if (s% eos_nuclide_abundance_threshold > 0.0)  &
-        & call dStar_eos_set_controls(s% eos_handle, &
-        &   nuclide_abundance_threshold=s% eos_nuclide_abundance_threshold)
-        if (s% eos_pasta_transition_in_fm3 > 0.0)  &
-        & call dStar_eos_set_controls(s% eos_handle, &
-        &   pasta_transition_in_fm3=s% eos_pasta_transition_in_fm3)
-        if (s% eos_cluster_transition_in_fm3 > 0.0)  &
-        & call dStar_eos_set_controls(s% eos_handle, &
-        &   cluster_transition_in_fm3=s% eos_cluster_transition_in_fm3)
-        
-        ! set conductivity channels
-        call conductivity_set_controls(s% cond_handle, &
-        &   include_neutrons=s% use_neutron_conductivity, &
-        &   include_superfluid_phonons=s% use_superfluid_phonon_conductivity)
-        if (s% rad_full_off_lgrho > 0.0) &
-        &   call conductivity_set_controls(s% cond_handle, &
-        &   lgrho_rad_off=s% rad_full_off_lgrho)
-        if (s% rad_full_on_lgrho > 0.0) &
-        &   call conductivity_set_controls(s% cond_handle, &
-        &   lgrho_rad_on=s% rad_full_on_lgrho)
-        ! set ee, eQ scattering
-        if (s% use_pcy_for_ee_scattering)  &
-        &   call conductivity_set_controls(s% cond_handle, &
-        &   which_ee_scattering=icond_pcy)
-        if (s% use_page_for_eQ_scattering)  &
-        &   call conductivity_set_controls(s% cond_handle, &
-        &   which_eQ_scattering=icond_eQ_page)
-            
-        write (error_unit,*) 'loading crust model...'
+        write (error_unit,indent1) 'loading crust model'
         call dStar_crust_startup(trim(dStar_data_dir),ierr)
         if (failure('dStar_crust_startup')) return
         
         call dStar_crust_load_table('hz90',s% eos_handle, s% Tcore, ierr)
         if (failure('dStar_crust_load_table')) return
 
+        write (error_unit,indent1) 'initializing atmosphere'
         call dStar_atm_startup(trim(dStar_data_dir),ierr)
         if (failure('dStar_atm_startup')) return
 
-        write(error_unit,*) 'integrating TOV equations...'
+        write(error_unit,indent1) 'integrating TOV equations'
         allocate(y(num_tov_variables))
-
-        call tov_integrate(log10(s% Pcore), log10(s% Psurf), s% Mcore, s% Rcore, s% target_resolution_lnP, y, ierr)
+        call tov_integrate( &
+        &   log10(s% Pcore), log10(s% Psurf), s% Mcore, s% Rcore,  &
+        &   s% target_resolution_lnP, y, ierr)
         if (failure('tov_integrate')) return
         deallocate(y)
         
-        ! allocate the info arrays
+        write (error_unit,indent1) 'allocating storage'
         stov => tov_model
         s% nz = stov% nzs - 1
         s% nisos = dStar_crust_get_composition_size()
         call allocate_NScool_info_arrays(s, ierr)
         
-        ! facial information
+        write (error_unit,indent1) 'storing zone-facial quatities'
         s% P_bar(1:s% nz) = stov% pressure(stov% nzs:2:-1) * pressure_g
         s% ePhi_bar(1:s% nz) = exp(stov% potential(stov% nzs:2:-1))
         s% e2Phi_bar(1:s% nz) = s% ePhi_bar(1:s% nz)**2
@@ -160,7 +192,7 @@ contains
         s% eLambda_bar(1:s% nz) = 1.0/sqrt(1.0-2.0*(stov% mass(stov% nzs:2:-1)+s% Mcore)/ &
         &   (stov% radius(stov% nzs:2:-1) + s% Rcore*1.0e5/length_g))
         
-        ! body information
+        write(error_unit,indent1) 'interpolating zone-averaged quantites'
         s% dm(1:s% nz-1) = s% m(1:s% nz-1) - s% m(2:s% nz)
         s% dm(s% nz) = s% m(s% nz)
         
@@ -196,9 +228,8 @@ contains
         s% Rtotal = stov% radius(stov% nzs)*length_g*1.0e-5 + s% Rcore
         s% grav = (s% Mtotal) * mass_g * Gnewton /  &
         &   (s% Rtotal*1.0e5)**2 * s% eLambda_bar(1)
-
         Plight = s% grav * 10.0_dp**s% lg_atm_light_element_column
-        
+        write(error_unit,indent1) 'loading atmosphere model'
         call dStar_atm_load_table(s% atm_model, s% grav, Plight, s% Psurf, ierr)
         if (failure('dStar_atm_load_table')) return
 
@@ -211,7 +242,6 @@ contains
             write (error_unit,*) 'do_setup_crust_zones failure in ',trim(str)
             failure = .TRUE.
         end function failure
-        
     end subroutine do_setup_crust_zones
     
     subroutine do_setup_crust_composition(s, ierr)
@@ -224,6 +254,8 @@ contains
         integer, intent(out) :: ierr
         real(dp), allocatable, dimension(:) :: lgP_bar
         
+        write(error_unit,*) 'setting crust composition...'
+        
         ! this routine assumes that we have already run do_setup_crust_zones
         ierr = 0
         allocate(lgP_bar(s% nz))
@@ -235,7 +267,7 @@ contains
         
         ! can fix the impurity parameter to a specified value
         if (s% fix_Qimp) then
-            write (error_unit,'(a,f7.2)') 'setting Qimp = ',s% Qimp
+            write (error_unit,'(tr8,a,f7.2)') 'setting Qimp = ',s% Qimp
             s% ionic_bar(1:s% nz)% Q = s% Qimp
         end if
         
@@ -254,6 +286,7 @@ contains
     end subroutine do_setup_crust_composition
     
     subroutine do_setup_crust_transport(s, ierr)
+        use, intrinsic :: iso_fortran_env, only: error_unit
         use constants_def
         use nucchem_lib
         use superfluid_def
@@ -287,6 +320,7 @@ contains
         ! for error checking
         real(dp), dimension(:), allocatable :: delP
         
+        write(error_unit,*) 'setting thermal transport coefficients...'
         ierr = 0
         s% n_tab = number_table_pts
         
@@ -311,6 +345,7 @@ contains
         s% tab_lnT(1:s% n_tab) = [(lgT_tab_min*ln10 + (lgT_tab_max-lgT_tab_min)*ln10*real(itemp-1,dp)/real(s% n_tab-1,dp), &
         &   itemp = 1, s% n_tab)]
         
+        write(error_unit,indent1) 'specific heat and neutrino emissivity'
         ! cell average quantities: Cp, plasma Gamma, and enu
         do iz = 1, s% nz
             lnCp_val(1:4,1:s% n_tab) => s% tab_lnCp(1:4*s% n_tab, iz)
@@ -380,6 +415,7 @@ contains
         
         ! facial quantities: Kcond
         ! compute dp for error checking
+        write (error_unit,indent1) 'thermal conductivity'
         allocate(delP(s% nz))
         do iz = 1, s% nz
             lnKcond_val(1:4,1:s% n_tab) => s% tab_lnK(1:4*s% n_tab, iz)
