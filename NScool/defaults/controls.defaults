@@ -114,11 +114,13 @@
     ! controls for the conductivity: setting these = .TRUE. means don't use the defaults
     use_pcy_for_ee_scattering = .FALSE.
     use_page_for_eQ_scattering = .FALSE.
-    ! set which channels to include; we only include electrons by default
-    use_electron_conductivity = .TRUE.
+    ! we only include electrons by default
     use_neutron_conductivity = .FALSE.
     use_superfluid_phonon_conductivity = .FALSE.
-    use_rad_opacity = .FALSE.
+    ! set densities for turning on/off radiative opacity; set < 0 to use 
+    !     defaults
+    rad_full_on_lgrho = -1.0
+    rad_full_off_lgrho = -1.0
     
     ! EOS controls: set to < 0 to use defaults
     eos_gamma_melt_pt = -1.0

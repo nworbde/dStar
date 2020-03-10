@@ -72,10 +72,11 @@
     logical :: use_page_for_eQ_scattering
     
     ! set which conductivity channels to include
-    logical :: use_electron_conductivity
     logical :: use_neutron_conductivity
     logical :: use_superfluid_phonon_conductivity
-    logical :: use_rad_opacity
+    ! and densities for turning on/off radiative opacity
+    real(dp) :: rad_full_on_lgrho
+    real(dp) :: rad_full_off_lgrho
     
     ! EOS controls: set to < 0 to use defaults
     real(dp) :: eos_gamma_melt_pt

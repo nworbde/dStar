@@ -57,10 +57,10 @@ module NScool_ctrls_io
         scale_sf_critical_temperatures, &
         use_pcy_for_ee_scattering, &
         use_page_for_eQ_scattering, &
-        use_electron_conductivity, &
         use_neutron_conductivity, &
         use_superfluid_phonon_conductivity, &
-        use_rad_opacity, &
+        rad_full_on_lgrho, &
+        rad_full_off_lgrho, &
         eos_gamma_melt_pt, &
         eos_rsi_melt_pt, &
         eos_nuclide_abundance_threshold, &
@@ -205,11 +205,12 @@ contains
         s% use_pcy_for_ee_scattering = use_pcy_for_ee_scattering
         s% use_page_for_eQ_scattering = use_page_for_eQ_scattering
 
-        s% use_electron_conductivity = use_electron_conductivity
         s% use_neutron_conductivity = use_neutron_conductivity
         s% use_superfluid_phonon_conductivity = &
         &    use_superfluid_phonon_conductivity
-        s% use_rad_opacity = use_rad_opacity
+        ! and densities for turning on/off radiative opacity
+        s% rad_full_on_lgrho = rad_full_on_lgrho
+        s% rad_full_off_lgrho = rad_full_off_lgrho
 
         s% eos_gamma_melt_pt = eos_gamma_melt_pt
         s% eos_rsi_melt_pt = eos_rsi_melt_pt

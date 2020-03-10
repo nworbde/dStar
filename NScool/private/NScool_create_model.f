@@ -111,10 +111,14 @@ contains
         
         ! set conductivity channels
         call conductivity_set_controls(s% cond_handle, &
-        &   include_electrons=s% use_electron_conductivity, &
         &   include_neutrons=s% use_neutron_conductivity, &
-        &   include_superfluid_phonons=s% use_superfluid_phonon_conductivity, &
-        &   include_photons=s% use_rad_opacity)
+        &   include_superfluid_phonons=s% use_superfluid_phonon_conductivity)
+        if (s% rad_full_off_lgrho > 0.0) &
+        &   call conductivity_set_controls(s% cond_handle, &
+        &   lgrho_rad_off=s% rad_full_off_lgrho)
+        if (s% rad_full_on_lgrho > 0.0) &
+        &   call conductivity_set_controls(s% cond_handle, &
+        &   lgrho_rad_on=s% rad_full_on_lgrho)
         ! set ee, eQ scattering
         if (s% use_pcy_for_ee_scattering)  &
         &   call conductivity_set_controls(s% cond_handle, &
