@@ -63,8 +63,7 @@ contains
         end if
 
         ! clip lgTb to table
-        lgT = max(lgTb,tab% lgTb_min)
-        lgT = min(lgTb,tab% lgTb_max)
+        lgT = min(max(lgTb,tab% lgTb_min),tab% lgTb_max)
         call interp_value_and_slope(tab% lgTb, tab% nv, tab% lgTeff, lgT, lgTeff, dlgTeff, ierr)
         if (ierr /= 0) then
             write (error_unit,'(a,i3)') routine_name//': ierr = ',ierr
