@@ -78,8 +78,8 @@ module conductivity_def
     type (conductivity_general_info), target :: &
     &   conductivity_handles(max_conductivity_handles)
     
-    real(dp), parameter :: default_rad_full_off_lgrho = 9.0_dp
-    real(dp), parameter :: default_rad_full_on_lgrho = 8.0_dp
+    real(dp), parameter :: default_rad_full_off_lgrho = 10.0_dp
+    real(dp), parameter :: default_rad_full_on_lgrho = 9.0_dp
     real(dp), parameter :: default_tab_on_lgrho = 9.0_dp
     real(dp), parameter :: default_tab_off_lgrho = 9.0_dp
     
