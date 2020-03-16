@@ -4,12 +4,14 @@ module superfluid_lib
 contains
 
     subroutine sf_startup(datadir,ierr)
-        use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         character(len=*), intent(in) :: datadir
         integer, intent(out) :: ierr
+        type(alert) :: already_initialized = alert( &
+        &   scope='sf_startup',message='module already initialized')
+
         if (sf_is_initialized) then
-            write (error_unit,* )  &
-            &   'sf_startup called on already initialized module'
+            call already_initialized% report
             return
         end if
         sf_datadir = trim(datadir)//'/Tc_data'
@@ -27,13 +29,15 @@ contains
     end subroutine sf_shutdown
 
     subroutine sf_load_gaps(p1pre,n1pre,n3pre,ierr)
-        use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         character(len=*), intent(in) :: p1pre,n1pre,n3pre
         integer, intent(out) :: ierr
+        type(alert) :: uninitialized=alert(scope='sf_load_gaps', &
+        &   message='module is unitialized')
         
         if (.not. sf_is_initialized) then
             ierr = -1
-            write(error_unit,*) 'sf_load_gaps called on uninitialized sf module'
+            call uninitialized% report
             return
         end if
         ierr = 0
@@ -70,7 +74,7 @@ contains
     end subroutine sf_get_results
     
     function sf_get_Tc(kF,id) result(Tc)
-        use, intrinsic :: iso_fortran_env, only : error_unit
+        use exceptions_lib
         use interp_1d_lib, only : interp_values
         real(dp), intent(in) :: kF
         integer, intent(in) :: id
@@ -79,6 +83,8 @@ contains
         real(dp), dimension(Np) :: k, T
         integer :: N, ierr
         type(sf_table_type), pointer :: tab
+        type(failure) :: interpolation_error=failure(scope='sf_get_Tc', &
+        &   message='interpolation error')
 
         tab => sf_tables(id)
         N = size(tab% kF)
@@ -88,12 +94,11 @@ contains
             return
         end if
         call interp_values(tab% kF, N, tab% f, Np, k, T, ierr)
-        if (ierr == 0) then
-            Tc = max(T(1),0.0_dp)*sf_scale(id)
-        else
-            write (error_unit,'(a,i3)') 'interpolation returned error ', ierr
+        if (interpolation_error% raised(ierr)) then
             Tc = 0.0_dp
+            return
         end if
+            Tc = max(T(1),0.0_dp)*sf_scale(id)
     end function sf_get_Tc
 
 end module superfluid_lib

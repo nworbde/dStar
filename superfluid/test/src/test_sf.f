@@ -9,7 +9,7 @@ program test_sf
 	
 	call sf_startup('../../data',ierr)
     if (failure('startup')) stop
-	
+    
 	call sf_load_gaps('ccdk93','gc','ao85',ierr)
     if (failure('load gaps')) stop
 	

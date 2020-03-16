@@ -2,7 +2,7 @@ module exceptions_lib
     use iso_fortran_env, only: error_unit
     implicit none
     
-    integer, private, save :: verbosity=3
+    integer, private, save :: verbosity = 3
     integer, private, save :: warning_count = 0
     integer, private, save :: max_warnings = 24
     logical, private, save :: suppress_warnings_after_max = .FALSE.
@@ -31,7 +31,7 @@ module exceptions_lib
     end type warning
     
     type, extends(exception) :: alert
-        integer :: level
+        integer :: level = 1
     contains
         procedure :: set_level
         procedure :: report => alert_message
@@ -117,10 +117,10 @@ contains
         self% level = level
     end subroutine set_level
         
-    subroutine alert_message(self, msg)
+    subroutine alert_message(self, message)
         class(alert), intent(inout) :: self
-        character(len=*), intent(in) :: msg
-        self% message = msg
+        character(len=*), intent(in), optional :: message
+        if (present(message)) self% message = message
         if (verbosity >= self% level) then
             write(error_unit,alert_fmt) trim(self% scope),trim(self% message)
         end if
