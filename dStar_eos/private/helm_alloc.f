@@ -37,16 +37,18 @@ c ***********************************************************************
          ! It also allocates the arrays in the Helm_Table record.
          
          use, intrinsic :: iso_fortran_env, only: error_unit
+         use exceptions_lib
          use dStar_eos_def
          
          type (Helm_Table), pointer :: h
          integer, intent(in) :: imax, jmax
          integer, intent(out) :: ierr ! 0 means AOK.
-         
+         type(failure) :: allocation_error=failure(scope='alloc_helm_table')
+
          ierr = 0
          
          allocate(h,stat=ierr)
-         if (helm_alloc_failure(ierr,'failure in attempt to allocate Helm_Table storage')) return
+         if (allocation_error% raised(ierr,'failure in attempt to allocate Helm_Table storage')) return
          
          h% imax = imax
          h% jmax = jmax 
@@ -102,14 +104,14 @@ c ***********************************************************************
             double precision, dimension(:), pointer :: ptr
             integer, intent(in) :: sz        
             allocate(ptr(sz),stat=ierr)
-            if (helm_alloc_failure(ierr,'failure in attempt to allocate Helm_Table storage')) return
+            if (allocation_error% raised(ierr,'failure in attempt to allocate Helm_Table storage')) return
          end subroutine alloc_1d_array
          
          subroutine alloc_2d_array(ptr,sz1,sz2)
             double precision, dimension(:,:), pointer :: ptr
             integer, intent(in) :: sz1,sz2         
             allocate(ptr(sz1,sz2),stat=ierr)
-            if (helm_alloc_failure(ierr,'failure in attempt to allocate Helm_Table storage')) return
+            if (allocation_error% raised(ierr,'failure in attempt to allocate Helm_Table storage')) return
          end subroutine alloc_2d_array
       
       
@@ -118,6 +120,7 @@ c ***********************************************************************
 
       subroutine read_helm_table(h, data_dir, ierr)
          use iso_fortran_env, only : error_unit
+         use exceptions_lib
          use dStar_eos_def
 
          implicit none
@@ -125,6 +128,8 @@ c ***********************************************************************
       type (Helm_Table), pointer :: h
       character(*), intent(IN) :: data_dir
       integer, intent(out) :: ierr
+      type(alert) :: status=alert(scope='read_helm_table')
+      type(failure) :: io_failure=failure(scope='read_helm_table')
 
 !..this routine reads the helmholtz eos file, and 
 !..must be called once before the helmeos routine is invoked.
@@ -213,14 +218,12 @@ c ***********************************************************************
        if (ios .ne. 0) then
       
           write(filename,'(2a)') trim(data_dir), '/helm_table.dat'
-          write(error_unit,*) 'read  ', trim(filename) 
-         
+          call status% report('read '//trim(filename))
+          
           ios = 0
           open(unit=19,file=trim(filename),action='read',status='old',iostat=ios)
-          if (ios .ne. 0) then 
-            write(message,'(3a,i6)') 'failed to open ', trim(filename), ' : ios ', ios
+          if (io_failure% raised(ios,'failed to open '//trim(filename))) then 
             ierr = -1
-            write(error_unit,*) message
             return
           end if
          
@@ -262,7 +265,7 @@ c ***********************************************************************
           !..write cachefile
       
           write(filename,'(2a)') trim(data_dir), '/cache/helm_table.bin'
-          write(error_unit,*) 'write  ', trim(filename) 
+          call status% report('write '//trim(filename))
           open(unit=19,file=trim(filename),status='replace',
      >            iostat=ios,action='write',form='unformatted')
          
@@ -396,15 +399,4 @@ c ***********************************************************************
 
 
       end subroutine free_helm_table
-      
-      function helm_alloc_failure(ierr,msg)
-          use, intrinsic :: iso_fortran_env, only: error_unit
-          integer, intent(in) :: ierr
-          character(len=*), intent(in) :: msg
-          logical :: helm_alloc_failure
-          
-          helm_alloc_failure = (ierr /= 0)
-          if (helm_alloc_failure) write(error_unit,*) 'helm_alloc: '//trim(msg)
-      end function helm_alloc_failure
-
       end module helm_alloc

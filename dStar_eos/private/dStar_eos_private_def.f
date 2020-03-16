@@ -2,11 +2,12 @@ module dStar_eos_private_def
     use dStar_eos_def
     
     ! error codes
-    character(len=80), dimension(-3:-1), parameter :: dstar_eos_private_def_errors =  &
+    character(len=80), dimension(-3:0), parameter :: dstar_eos_private_def_errors =  &
     &   [character(len=80):: &
     &   'invalid dStar_eos_handle', &
     &   'broken handle for dStar_eos_id', &
-    &   'no available crust eos handle']
+    &   'no available crust eos handle', &
+    &   'no errors']
 
     type dStar_eos_general_info
         real(dp) :: Gamma_melt

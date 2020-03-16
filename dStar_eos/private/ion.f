@@ -19,6 +19,7 @@ contains
 
 subroutine ion_mixture(rq,rs,Gamma_e,ionic,ncharged,charged_ids,Yion,Gamma,ionQ,phase,f,u,p,s,cv,dpr,dpT,err)
     use, intrinsic :: iso_fortran_env, only: error_unit
+    use exceptions_lib
     use constants_def, only: dp, amu, Melectron
     use dStar_eos_def
     use dStar_eos_private_def
@@ -38,6 +39,7 @@ subroutine ion_mixture(rq,rs,Gamma_e,ionic,ncharged,charged_ids,Yion,Gamma,ionQ,
     real(dp) :: Mu
     real(dp) :: rsi,ionQ2,fi,ui,si,pi,cvi,dpri,dpti,fm,um,sm,pm,cvm,dprm,dptm
     integer :: i
+    type(alert) :: quantum_effects=alert(scope='ion_mixture')
     
     err = 0
     Mu = amu/Melectron
@@ -60,8 +62,8 @@ subroutine ion_mixture(rq,rs,Gamma_e,ionic,ncharged,charged_ids,Yion,Gamma,ionQ,
     ionQ = sqrt(ionQ2)
     if (phase == liquid_phase .and. ionQ2 > Q2_threshold) then
         err = strong_quantum_effects
-        if (.not. rq% suppress_warnings) &
-        &   write(error_unit,*) 'ion_mixture: strong quantum effects in liquid encountered'
+        if (.not. rq% suppress_warnings) call quantum_effects% report( &
+        &   'strong quantum effects in liquid encountered')
     end if
 
     ! sum contributions
