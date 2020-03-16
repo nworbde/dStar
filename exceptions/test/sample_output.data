@@ -1,0 +1,51 @@
+
+verbosity = -1
+
+verbosity = 0
+FAILURE: test_exception
+    ierr = -1
+
+verbosity = 1
+FAILURE: test_exception
+    ierr = -1
+Warning: test_exception
+    while doing verbosity check
+
+verbosity = 2
+FAILURE: test_exception
+    ierr = -1
+Warning: test_exception
+    while doing verbosity check
+test_exception: message two
+
+verbosity = 3
+FAILURE: test_exception
+    ierr = -1
+Warning: test_exception
+    while doing verbosity check
+test_exception: message two
+test_exception: message three
+
+testing suppression of repeated warnings.
+maximum number of warnings is 8
+
+checking assertions
+Warning: test_exception
+    v = 1
+Warning: test_exception
+    v = 2
+Warning: test_exception
+    v = 3
+Warning: test_exception
+    v = 4
+Warning: test_exception
+    v = 5
+Warning: test_exception
+    v = 6
+Warning: test_exception
+    v = 7
+Warning: test_exception
+    v = 8
+    (further alerts will be suppressed)
+test_exception: assertion failed
+ only get here if halt_on_assertion is false
