@@ -9,6 +9,7 @@ contains
     
     subroutine do_load_nuclib(filename,cache_filename,ierr)
         use, intrinsic :: iso_fortran_env, only: iostat_end, error_unit
+        use exceptions_lib
         use nucchem_def
         use nucchem_storage
         
@@ -18,6 +19,7 @@ contains
         integer :: i, iso_count,ios, nuclib_unitno
         real, dimension(24) :: pfcn
         logical :: have_cache
+        type(failure) :: load_failure=failure(scope='do_load_nuclib')
         
         ierr = 0
         inquire(file=cache_filename,exist=have_cache)
@@ -28,11 +30,12 @@ contains
         
         open(newunit=nuclib_unitno, file=trim(filename), iostat=ierr, &
         & status="old", action="read")
-        if (io_failure('opening '//trim(filename),ierr)) return
+        if (load_failure% raised(ierr,message='opening '//trim(filename))) &
+        &   return
 
         ! allocate a temporary to hold the library
         call allocate_nuclib_data(tmp_n,max_nnuclib,ierr)
-        if (io_failure('allocating storage',ierr)) return
+        if (load_failure% raised(ierr,message='allocating storage')) return
 
         i = 1
         do
@@ -53,7 +56,7 @@ contains
         tmp_n% Nnuclides = i-1
 
         call copy_nuclib_data(tmp_n,ierr)
-        if (io_failure('copying nuclib data',ierr)) return
+        if (load_failure% raised(ierr,'copying nuclib data')) return
         call free_nuclib_data(tmp_n)
         
         if (.not.have_cache) then
@@ -84,20 +87,24 @@ contains
     end subroutine do_load_nuclib    
 
     subroutine do_read_nuclib_cache(filename,ierr)
+        use exceptions_lib
         use nucchem_def
         use nucchem_storage
         character(len=*), intent(in) :: filename
         integer, intent(out) :: ierr
         integer :: cache_unitno, n
+        type(failure) :: cache_failure=failure(scope='do_read_nuclib_cache')
         
         ierr = 0
         
         open(newunit=cache_unitno, file=trim(filename), iostat=ierr, &
         &   action="read",status="old",form="unformatted")
-        if (io_failure('opening '//trim(filename),ierr)) return
+        if (cache_failure% raised(ierr,message='opening '//trim(filename))) &
+        &    return
         
         read(cache_unitno) n
         call allocate_nuclib_data(nuclib,n,ierr)
+        if (cache_failure% raised(ierr,message='allocating nuclib')) return
         read(cache_unitno) nuclib% name
         read(cache_unitno) nuclib% provenance
         read(cache_unitno) nuclib% A
@@ -111,17 +118,20 @@ contains
     end subroutine do_read_nuclib_cache
      
     subroutine do_write_nuclib_cache(filename,ierr)
+        use exceptions_lib
         use nucchem_def
         character(len=*), intent(in) :: filename
         integer, intent(out) :: ierr
         integer :: cache_unitno
+        type(failure) :: cache_failure=failure(scope='do_write_nuclib_cache')
         
         ierr = 0
         if (nuclib% Nnuclides == 0) return
         
         open(newunit=cache_unitno, file=trim(filename), iostat=ierr, &
         &   action="write",form="unformatted")
-        if (io_failure('opening '//trim(filename),ierr)) return
+        if (cache_failure% raised(ierr, &
+        &   message='opening '//trim(filename))) return
         
         write(cache_unitno) nuclib% Nnuclides
         write(cache_unitno) nuclib% name
@@ -154,20 +164,20 @@ contains
         call integer_dict_create_hash(nuclide_dict,ierr)
     end subroutine do_parse_nuclides
     
-    function io_failure(action,ierr)
-        use iso_fortran_env, only: error_unit
-        character(len=*), intent(in) :: action
-        integer, intent(in) :: ierr
-        logical :: io_failure
-        character(len=*), parameter :: err_format = &
-        &  '("Error while ",a,". error code = ",i0)'
-        
-        if (ierr == 0) then
-            io_failure = .FALSE.
-            return
-        end if
-        io_failure = .TRUE.
-        write (error_unit,err_format) action, ierr
-    end function io_failure
+!     function io_failure(action,ierr)
+!         use iso_fortran_env, only: error_unit
+!         character(len=*), intent(in) :: action
+!         integer, intent(in) :: ierr
+!         logical :: io_failure
+!         character(len=*), parameter :: err_format = &
+!         &  '("Error while ",a,". error code = ",i0)'
+!
+!         if (ierr == 0) then
+!             io_failure = .FALSE.
+!             return
+!         end if
+!         io_failure = .TRUE.
+!         write (error_unit,err_format) action, ierr
+!     end function io_failure
 
 end module nucchem_io

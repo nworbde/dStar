@@ -47,5 +47,4 @@ Warning: test_exception
 Warning: test_exception
     v = 8
     (further alerts will be suppressed)
-test_exception: assertion failed
- only get here if halt_on_assertion is false
+test_exception: val < 3

@@ -10,7 +10,7 @@ program test_exception
     &   message='while doing verbosity check')
     type(alert) :: two=alert(scope='test_exception',level=2)
     type(alert) :: three=alert(scope='test_exception',level=3)
-    type(assertion) :: valcheck=assertion(scope='test_exception')
+    type(assertion) :: valcheck=assertion(scope='test_exception',message='val < 3')
     real :: val
     
     do v = -1,3

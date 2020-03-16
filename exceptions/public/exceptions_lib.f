@@ -136,7 +136,8 @@ contains
         class(assertion), intent(inout) :: self
         logical, intent(in) :: condition
         if (condition) return
-        write (error_unit,'(a)') trim(self% scope)//': assertion failed'
+        if (len_trim(self% message) == 0) self% message='assertion failed'
+        write (error_unit,alert_fmt) trim(self% scope),trim(self% message)
         if (self% halt) stop 1
     end subroutine assert
     

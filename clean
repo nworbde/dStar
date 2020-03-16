@@ -41,8 +41,8 @@ echo "cleaning dStar packages..."
 do_one exceptions
 do_one constants
 do_one superfluid
-do_one neutrino
 do_one nucchem
+do_one neutrino
 do_one dStar_eos
 do_one conductivity
 do_one dStar_atm

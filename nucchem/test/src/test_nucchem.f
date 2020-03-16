@@ -1,4 +1,5 @@
 program test_nucchem
+    use exceptions_lib
 	use nucchem_def
 	use nucchem_lib
 
@@ -8,9 +9,11 @@ program test_nucchem
 	character(len=iso_name_length), dimension(2) :: names
 	real(dp) :: Xsum
 	type(composition_info_type) :: comp
+    type(assertion) :: initialization=assertion(scope='main', &
+    &   message='nucchem is uninitialized')
 	
-	call nucchem_init('../../data',ierr)
-	if (failure('unable to initialize nucchem')) stop
+    call nucchem_init('../../data',ierr)
+    call initialization% assert(ierr==0)
 	
 	! check the composition average
 	Z = [26,28]
@@ -34,14 +37,4 @@ program test_nucchem
 	write (*,'(a10,f8.3)')'<Q> = ',comp% Q
 		
 	call nucchem_shutdown
-	
-	contains
-	function failure(str)
-		use iso_fortran_env, only : error_unit
-		character(len=*), intent(in) :: str
-		logical :: failure
-
-        failure = (ierr /= 0)
-        if (failure) write (error_unit,'(a)') str
-	end function failure
 end program test_nucchem
