@@ -38,6 +38,7 @@ function clean_data_caches {
 echo
 echo "cleaning dStar packages..."
 
+do_one exceptions
 do_one constants
 do_one superfluid
 do_one neutrino
