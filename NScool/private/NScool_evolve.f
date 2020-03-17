@@ -9,6 +9,7 @@ module NScool_evolve
 contains
     subroutine do_integrate_crust(NScool_id,ierr)
         use iso_fortran_env, only : error_unit
+        use exceptions_lib
         use constants_def
         use num_def
         use num_lib
@@ -34,6 +35,20 @@ contains
         ! for the bicyclic routine, not used
         real(dp), dimension(:), pointer :: lblk, dblk, ublk, uf_lblk, uf_dblk, uf_ublk
         integer :: caller_id, nvar, nz
+        ! error codes
+        character(len=80), dimension(-8:2), parameter :: error_codes = [character(len=80) ::  &
+        &   "cannot satisfy given tolerances even after reducing stepsize by 1d30", &
+        &   "illegal arg for isolve", &
+        &   "terminated by fcn returning nonzero ierr", &
+        &   "terminated by jac returning nonzero ierr", &
+        &   "matrix is repeatedly singular", &
+        &   "step size becomes too small", &
+        &   "reached max allowed number of steps", &
+        &   "input is not consistent", &
+        &   "", &
+        &   "computation successful", &
+        &   "computation successful (terminated by solout)" ]
+        type(alert) :: integration=alert(scope='do_integrate_crust')
 
         ierr = 0
 
@@ -101,29 +116,7 @@ contains
           & num_deriv_rpar, rpar, num_deriv_ipar, ipar, error_unit, idid)
 
         ! post-mortem
-        write(error_unit,*)
-        select case(idid)
-        case(1)
-          write(error_unit,*) "computation successful"
-        case(2)
-          write(error_unit,*) "computation successful (terminated by solout)"
-        case(-1)
-          write(error_unit,*) "input is not consistent, "
-        case(-2)
-          write(error_unit,*) "reached max allowed number of steps, "
-        case(-3)
-          write(error_unit,*) "step size becomes too small, "
-        case(-4)
-          write(error_unit,*) "matrix is repeatedly singular."
-        case(-5)
-          write(error_unit,*) "terminated by jac returning nonzero ierr."
-        case(-6)
-          write(error_unit,*) "terminated by fcn returning nonzero ierr."
-        case(-7)
-          write(error_unit,*) "illegal arg for isolve."
-        case(-8)
-          write(error_unit,*) "cannot satisfy given tolerances even after reducing stepsize by 1d30."
-        end select
+        call integration% report(error_codes(idid))
         if (idid < 0) ierr = idid
 
         ! print statistics
@@ -177,6 +170,8 @@ contains
        &    message='writing history')
        type(warning) :: profile_warning=warning(scope='evaluate_timestep', &
        &    message='writing profile')
+       type(alert) :: writing=alert(scope='evaluate_timestep')
+       character(len=128) :: status_message
            
        irtrn = 0
        ierr = 0
@@ -224,7 +219,8 @@ contains
        if (mod(s% model, s% write_interval_for_history) == 0) then
           call do_write_history(ipar(i_id),ierr)
           if (history_warning% raised(ierr)) return
-          write (error_unit,'(a,i0,a)') 'saving model ',s% model,' to history log'
+          write (status_message,'(a,i0,a)') 'saving model ',s% model,' to history log'
+          call writing% report(status_message)
        end if
   
        ! update profile log
@@ -232,7 +228,8 @@ contains
           write(filename,'(a,i4.4)') 'profile',s% model
           call do_write_profile(ipar(i_id),ierr)
           if (profile_warning% raised(ierr)) return
-          write (error_unit,'(a,i0,a)') 'saving model ',s% model,' to profile log'
+          write (status_message,'(a,i0,a)') 'saving model ',s% model,' to profile log'
+          call writing% report(status_message)
        end if
     end subroutine evaluate_timestep
 

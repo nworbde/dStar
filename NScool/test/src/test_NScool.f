@@ -59,13 +59,15 @@ program test_NScool
     
 contains
 	subroutine check_okay(msg,ierr)
+        use exceptions_lib
 		character(len=*), intent(in) :: msg
 		integer, intent(inout) :: ierr
-		if (ierr /= 0) then
-			write (error_unit,*) trim(msg)//': ierr = ',ierr
-			if (ierr < 0) stop
-        else
-            write (error_unit,*) trim(msg)//': okay'
-		end if
+        type(assertion) :: all_good=assertion(scope='main')
+        type(alert) :: okay=alert(scope='main')
+        call all_good% set_message(trim(msg))
+        call okay% set_message(trim(msg)//': okay')
+        
+        call all_good% assert(ierr==0)
+        call okay% report
 	end subroutine check_okay
 end program test_NScool
