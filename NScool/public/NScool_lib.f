@@ -49,16 +49,22 @@ contains
 
     subroutine NScool_evolve_model(id, ierr)
         use constants_def, only : julian_day, amu, ergs_to_mev
+        use exceptions_lib
         use NScool_def, only : NScool_info, get_NScool_info_ptr
         use NScool_evolve, only: do_integrate_crust
         integer, intent(in) :: id
         integer, intent(out) :: ierr
         type(NScool_info), pointer :: s
         integer :: i_epoch
+        type(assertion) :: got_pointer=assertion(scope='NScool_evolve_model', &
+        &   message='unable to get pointer')
+        type(failure) :: integration_error=failure(scope='NScool_evolve_model', &
+        &   message='integration error; exiting loop over epochs')
 
         ierr = 0
         call get_NScool_info_ptr(id,s,ierr)
-        if (ierr /= 0) return
+        call got_pointer% assert(ierr == 0)
+
         do i_epoch = 1, s% number_epochs
             s% epoch_start_time = s% epoch_boundaries(i_epoch-1)
             s% epoch_duration = s% epoch_boundaries(i_epoch) - s% epoch_start_time
@@ -72,6 +78,7 @@ contains
                 end if
             end if
             call do_integrate_crust(id,ierr)
+            if (integration_error% raised(ierr)) exit
             s% t_monitor(i_epoch) = s% tsec / julian_day
             s% Teff_monitor(i_epoch) = s% Teff * s% ePhi(1)
             ! need to check about the frame in which Mdot is defined

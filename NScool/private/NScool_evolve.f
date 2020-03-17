@@ -143,6 +143,7 @@ contains
 
     subroutine evaluate_timestep(nr, xold, x, n, y, rwork_y, iwork_y, interp_y, lrpar, rpar, lipar, ipar, irtrn)
        use iso_fortran_env, only : output_unit, error_unit
+       use exceptions_lib
        use NScool_terminal, only : do_write_terminal
        use NScool_history, only : do_write_history
        use NScool_profile, only : do_write_profile
@@ -162,22 +163,28 @@ contains
        integer :: ierr
        logical :: print_terminal_header
        character(len=256) :: filename      
-  
+       type(assertion) :: got_pointer=assertion( &
+       &   scope='evaluate_timestep',message='unable to access NScool_info')
+       type(assertion) :: equations=assertion( &
+       &   scope='evaluate_timestep',message='wrong number of equations')
+       type(failure) :: coefficient_error=failure(scope='evaluate_timestep', &
+       &    message='evaluatning coefficients')
+       type(failure) :: luminosity_error=failure(scope='evaluate_timestep', &
+       &    message='evaluating luminosity')
+       type(warning) :: terminal_warning=warning(scope='evaluate_timestep', &
+       &    message='writing to terminal')
+       type(warning) :: history_warning=warning(scope='evaluate_timestep', &
+       &    message='writing history')
+       type(warning) :: profile_warning=warning(scope='evaluate_timestep', &
+       &    message='writing profile')
+           
        irtrn = 0
        ierr = 0
 
        ! get the crust information information
        call get_NScool_info_ptr(ipar(i_id), s, ierr)
-       if (ierr /= 0) then
-          write (error_unit,*) 'unable to access NScool info in get_derivatives'
-          irtrn = -1
-          return
-       end if
-       if (n /= s% nz) then
-          write (error_unit,*) 'wrong number of equations in solver'
-          irtrn = -2
-          return
-       end if
+       call got_pointer% assert(ierr == 0)
+       call equations% assert(n == s% nz)
        
        if (s% suppress_first_step_output .and. x == xold) return
 
@@ -190,17 +197,15 @@ contains
        call interpolate_temps(s)
   
        call get_coefficients(s,ierr)
-       if (ierr /= 0) then
-          write (error_unit,*) 'error while interpolating coefficients'
-          irtrn = -3
-          return
+       if (coefficient_error% raised(ierr)) then
+           irtrn=-1
+           return
        end if
   
        call evaluate_luminosity(s, ierr)
-       if (ierr /= 0) then
-          write (error_unit,*) 'error while evaluating luminosity'
-          irtrn = -3
-          return
+       if (luminosity_error% raised(ierr)) then
+           irtrn=-1
+           return
        end if
 
        ! update terminal information
@@ -211,20 +216,14 @@ contains
              print_terminal_header = .FALSE.
           end if
           call do_write_terminal(ipar(i_id), ierr, print_terminal_header)
-          if (ierr /= 0) then
-             write(error_unit,*) 'failure writing to terminal'
-             return
-          end if
+          if (terminal_warning% raised(ierr)) return
           ipar(i_num_terminal_writes) = ipar(i_num_terminal_writes) + 1
        end if
   
        ! update history log
        if (mod(s% model, s% write_interval_for_history) == 0) then
           call do_write_history(ipar(i_id),ierr)
-          if (ierr /= 0) then
-             write (error_unit,*) 'failure writing history log'
-             return
-          end if
+          if (history_warning% raised(ierr)) return
           write (error_unit,'(a,i0,a)') 'saving model ',s% model,' to history log'
        end if
   
@@ -232,16 +231,14 @@ contains
        if (mod(s% model, s% write_interval_for_profile) == 0) then
           write(filename,'(a,i4.4)') 'profile',s% model
           call do_write_profile(ipar(i_id),ierr)
-          if (ierr /= 0) then
-             write (error_unit,*) 'failure writing profile log'
-             return
-          end if
+          if (profile_warning% raised(ierr)) return
           write (error_unit,'(a,i0,a)') 'saving model ',s% model,' to profile log'
        end if
     end subroutine evaluate_timestep
 
     subroutine get_derivatives(n, x, h, y, f, lrpar, rpar, lipar, ipar, ierr)
         use const_def, only: dp
+        use exceptions_lib
         integer, intent(in) :: n, lrpar, lipar
         real(dp), intent(in) :: x, h
         real(dp), intent(inout) :: y(:) ! okay to edit y if necessary (e.g., replace negative values by zeros)
@@ -250,19 +247,16 @@ contains
         real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
         integer, intent(out) :: ierr ! nonzero means retry with smaller timestep.
         type(NScool_info), pointer :: s
+        type(assertion) :: got_pointer=assertion( &
+        &   scope='get_derivatives',message='unable to access NScool_info')
+        type(assertion) :: equations=assertion( &
+        &   scope='get_derivatives',message='wrong number of equations')
 
         ierr = 0
         call get_NScool_info_ptr(ipar(i_id), s, ierr)
         ! fatal erors
-        if (ierr /= 0) then
-            write (*,*) 'unable to acces NScool_info in get_derivatives'
-            stop
-        end if
-        if (n /= s% nz) then
-            ierr = -9
-            write (*,*) 'wrong number of equations in solver'
-            stop
-        end if
+        call got_pointer% assert(ierr == 0)
+        call equations% assert(n == s% nz)
 
         s% lnT(1:n) = y(1:n)
         s% T(1:n) = exp(s% lnT(1:n))
@@ -289,6 +283,7 @@ contains
     
     subroutine get_jacobian(n, x, h, y, f, dfdy, ldfy, lrpar, rpar, lipar, ipar, ierr)
         use const_def, only: dp
+        use exceptions_lib
         integer, intent(in) :: n, ldfy, lrpar, lipar
         real(dp), intent(in) :: x, h
         real(dp), intent(inout) :: y(:)
@@ -308,19 +303,16 @@ contains
         ! work arrays
         real(dp), dimension(n) :: CTinv, CTdminv, ArKdm
         real(dp) :: wplus(1:n-1), wminus(2:n), dLpdlnT(1:n-1), dLdlnT(2:n)
+        type(assertion) :: got_pointer=assertion( &
+        &   scope='get_jacobian',message='unable to access NScool_info')
+        type(assertion) :: equations=assertion( &
+        &   scope='get_jacobian',message='wrong number of equations')
         
         ierr = 0
         call get_NScool_info_ptr(ipar(i_id), s, ierr)
         ! fatal erors
-        if (ierr /= 0) then
-            write (*,*) 'unable to acces NScool_info in get_derivatives'
-            stop
-        end if
-        if (n /= s% nz) then
-            ierr = -9
-            write (*,*) 'wrong number of equations in solver'
-            stop
-        end if
+        call got_pointer% assert(ierr == 0)
+        call equations% assert(n == s% nz)
         
         ! call to derivatives ensures that L, T, Tbar and their ln's are set, as well as the coefficients
         call get_derivatives(n, x, h, y, f, lrpar, rpar, lipar, ipar, ierr)
@@ -367,6 +359,7 @@ contains
     
     subroutine get_num_jacobian(n, x, h, y, f, dfdy, ldfy, lrpar, rpar, lipar, ipar, ierr)
         use const_def, only: dp
+        use exceptions_lib
         integer, intent(in) :: n, ldfy, lrpar, lipar
         real(dp), intent(in) :: x, h
         real(dp), intent(inout) :: y(n)
@@ -387,19 +380,15 @@ contains
         ! work arrays
         real(dp), dimension(n) :: ym(n), yp(n), y0(n), fm(n), fp(n)
         integer :: j
+        type(assertion) :: got_pointer=assertion( &
+        &   scope='get_num_jacobian',message='unable to access NScool_info')
+        type(assertion) :: equations=assertion( &
+        &   scope='get_num_jacobian',message='wrong number of equations')
         
         ierr = 0
         call get_NScool_info_ptr(ipar(i_id), s, ierr)
-        ! fatal erors
-        if (ierr /= 0) then
-            write (*,*) 'unable to acces NScool_info in get_derivatives'
-            stop
-        end if
-        if (n /= s% nz) then
-            ierr = -9
-            write (*,*) 'wrong number of equations in solver'
-            stop
-        end if
+        call got_pointer% assert(ierr == 0)
+        call equations% assert(n == s% nz)
         
         dfdy = 0.0_dp
         invtwoh = 0.5_dp/h
@@ -470,10 +459,14 @@ contains
     
     subroutine get_coefficients(s, ierr)
         use interp_1d_lib
+        use exceptions_lib
         type(NScool_info), pointer :: s
         integer, intent(out) :: ierr
         integer :: iz
         real(dp), dimension(:), pointer :: lnKcond_interp, lnCp_interp, lnGamma_interp, lnEnu_interp
+        type(failure) :: interpolation_error=failure(scope='get_coefficients')
+        type(failure) :: heating_error=failure(scope='get_coefficients', &
+        &   message='calculating nuclear heating')
         
         do iz = 1, s% nz
             
@@ -483,40 +476,49 @@ contains
             lnEnu_interp(1:4*s% n_tab) => s% tab_lnEnu(1:4*s% n_tab, iz)
         
             call interp_value_and_slope(s% tab_lnT, s% n_tab, lnKcond_interp, s% lnT_bar(iz), s% lnK(iz), s% dlnK_dlnT(iz), ierr)
-            if (failure('lnK', iz)) return
+            if (interpolation_error% raised(ierr)) then
+                call report('lnK', iz)
+                return
+            end if
 
             call interp_value_and_slope(s% tab_lnT, s% n_tab, lnCp_interp, s% lnT(iz), s% lnCp(iz), s% dlnCp_dlnT(iz), ierr)
-            if (failure('lnCp',iz)) return
+            if (interpolation_error% raised(ierr)) then
+                call report('lnCp',iz)
+                return
+            end if
             
             call interp_value_and_slope(s% tab_lnT, s% n_tab, lnGamma_interp, s% lnT(iz), s% lnGamma(iz),  &
             &   s% dlnGamma_dlnT(iz), ierr)
-            if (failure('lnGamma',iz)) return
+            if (interpolation_error% raised(ierr)) then
+                call report('lnGamma',iz)
+                return
+            end if
             
             call interp_value_and_slope(s% tab_lnT, s% n_tab, lnEnu_interp, s% lnT(iz), s% lnenu(iz), s% dlnenu_dlnT(iz), ierr)
-            if (failure('lnEnu',iz)) return
+            if (interpolation_error% raised(ierr)) then
+                call report('lnEnu',iz)
+                return
+            end if
             
             s% Kcond = exp(s% lnK)
             s% Cp = exp(s% lnCp)
             s% Gamma = exp(s% lnGamma)
             s% enu = exp(s% lnenu)
             
-            call get_nuclear_heating(s, ierr)
-            
         end do
         
+        call get_nuclear_heating(s, ierr)
+        if (heating_error% raised(ierr)) return
+        
         contains
-        function failure(str,izone)
+        subroutine report(str,izone)
            character(len=*), intent(in) :: str
            integer, intent(in) :: izone
-           logical :: failure
-         
-           if (ierr == 0) then
-              failure = .FALSE.
-              return
-           end if
-           write (*,*) 'FAILURE interpolating ',str,' zone ',iz
-           failure = .TRUE.
-        end function failure
+           type(alert) :: status=alert(scope='get_coefficient',level=0)
+           character(len=128) :: msg
+           write (msg,'(a,i0)') 'interpolating '//str//', zone ',iz
+           call status% report(msg)
+        end subroutine report
             
     end subroutine get_coefficients
     

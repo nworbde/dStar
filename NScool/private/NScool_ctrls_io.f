@@ -101,11 +101,17 @@ contains
     end subroutine do_one_setup
 
     subroutine read_controls(id,filename,ierr)
+        use exceptions_lib
         integer, intent(in) :: id
         character(len=*), intent(in) :: filename
         integer, intent(out) :: ierr
         type(NScool_info), pointer :: s
         integer :: iounit
+        type(assertion) :: open_namelist=assertion(scope='read_controls')
+        type(assertion) :: read_namelist=assertion(scope='read_controls')
+            
+        call open_namelist% set_message('failed to open '//trim(filename))
+        call read_namelist% set_message('failed while reading '//trim(filename))
 
         ierr = 0
         call get_NScool_info_ptr(id,s,ierr)
@@ -114,23 +120,10 @@ contains
         if (len_trim(filename) > 0) then
             open (newunit=iounit,file=trim(filename),  &
             & action='read', delim='quote', status='old', iostat=ierr)
-            if (ierr /= 0) then
-                write(*,*) 'failed to open control namelist file ',trim(filename)
-                return
-            end if
+            call open_namelist% assert(ierr==0)
             read(iounit,nml=controls,iostat=ierr)
             close(iounit)
-            if (ierr /= 0) then
-                write(*,'(///,a)') 'failed while reading control namelist file '//trim(filename)
-
-                ! the following will generate a more informative description of the failure
-                close(iounit)
-                open (newunit=iounit,file=trim(filename),  &
-                & action='read', delim='quote', status='old', iostat=ierr)
-                read(iounit,nml=controls)
-                close(iounit)
-                stop
-            end if
+            call read_namelist% assert(ierr == 0)
         end if
     end subroutine read_controls
    
@@ -140,12 +133,14 @@ contains
 
     subroutine store_controls(s,ierr)
         use iso_fortran_env, only : error_unit
+        use exceptions_lib
         use constants_def, only : Msun, julian_day
         use num_lib, only : solver_option
         use storage, only: allocate_NScool_epoch_arrays
         use NScool_epochs, only: do_load_epochs
         type(NScool_info), pointer :: s
         integer, intent(out) :: ierr
+        type(failure) :: epochs_failure=failure(scope='store_controls')
 
         ierr = 0
 
@@ -248,27 +243,17 @@ contains
         s% epoch_Mdot_scale = epoch_Mdot_scale
         if (s% load_epochs) then
             call do_load_epochs(s, ierr)
-            if (failed('unable to load epochs')) return
+            if (epochs_failure% raised(ierr,'loading epochs')) return
         else
             s% number_epochs = number_epochs
             call allocate_NScool_epoch_arrays(s, ierr)
-            if (failed('unable to allocate epochs')) return
+            if (epochs_failure% raised(ierr,'allocating epochs')) return
             s% epoch_Mdots(1:number_epochs) = &
             &   basic_epoch_Mdots(1:number_epochs) * s% epoch_Mdot_scale
             s% epoch_boundaries(0:number_epochs) = &
             &   basic_epoch_boundaries(0:number_epochs) *  &
             &   s% epoch_time_scale*julian_day
         end if
-        
-    contains
-        function failed(msg)
-            character(len=*), intent(in) :: msg
-            logical :: failed
-            failed = .FALSE.
-            if (ierr == 0) return
-            write (error_unit,*) 'store_controls: ' // msg
-            failed = .TRUE.
-        end function failed
    end subroutine store_controls
    
    subroutine write_controls(io,ierr)

@@ -19,34 +19,35 @@ module create_model
 contains
     
     subroutine do_create_crust_model(id, ierr)
+        use exceptions_lib
         integer, intent(in) :: id
         integer, intent(out) :: ierr
         type(NScool_info), pointer :: s
+        type(failure) :: zone_error=failure(scope='do_create_crust_model', &
+        &   message='setting crust zones')
+        type(failure) :: composition_error= &
+        &   failure(scope='do_create_crust_model', &
+        &   message='setting crust composition')
+        type(failure) :: transport_error=failure( &
+        &   scope='do_create_crust_model',message='setting crust transport')
+        type(assertion) :: got_pointer=assertion(scope='do_create_crust_model')
         
         call get_NScool_info_ptr(id,s,ierr)
+        call got_pointer% assert(ierr==0)
+        
         call do_setup_crust_zones(s, ierr)
-        if (failed('do_setup_crust_zones')) return
+        if (zone_error% raised(ierr)) return
         
         call do_setup_crust_composition(s, ierr)
-        if (failed('do_setup_crust_composition')) return
+        if (composition_error% raised(ierr)) return
         
         call do_setup_crust_transport(s, ierr)
-        if (failed('do_setup_crust_transport')) return
-        
-    contains
-        function failed(msg)
-            use, intrinsic :: iso_fortran_env, only: error_unit
-            character(len=*), intent(in) :: msg
-            logical :: failed
-            failed = .FALSE.
-            if (ierr == 0) return
-            write (*,*) 'do_create_crust_model failed for ',trim(msg)
-            failed = .TRUE.
-        end function failed
+        if (transport_error% raised(ierr)) return
     end subroutine do_create_crust_model
     
     subroutine do_setup_crust_zones(s, ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit, output_unit
+        use exceptions_lib
         use constants_def
         use nucchem_lib
         use superfluid_lib
@@ -62,26 +63,43 @@ contains
         integer, intent(out) :: ierr
         real(dp), dimension(:), pointer :: y
         real(dp) :: Plight
+        type(alert) :: status=alert(scope='do_setup_crust_zones')
+        type(failure) :: nucchem_error=failure(scope='do_setup_crust_zones', &
+        &   message='initializing nucchem module')
+        type(failure) :: superfluid_error=failure(scope='do_setup_crust_zones', &
+        &   message='starting superfluid module')
+        type(failure) :: gap_error=failure(scope='do_setup_crust_zones', &
+        &   message='loading gaps')
+        type(failure) :: eos_error=failure(scope='do_setup_crust_zones', &
+        &   message='starting eos module')
+        type(failure) :: crust_error=failure(scope='do_setup_crust_zones', &
+        &   message='starting crust module')
+        type(failure) :: crust_table_error=failure(scope='do_setup_crust_zones', &
+        &   message='setting crust zones')
+        type(failure) :: atm_error=failure(scope='do_setup_crust_zones', &
+        &   message='starting atmosphere module')
+        type(failure) :: tov_error=failure(scope='do_setup_crust_zones', &
+        &   message='integrating TOV eqns')
+        type(failure) :: atm_load_error=failure(scope='do_setup_crust_zones', &
+        &   message='loading atm table')
+            
+        call status% report('establishing crust zones...')
         
-        write (error_unit,*) 'establishing crust zones...'
-        
-        write (error_unit,*) 'initializing microphysics...'
+        call status% report('initializing microphysics...')
         call nucchem_init(trim(dStar_data_dir),ierr)
-        if (failure('nucchem_init')) return
+        if (nucchem_error% raised(ierr)) return
     
         call sf_startup(trim(dStar_data_dir),ierr)
-        if (failure('sf_startup')) return
+        if (superfluid_error% raised(ierr)) return
     
         call sf_load_gaps(trim(s% which_proton_1S0_gap), trim(s% which_neutron_1S0_gap), &
             & trim(s% which_neutron_3P2_gap), ierr)
-        if (failure('sf_load_gaps')) return
+        if (gap_error% raised(ierr)) return
         sf_scale(1:max_number_sf_types) = s% scale_sf_critical_temperatures
     
-        call dStar_eos_startup(trim(dStar_data_dir))
-        if (failure('dStar_eos_startup')) return
-    
+        call dStar_eos_startup(trim(dStar_data_dir))    
         s% eos_handle = alloc_dStar_eos_handle(ierr)
-        if (failure('alloc_dStar_eos_handle')) return
+        if (eos_error% raised(ierr)) return
     
         ! switch off the warnings about quantum effects
         call dStar_eos_set_controls(s% eos_handle,suppress_warnings=.TRUE.)
@@ -96,21 +114,21 @@ contains
         if (s% eos_cluster_transition_in_fm3 > 0.0)  &
         & call dStar_eos_set_controls(s% eos_handle,cluster_transition_in_fm3=s% eos_cluster_transition_in_fm3)
             
-        write (error_unit,*) 'loading crust model...'
+        call status% report('loading crust model...')
         call dStar_crust_startup(trim(dStar_data_dir),ierr)
-        if (failure('dStar_crust_startup')) return
+        if (crust_error% raised(ierr)) return
         
         call dStar_crust_load_table('hz90',s% eos_handle, s% Tcore, ierr)
-        if (failure('dStar_crust_load_table')) return
+        if (crust_table_error% raised(ierr)) return
 
         call dStar_atm_startup(trim(dStar_data_dir),ierr)
-        if (failure('dStar_atm_startup')) return
+        if (atm_error% raised(ierr)) return
 
-        write(error_unit,*) 'integrating TOV equations...'
+        call status% report('integrating TOV equations...')
         allocate(y(num_tov_variables))
 
         call tov_integrate(log10(s% Pcore), log10(s% Psurf), s% Mcore, s% Rcore, s% target_resolution_lnP, y, ierr)
-        if (failure('tov_integrate')) return
+        if (tov_error% raised(ierr)) return
         deallocate(y)
         
         ! allocate the info arrays
@@ -169,22 +187,12 @@ contains
         Plight = s% grav * 10.0_dp**s% lg_atm_light_element_column
         
         call dStar_atm_load_table(s% atm_model, s% grav, Plight, s% Psurf, ierr)
-        if (failure('dStar_atm_load_table')) return
-
-    contains
-        function failure(str)
-            character(len=*), intent(in) :: str
-            logical :: failure
-            failure = .FALSE.
-            if (ierr == 0) return
-            write (error_unit,*) 'do_setup_crust_zones failure in ',trim(str)
-            failure = .TRUE.
-        end function failure
-        
+        if (atm_load_error% raised(ierr)) return        
     end subroutine do_setup_crust_zones
     
     subroutine do_setup_crust_composition(s, ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         use nucchem_def
         use nucchem_lib
         use storage
@@ -192,6 +200,8 @@ contains
         type(NScool_info), pointer :: s
         integer, intent(out) :: ierr
         real(dp), allocatable, dimension(:) :: lgP_bar
+        type(alert) :: qimp=alert(scope='do_setup_crust_composition')
+        character(len=128) :: qimp_msg
         
         ! this routine assumes that we have already run do_setup_crust_zones
         ierr = 0
@@ -204,13 +214,14 @@ contains
         
         ! can fix the impurity parameter to a specified value
         if (s% fix_Qimp) then
-            write (error_unit,'(a,f7.2)') 'setting Qimp = ',s% Qimp
+            write (qimp_msg,'(a,f7.2)') 'setting Qimp = ',s% Qimp
+            call qimp% report(qimp_msg)
             s% ionic_bar(1:s% nz)% Q = s% Qimp
         end if
         
         ! if there is a customized option, use that
         if (s% use_other_set_Qimp) then
-            write (error_unit,'(a)') 'using user-defined Qimp'
+            call qimp% report('using user-defined Qimp')
             call s% other_set_Qimp(s% id, ierr)
         end if
 
