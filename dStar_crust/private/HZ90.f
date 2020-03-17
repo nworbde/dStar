@@ -174,6 +174,7 @@ contains
     end subroutine do_make_crust
     
     subroutine find_densities(eos_handle,lgP,lgRho,lgEps,Yion,ncharged,charged_ids,ionic,Tref)
+        use exceptions_lib
         use constants_def
         use nucchem_def
         use num_lib
@@ -194,6 +195,9 @@ contains
         integer :: i,Ntab
         real(dp) :: x1, x3, y1, y3, epsx, epsy, lgRho_guess
         integer :: imax, ierr
+        type(warning) :: rootfind_error=warning(scope='find_densities')
+        type(alert) :: rootfind_status=alert(scope='find_densities')
+        character(len=128) :: error_message
         
         Pfac = 0.25*(threepisquare)**onethird *hbar*clight*avo**(4.0*onethird)
         Ntab = size(lgP)
@@ -238,15 +242,19 @@ contains
             
             call look_for_brackets(lgRho_guess,0.05*lgRho_guess,x1,x3,match_density, &
             &   y1,y3,imax,lrpar,rpar,lipar,ipar,ierr)
-            if (ierr /= 0) then
-                write (*,*) 'unable to bracket root',lgP(i), x1, x3, y1, y3
+            if (rootfind_error% raised(ierr)) then
+                write(error_message,'(a,5f0.3)') &
+                &   'unable to bracket root: ',lgP(i), x1, x3, y1, y3
+                call rootfind_status% report(error_message)
                 cycle
             end if
             
             lgRho(i) = safe_root_with_initial_guess(match_density,lgRho_guess,x1,x3,y1,y3, &
             &   imax,epsx,epsy,lrpar,rpar,lipar,ipar,ierr)
-            if (ierr /= 0) then
-                write(*,*) 'unable to converge', lgP(i), x1, x3, y1, y3
+            if (rootfind_error% raised(ierr)) then
+                write(error_message,'(a,5f0.3)') &
+                &   'unable to converge: ',lgP(i), x1, x3, y1, y3
+                call rootfind_status% report(error_message)
                 cycle
             end if
             lgEps(i) = rpar(ncharged+14)

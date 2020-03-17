@@ -1,4 +1,5 @@
 program test_crust
+    use exceptions_lib
     use constants_def, only: dp
     use constants_lib
     use nucchem_def
@@ -73,13 +74,13 @@ program test_crust
 
 contains
     subroutine check_okay(msg,ierr)
-        use iso_fortran_env, only : error_unit
+        use exceptions_lib
         character(len=*), intent(in) :: msg
         integer, intent(inout) :: ierr
-        if (ierr /= 0) then
-            write (error_unit,*) trim(msg)//': ierr = ',ierr
-            if (ierr < 0) stop
-        end if
+        type(assertion) :: okay=assertion(scope='main')
+        
+        call okay% set_message(msg)
+        call okay% assert(ierr == 0)
     end subroutine check_okay
 
 end program test_crust
