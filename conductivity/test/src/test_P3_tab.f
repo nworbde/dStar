@@ -1,6 +1,7 @@
 program test_P3_tab
     use iso_fortran_env, only: output_unit, error_unit
     use utils_lib, only: StrUpCase
+    use exceptions_lib
     use constants_lib
     use nucchem_def
     use nucchem_lib
@@ -31,16 +32,18 @@ program test_P3_tab
     integer :: phase
 	real(dp), dimension(max_number_sf_types) :: Tcs
     character(len=iso_name_length) :: name(2)
+    type(assertion) :: check_okay=assertion(scope='main')
     
     call constants_init('',ierr)
+    call check_okay% assert(ierr==0)
     call nucchem_init('../../data',ierr)
+    call check_okay% assert(ierr==0)
     call dStar_eos_startup('../../data')
     call conductivity_startup('../../data')
     eos_handle = alloc_dStar_eos_handle(ierr)
+    call check_okay% assert(ierr==0)
     cond_handle = alloc_conductivity_handle(ierr)
-!     tab => PPP_tbl
-!     call load_PPP_electron_table(datadir,ierr)
-!     call construct_interpolation_coefficients(ierr)
+    call check_okay% assert(ierr==0)
     
     Tcs = 1.0e9_dp
     Z = [ 2, 26 ]

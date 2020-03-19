@@ -4,24 +4,25 @@ module conductivity_lib
 contains
 
     subroutine conductivity_startup(datadir)
-        use iso_fortran_env, only: error_unit
+        use exceptions_lib
         use PPP_electron
         implicit none
         character(len=*), intent(in) :: datadir
         character(len=256) :: cond_datadir
         integer :: ierr
+        type(alert) :: status = alert(scope='conductivity_startup')
         call conductivity_def_init
         
         cond_datadir = trim(datadir) // '/conductivity'
         call load_PPP_electron_table(cond_datadir,ierr)
         if (ierr == unable_to_load_table) then
-            write(error_unit, *)  &
-            &   'low-density electron conduction will be computed using analytical fmla.'
+            call status% report( &
+            &   'low-density electron conduction will be computed using analytical fmla.')
         end if
         call construct_interpolation_coefficients(ierr)
         if (ierr == unable_to_compute_interpolation) then
-            write(error_unit, *)  &
-            &   'low-density electron conduction will be computed using analytical fmla.'
+            call status% report( &
+            &   'low-density electron conduction will be computed using analytical fmla.')
         end if
         conductivity_is_initialized = .TRUE.
     end subroutine conductivity_startup
@@ -33,16 +34,17 @@ contains
     end subroutine conductivity_shutdown
     
     function alloc_conductivity_handle(ierr) result(handle)
-        use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         integer, intent(out) :: ierr
         integer :: handle
+        type(alert) :: status=alert(scope='alloc_conductivity_handle')
         handle = do_alloc_conductivity(ierr)
         if (ierr /= 0) then
             select case(ierr)
             case(-1)
-                write(error_unit,*) 'unable to allocate conductivity: no free handles'
+                call status% report('unable to allocate conductivity: no free handles')
             case(-2)
-                write(error_unit,*) 'unable to allocate conductivity: bad handle'
+                call status% report('unable to allocate conductivity: bad handle')
             end select
         end if
     end function alloc_conductivity_handle
@@ -56,7 +58,7 @@ contains
     &   include_superfluid_phonons, which_ee_scattering, which_eQ_scattering, &
     &   lgrho_rad_off, lgrho_rad_on, &
     &   max_lgrho_table, min_lgrho_table)
-        use iso_fortran_env, only: error_unit
+        use exceptions_lib
         implicit none
         integer, intent(in) :: handle
         logical, intent(in), optional :: include_neutrons
@@ -67,16 +69,16 @@ contains
         real(dp), intent(in), optional :: max_lgrho_table, min_lgrho_table
         type(conductivity_general_info), pointer :: rq
         integer :: ierr
+        type(assertion) :: got_pointer=assertion(scope='conductivity_set_controls', &
+        &   message='got conductivity pointer')
+        type(assertion) :: got_handle=assertion(scope='conductivity_set_controls', &
+        &   message='conductivity handle is in use')
+        type(alert) :: status=alert(scope='conductivity_set_controls')
+        character(len=128) :: msg
         
         call get_conductivity_ptr(handle,rq,ierr)
-        if (ierr /= 0) then
-            write(error_unit,*) 'conductivity_set_controls: bad handle'
-            return
-        end if
-        if (.not. rq% in_use) then
-            write(error_unit,*) 'conductivity_set_controls: handle is not in use'
-            return
-        end if
+        call got_pointer% assert(ierr == 0)
+        call got_handle% assert(rq% in_use)
         
         if (present(include_neutrons)) rq% include_neutrons = include_neutrons
         if (present(include_superfluid_phonons)) rq% include_superfluid_phonons = &
@@ -85,14 +87,16 @@ contains
             if (which_ee_scattering==icond_sy06 .or. which_ee_scattering==icond_pcy) then
                 rq% ee_scattering_fmla = which_ee_scattering
             else
-                write(error_unit,'(a,i0,a)') 'unknown flag ',which_ee_scattering,' for ee scattering'
+                write(msg,'(a,i0,a)') 'unknown flag ',which_ee_scattering,' for ee scattering'
+                call status% report(msg)
             end if
         end if
         if (present(which_eQ_scattering)) then
             if (which_eQ_scattering==icond_eQ_potekhin .or. which_eQ_scattering==icond_eQ_page) then
                 rq% eQ_scattering_fmla = which_eQ_scattering
             else
-                write(error_unit,'(a,i0,a)') 'unknown flag ',which_eQ_scattering,' for eQ scattering'
+                write(msg,'(a,i0,a)') 'unknown flag ',which_eQ_scattering,' for eQ scattering'
+                call status% report(msg)
             end if
         end if
         if (present(lgrho_rad_off)) rq% rad_full_off_lgrho = lgrho_rad_off
@@ -103,8 +107,7 @@ contains
 
     subroutine get_thermal_conductivity(handle, &
     &   rho,T,chi,Gamma,eta,mu_e,ionic,Tcn,K)
-!     which_components, &
-!     &   use_pcy,use_page)
+        use exceptions_lib
         use nucchem_def, only: composition_info_type
         use eval_conductivity
         integer, intent(in) :: handle
@@ -113,14 +116,11 @@ contains
         real(dp), intent(in) :: Tcn ! neutron critical temperature
         type(conductivity_components), intent(out) :: K
         type(conductivity_general_info), pointer :: rq
-!         logical, intent(in), optional :: use_pcy
-!         logical, intent(in), optional :: use_page
-!         logical, intent(in), optional :: &
-!         &   which_components(num_conductivity_channels)
         integer :: ierr
+        type(assertion) :: got_pointer=assertion(scope='get_thermal_conductivity')
 
         call get_conductivity_ptr(handle,rq,ierr)
-        if (ierr /= 0) return
+        call got_pointer% assert(ierr == 0)
         call conductivity(rq,rho,T,chi,Gamma,eta,mu_e,ionic,Tcn,K)
     end subroutine get_thermal_conductivity
 

@@ -19,7 +19,7 @@ contains
 
     subroutine ion_mixture(rq,rs,Gamma_e,ionic,ncharged,charged_ids,Yion, &
     &   Gamma,ionQ,phase,f,u,p,s,cv,dpr,dpT,err)
-        use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         use constants_def, only: dp, amu, Melectron
         use dStar_eos_def
         use dStar_eos_private_def

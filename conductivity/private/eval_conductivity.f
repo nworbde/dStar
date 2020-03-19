@@ -4,7 +4,7 @@ module eval_conductivity
 contains
     
     subroutine conductivity(rq,rho,T,chi,Gamma,eta,mu_e,ionic,Tns,kappa)
-        use iso_fortran_env, only : error_unit
+        use exceptions_lib
         use constants_def
         use nucchem_def, only: composition_info_type
         use neutron_conductivity
@@ -23,6 +23,9 @@ contains
         real(dp), parameter :: eQ_threshold = 1.0e-8_dp
         real(dp), parameter :: sf_reduction_threshold = 1.0e-10_dp
         integer :: ierr
+        type(alert) :: scattering_options=alert(scope='conductivity')
+        type(failure) :: nimp_error=failure(scope='conductivity')
+        type(failure) :: nph_error=failure(scope='conductivity')
 
         call clear_kappa
         lgrho = log10(rho)
@@ -44,8 +47,8 @@ contains
         case(icond_pcy)
             nu_c = ee_PCY(ne,T)
         case default
-            write(error_unit,*)  &
-            &   'unknown option for ee scattering: using SY06'
+            call scattering_options% report( &
+            &   'unknown option for ee scattering: using SY06')
             nu_c = ee_SY06(ne,T)
         end select
         nu = nu + nu_c
@@ -65,8 +68,8 @@ contains
             nu_c = eQ_page( &
             &    kF,T,ionic%Ye,ionic%Z,ionic%Z2,ionic%A,ionic%Q)
         case default
-            write(error_unit,*)  &
-            &   'unknown option for eQ scattering: using Potekhin'
+            call scattering_options% report( &
+            &   'unknown option for eQ scattering: using Potekhin')
             nu_c = eQ(kF,T,ionic%Ye,ionic%Z,ionic%Z2,ionic%A,ionic%Q)
         end select
         nu = nu + nu_c
@@ -96,14 +99,22 @@ contains
                 end if
                         
                 nu_c = n_imp(nn,nion,T,ionic,ierr)
-                kappa% nQ = kappa_n_pre/nu_c*R
-                nu = nu + nu_c
+                if (nimp_error% raised(ierr)) then
+                    nu_c = 0.0_dp
+                else
+                    kappa% nQ = kappa_n_pre/nu_c*R
+                    nu = nu + nu_c
+                end if
 
                 nu_c = n_phonon(nn,nion,T,ionic, ierr)
-                kappa% np = kappa_n_pre/nu_c*R
-                nu = nu + nu_c
-            
-                kappa% neutron_total = kappa_n_pre/nu*R
+                if (nph_error% raised(ierr)) then
+                    nu_c = 0.0_dp
+                else
+                    kappa% np = kappa_n_pre/nu_c*R
+                    nu = nu + nu_c
+                end if
+                
+                if (nu > 0.0_dp) kappa% neutron_total = kappa_n_pre/nu*R
             end if
         
             ! superfluid phonons

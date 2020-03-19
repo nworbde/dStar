@@ -69,7 +69,7 @@ contains
         ! neutron-impurity scattering
         ! implements formalism described in Appendix of
         ! Deibel et al. (2017), ApJ 839: 95
-        use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         use nucchem_def, only: composition_info_type
         use constants_def
         use num_lib
@@ -101,7 +101,10 @@ contains
         real(dp), dimension(:), pointer :: rpar => null()
         real(dp) :: h, kn_end, kn_start, kn, kfi
         integer :: liwork, lwork, itol, lipar, lrpar, idid, lout, iout, npts
+        character(len=128) :: msg
+        type(alert) :: status=alert(scope='n_imp')
 
+        ierr = 0
         allocate(y(num_integration_variables))
 
         kFn = (threepisquare*nn)**onethird
@@ -149,7 +152,8 @@ contains
         &   num_rpar, rpar, num_ipar, ipar, lout, idid)
 
         if (idid < 0) then
-            write(error_unit,*) 'n_imp: dop853 returned with error',idid
+            write(msg,'(a,i0)') 'dop853 returned with error ',idid
+            call status% report(msg)
             ierr = idid
         end if
 
@@ -172,7 +176,7 @@ contains
         ! neutron-phonon scattering
         ! implements formalism described in Appendix of
         ! Deibel et al. (2017), ApJ 839: 95
-        use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         use nucchem_def, only: composition_info_type
         use constants_def
         use num_lib    
@@ -203,7 +207,10 @@ contains
         real(dp), dimension(:), pointer :: rpar => null()
         real(dp) :: h, kn_end, kn_start, kn, kfi
         integer :: liwork, lwork, itol, lipar, lrpar,idid, lout, iout, npts
+        character(len=128) :: msg
+        type(alert) :: status=alert(scope='n_phonon')
 
+        ierr = 0
         allocate(y(num_integration_variables))
 
         kFn = (threepisquare*nn)**onethird
@@ -251,7 +258,8 @@ contains
         &   num_rpar, rpar, num_ipar, ipar, lout, idid)
     
         if (idid < 0) then
-            write(error_unit,*) 'n_phonon: dop853 returned with error',idid
+            write(msg,'(a,i0)') 'dop853 returned with error ',idid
+            call status% report(msg)
             ierr = idid
         end if
 

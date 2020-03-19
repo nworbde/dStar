@@ -1,5 +1,6 @@
 program test_cond
     use, intrinsic :: iso_fortran_env, only: output_unit
+    use exceptions_lib
     use constants_lib
     use nucchem_def
     use nucchem_lib
@@ -18,13 +19,22 @@ program test_cond
     type(composition_info_type) :: ionic
     real(dp) :: chi,Xsum
     real(dp), dimension(num_dStar_eos_results) :: res
+    type(assertion) :: check_okay=assertion(scope='main')
     
     call constants_init('',ierr)
+    call check_okay% assert(ierr==0)
+
     call nucchem_init(datadir,ierr)
+    call check_okay% assert(ierr==0)
+
     call dStar_eos_startup(datadir)
     call conductivity_startup(datadir)
+
     eos_handle = alloc_dStar_eos_handle(ierr)
+    call check_okay% assert(ierr==0)    
     cond_handle = alloc_conductivity_handle(ierr)
+    call check_okay% assert(ierr==0)
+    
     ! for this test, we include neutrons and keep the rad'n on
     call conductivity_set_controls(cond_handle, &
     &   include_neutrons=.TRUE., include_superfluid_phonons=.TRUE., &

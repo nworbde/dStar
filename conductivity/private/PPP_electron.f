@@ -38,7 +38,7 @@ module PPP_electron
 contains
     
     subroutine load_PPP_electron_table(datadir,ierr)
-        use iso_fortran_env, only: error_unit
+        use exceptions_lib
         implicit none
         character(len=*), intent(in) :: datadir
         integer, intent(out) :: ierr
@@ -46,11 +46,16 @@ contains
         character(len=*), parameter :: this_routine = 'load_PPP_electron_table'
         character(len=256) :: data_filename, cache_filename
         logical :: have_cache
+        type(alert) :: status=alert(scope=this_routine)
+        type(failure) :: read_table_error=failure(scope=this_routine, &
+        &   message='unable to load table')
+        type(failure) :: write_cache_error=failure(scope=this_routine, &
+        &   message='unable to write cache')
         
         ierr = 0
         tab => PPP_tbl
         if (tab% is_loaded) then
-            write(error_unit,'(a)') this_routine//': table is already loaded'
+            call status% report('table is already loaded')
             return
         end if
         
@@ -71,14 +76,14 @@ contains
         data_filename =  &
         &   trim(datadir)//'/'//trim(tablename)//'.dat'
         call read_PPP_electron_table(data_filename,tab,ierr)
-        if (failure(this_routine//': unable to load table',ierr)) then
+        if (read_table_error% raised(ierr)) then
             ierr = unable_to_load_table
             return
         end if
         tab% is_loaded = .TRUE.
 
         call write_PPP_electron_table_cache(cache_filename,tab,ierr)
-        if (failure(this_routine//': unable to write cache',ierr)) then
+        if (write_cache_error% raised(ierr)) then
             ierr = unable_to_write_cache
             return
         end if
@@ -90,6 +95,7 @@ contains
 
     subroutine construct_interpolation_coefficients(ierr)
         use interp_2d_lib_db, only: interp_mkbicub_db
+        use exceptions_lib
         implicit none
         integer, intent(out) :: ierr
         real(dp), dimension(:), pointer :: ftab=>null()
@@ -100,6 +106,8 @@ contains
         integer :: iZ
         real(dp), dimension(NT) :: bcrhomin, bcrhomax
         real(dp), dimension(Nrho) :: bcTmin, bcTmax
+        type(failure) :: interpolation_error=failure(scope=this_routine, &
+        &   message='unable to construct interpolation')
         
         tab => PPP_tbl
         workspace(1,:,:,:) = tab% lgK
@@ -114,7 +122,7 @@ contains
             &   not_a_knot,bcrhomin,not_a_knot,bcrhomax, &
             &   tab% linear_T,tab% linear_rho,ierr)
             
-            if (failure(this_routine//': unable to construct interpolation', ierr)) then
+            if (interpolation_error% raised(ierr)) then
                 ierr = unable_to_compute_interpolation
                 tab% is_loaded = .FALSE.
                 return
@@ -124,6 +132,7 @@ contains
     end subroutine construct_interpolation_coefficients
 
     subroutine read_PPP_electron_table(datafile,tab,ierr)
+        use exceptions_lib
         implicit none
         character(len=*), intent(in) :: datafile
         type(electron_conductivity_tbl), pointer :: tab
@@ -131,10 +140,11 @@ contains
         character(len=*), parameter :: this_routine='read_PPP_electron_table'
         integer :: unitno, iZ, irho
         real(dp), dimension(NZ) :: Zs
+        type(failure) :: io_error=failure(scope=this_routine)
         
         open(newunit=unitno,file=datafile,status='old',action='read', &
         &   iostat = ierr)
-        if (failure(this_routine//' opening '//datafile,ierr)) then
+        if (io_error% raised(ierr,'opening '//trim(datafile))) then
             close(unitno)
             return
         end if
@@ -142,14 +152,14 @@ contains
         read(unitno,*)  ! skip first line
         do iZ = 1, NZ
             read(unitno,*,iostat=ierr) Zs(iZ),tab% lgTs(:)
-            if (failure(this_routine//': unable to read Zs, Ts',ierr)) then
+            if (io_error% raised(ierr,'unable to read Zs, Ts')) then
                 close(unitno)
                 return
             end if
             do irho = 1, Nrho
                 read(unitno,*,iostat=ierr)  &
                 &   tab% lgrhos(irho), tab% lgK(:,irho,iZ)
-                if (failure(this_routine//': unable to read rho, K',ierr)) then
+                if (io_error% raised(ierr,'unable to read rho, K')) then
                     close(unitno)
                     return
                 end if
@@ -162,6 +172,7 @@ contains
     end subroutine read_PPP_electron_table
     
     subroutine read_PPP_electron_table_cache(cache_filename,tab,ierr)
+        use exceptions_lib
         implicit none
         character(len=*), intent(in) :: cache_filename
         type(electron_conductivity_tbl), pointer :: tab
@@ -169,11 +180,11 @@ contains
         character(len=*), parameter :: &
         &   this_routine='read_PPP_electron_table_cache'
         integer :: unitno
+        type(failure) :: io_error=failure(scope=this_routine)
         
         open(newunit=unitno,file=trim(cache_filename),action='read', &
         &   form='unformatted',iostat=ierr)
-        if (failure(this_routine//': unable to open '//cache_filename, ierr)) &
-        &   return
+        if (io_error% raised(ierr,'unable to open '//cache_filename)) return
         
         read(unitno) tab% lgZs
         read(unitno) tab% lgTs
@@ -184,6 +195,7 @@ contains
     end subroutine read_PPP_electron_table_cache
 
     subroutine write_PPP_electron_table_cache(cache_filename,tab,ierr)
+        use exceptions_lib
         implicit none
         character(len=*), intent(in) :: cache_filename
         type(electron_conductivity_tbl), pointer :: tab
@@ -191,11 +203,11 @@ contains
         character(len=*), parameter :: this_routine = &
         &   'write_PPP_electron_table_cache'        
         integer :: unitno
+        type(failure) :: io_error=failure(scope=this_routine)
         
         open(newunit=unitno,file=trim(cache_filename),action='write', &
         &   form='unformatted',iostat=ierr)
-        if (failure(this_routine//': unable to open '//cache_filename,ierr)) &
-        &   return
+        if (io_error% raised(ierr,'unable to open '//cache_filename)) return
         
         write(unitno) tab% lgZs
         write(unitno) tab% lgTs
@@ -221,6 +233,7 @@ contains
         use iso_fortran_env, only: error_unit
         use num_lib, only: binary_search
         use interp_2d_lib_db, only: interp_evbicub_db
+        use exceptions_lib
         implicit none
         real(dp), intent(in) :: rho,T,Z
         real(dp), intent(out) :: K
@@ -232,20 +245,16 @@ contains
         integer, dimension(6) :: ict
         real(dp), dimension(6) :: lgK
         integer :: lZ
-        integer, parameter :: max_warnings = 3
-        integer, save :: warning_count = 0
+        type(warning) :: loaded_table=warning(scope=this_routine, &
+        &   message='table is not loaded')
+        type(failure) :: interpolation_error=failure(scope=this_routine)
         
         ierr = 0
         K = 0.0_dp
         tab => PPP_tbl
         if (.not.tab% is_loaded) then
-            warning_count = warning_count + 1
             ierr = table_is_not_loaded
-            write(error_unit,'(a)') this_routine//': table is not loaded'
-            if (warning_count >= max_warnings) then
-                write(error_unit,'(a)') 'further warnings will be suppressed'
-            end if
-            return
+            if (loaded_table% raised(ierr)) return
         end if
             
         lgrho = log10(clip_to_table(rho, tab% rhomin, tab% rhomax))
@@ -259,7 +268,7 @@ contains
         ftab(1:4*Nrho*NT) => workspace(:,:,:,lZ)
         call interp_evbicub_db(lgT,lgrho,tab% lgTs,NT,tab% lgrhos,Nrho, &
         &   tab% linear_T,tab% linear_rho,ftab,NT,ict,lgK,ierr)
-        if (failure(this_routine//': interpolation Z0',ierr)) then
+        if (interpolation_error% raised(ierr,'interpolation Z0')) then
             ierr = unable_to_evaluate_conductivity
             return
         end if
@@ -274,7 +283,7 @@ contains
         ftab(1:4*Nrho*NT) => workspace(:,:,:,lZ)
         call interp_evbicub_db(lgT,lgrho,tab% lgTs,NT,tab% lgrhos,Nrho, &
         &   tab% linear_T,tab% linear_rho,ftab,NT,ict,lgK,ierr)
-        if (failure(this_routine//': interpolation Z1',ierr)) then
+        if (interpolation_error% raised(ierr,'interpolation Z1')) then
             ierr = unable_to_evaluate_conductivity
             return
         end if
@@ -290,18 +299,5 @@ contains
             xc = min(max(x,xmin),xmax)
         end function clip_to_table
     end subroutine eval_PPP_electron_table
-
-    function failure(msg,ierr)
-        use iso_fortran_env, only: error_unit
-        implicit none
-        character(len=*), intent(in) :: msg
-        integer, intent(in) :: ierr
-        logical :: failure
-
-        failure = (ierr /= 0)
-        if (failure) then
-            write(error_unit,'(a)') trim(msg)
-        end if
-    end function failure
 
 end module PPP_electron
