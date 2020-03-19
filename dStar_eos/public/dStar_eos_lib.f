@@ -198,7 +198,7 @@ module dStar_eos_lib
             uifac = nikT/rho
             pifac = nikT
             sifac = nik/rho
-        else if (ion_eos_warning% raised(ierr))
+        else if (ion_eos_warning% raised(ierr)) then
             uifac = 0.0; pifac = 0.0; sifac = 0.0
         end if
         
