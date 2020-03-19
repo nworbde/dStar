@@ -17,7 +17,8 @@ module ion_eos
 
 contains
 
-subroutine ion_mixture(rq,rs,Gamma_e,ionic,ncharged,charged_ids,Yion,Gamma,ionQ,phase,f,u,p,s,cv,dpr,dpT,err)
+subroutine ion_mixture(rq,rs,Gamma_e,ionic,ncharged,charged_ids,Yion, &
+&   Gamma,ionQ,phase,f,u,p,s,cv,dpr,dpT,err)
     use, intrinsic :: iso_fortran_env, only: error_unit
     use exceptions_lib
     use constants_def, only: dp, amu, Melectron
@@ -234,48 +235,48 @@ subroutine ie_liquid(Gamma_e,rs,Z,f,u,p,s,cv,dpr,dpt)
     cor0_xg = (u0_xg-(u0_x*d0_g+u0_g*d0_x)/d0 + 2.0*u0*d0_x*d0_g/d0**2)/d0
     
     rgam = sqrt(1.0+xr**2)
-  q1 = 0.18/z**0.25
-  q2 = 0.2+0.37/sqrt(z)
-  h1u = 1.0 + 0.2*xr**2
-  h1d = 1.0 + q1*xr + q2*xr**2
-  h1=h1u/h1d
-  h1x = 0.4*xr/h1u-(q1+2.*q2*xr)/h1d
-  h1_x = h1*h1x
-  h1_xx = h1_x*h1x+ h1*(.4/h1u-(.4*xr/h1u)**2-2.*q2/h1d+((q1+2.*q2*xr)/h1d)**2)
-  up = cDH*sGam+a*cTF*nuGam*cor0*h1
-  up_x = a*cTF*nuGam*(cor0_x*h1+cor0*h1_x)
-  up_g = 0.5*cDH/sGam+a*cTF*(nuGam_g*cor0+nuGam*cor0_g)*h1
-  up_xx = a*cTF*nuGam*(cor0_xx*h1+2.*cor0_x*h1_x+cor0*h1_xx)
-  up_gg = -0.25*cDH/(sGam*Gamma_e)  &
-    & + a*cTF*(nuGam_gg*cor0+2.0*nuGam_g*cor0_g+nuGam*cor0_gg)*h1
-  up_xg = a*cTF*(nuGam_g*(cor0_x*h1+cor0*h1_x) + nuGam*(cor0_xg*h1+cor0_g*h1_x))
-  dn1 = b*sGam+a/rs*nuGam*cor1
-  dn1_x = a*nuGam*(cor1/xrs+cor1_x/rs)
-  dn1_g = 0.5*b/sGam+a/rs*(nuGam_g*cor1+nuGam*cor1_g)
-  dn1_xx = a*nuGam/xrs*(2.*cor1_x+xr*cor1_xx)
-  dn1_gg = -0.25*b/(Gamma_e*sGam) + a/rs*(nuGam_gg*cor1+2.*nuGam_g*cor1_g+nuGam*cor1_gg)
-  dn1_xg = a*(nuGam_g*(cor1/xrs+cor1_x/rs)+nuGam*(cor1_g/xrs+cor1_xg/rs))
-  dn = 1.0 + dn1/rgam
-  dn_x = dn1_x/rgam-xr*dn1/rgam**3
-  dn_xx = (dn1_xx-((2.*xr*dn1_x+dn1)-3.*xr**2*dn1/rgam**2)/rgam**2)/rgam
-  dn_g = dn1_g/rgam
-  dn_gg = dn1_gg/rgam
-  dn_xg = dn1_xg/rgam-xr*dn1_g/rgam**3
-  f = -up/dn*Gamma_e
-  fx = (up*dn_x/dn-up_x)/dn
-  fx_g = ((up_g*dn_x+up_x*dn_g+up*dn_xg-2.0*up*dn_x*dn_g/dn)/dn - up_xg)/dn
-  f_x = fx*Gamma_e
-  fg = (up*dn_g/dn-up_g)/dn
-  f_g = fg*Gamma_e-up/dn
-  f_xx = ((up*dn_xx+2.0*(up_x*dn_x-up*dn_x**2/dn))/dn-up_xx)/dn*Gamma_e
-  f_gg = 2.0*fg+Gamma_e*((2.*dn_g*(up_g-up*dn_g/dn)+up*dn_gg)/dn-up_gg)/dn
-  f_xg = fx+Gamma_e*fx_g
-  u = Gamma_e*f_g
+    q1 = 0.18/z**0.25
+    q2 = 0.2+0.37/sqrt(z)
+    h1u = 1.0 + 0.2*xr**2
+    h1d = 1.0 + q1*xr + q2*xr**2
+    h1=h1u/h1d
+    h1x = 0.4*xr/h1u-(q1+2.*q2*xr)/h1d
+    h1_x = h1*h1x
+    h1_xx = h1_x*h1x+ h1*(.4/h1u-(.4*xr/h1u)**2-2.*q2/h1d+((q1+2.*q2*xr)/h1d)**2)
+    up = cDH*sGam+a*cTF*nuGam*cor0*h1
+    up_x = a*cTF*nuGam*(cor0_x*h1+cor0*h1_x)
+    up_g = 0.5*cDH/sGam+a*cTF*(nuGam_g*cor0+nuGam*cor0_g)*h1
+    up_xx = a*cTF*nuGam*(cor0_xx*h1+2.*cor0_x*h1_x+cor0*h1_xx)
+    up_gg = -0.25*cDH/(sGam*Gamma_e)  &
+    &   + a*cTF*(nuGam_gg*cor0+2.0*nuGam_g*cor0_g+nuGam*cor0_gg)*h1
+    up_xg = a*cTF*(nuGam_g*(cor0_x*h1+cor0*h1_x) + nuGam*(cor0_xg*h1+cor0_g*h1_x))
+    dn1 = b*sGam+a/rs*nuGam*cor1
+    dn1_x = a*nuGam*(cor1/xrs+cor1_x/rs)
+    dn1_g = 0.5*b/sGam+a/rs*(nuGam_g*cor1+nuGam*cor1_g)
+    dn1_xx = a*nuGam/xrs*(2.*cor1_x+xr*cor1_xx)
+    dn1_gg = -0.25*b/(Gamma_e*sGam) + a/rs*(nuGam_gg*cor1+2.*nuGam_g*cor1_g+nuGam*cor1_gg)
+    dn1_xg = a*(nuGam_g*(cor1/xrs+cor1_x/rs)+nuGam*(cor1_g/xrs+cor1_xg/rs))
+    dn = 1.0 + dn1/rgam
+    dn_x = dn1_x/rgam-xr*dn1/rgam**3
+    dn_xx = (dn1_xx-((2.*xr*dn1_x+dn1)-3.*xr**2*dn1/rgam**2)/rgam**2)/rgam
+    dn_g = dn1_g/rgam
+    dn_gg = dn1_gg/rgam
+    dn_xg = dn1_xg/rgam-xr*dn1_g/rgam**3
+    f = -up/dn*Gamma_e
+    fx = (up*dn_x/dn-up_x)/dn
+    fx_g = ((up_g*dn_x+up_x*dn_g+up*dn_xg-2.0*up*dn_x*dn_g/dn)/dn - up_xg)/dn
+    f_x = fx*Gamma_e
+    fg = (up*dn_g/dn-up_g)/dn
+    f_g = fg*Gamma_e-up/dn
+    f_xx = ((up*dn_xx+2.0*(up_x*dn_x-up*dn_x**2/dn))/dn-up_xx)/dn*Gamma_e
+    f_gg = 2.0*fg+Gamma_e*((2.*dn_g*(up_g-up*dn_g/dn)+up*dn_gg)/dn-up_gg)/dn
+    f_xg = fx+Gamma_e*fx_g
+    u = Gamma_e*f_g
     s = u-f
-  cv = -Gamma_e**2*f_gg
-  p = onethird*(xr*f_x+Gamma_e*f_g)
-  dpt = -Gamma_e**2*(xr*fx_g+f_gg)*onethird
-  dpr = (12.0*p+xr**2*f_xx+2.0*xr*Gamma_e*f_xg+Gamma_e**2*f_gg)/9.0
+    cv = -Gamma_e**2*f_gg
+    p = onethird*(xr*f_x+Gamma_e*f_g)
+    dpt = -Gamma_e**2*(xr*fx_g+f_gg)*onethird
+    dpr = (12.0*p+xr**2*f_xx+2.0*xr*Gamma_e*f_xg+Gamma_e**2*f_gg)/9.0
 end subroutine ie_liquid
 
 subroutine ie_lattice(Gamma,theta,rs,Z,f,u,p,s,cv,dpr,dpt)
@@ -352,10 +353,12 @@ subroutine ie_lattice(Gamma,theta,rs,Z,f,u,p,s,cv,dpr,dpt)
         sup_x = sup*supx
         supg = 0.5*(supa_g/supa-supb_g/supb)
         sup_g = sup*supg
-        sup_xx = sup_x*supx + sup*0.5*(supa_xx/supa-(supa_x/supa)**2 - supb_xx/supb+(supb_x/supb)**2)
-        sup_gg = sup_g*supg + sup*0.5*(supa_gg/supa-(supa_g/supa)**2 - supb_gg/supb+(supb_g/supb)**2)
+        sup_xx = sup_x*supx + sup*0.5*(supa_xx/supa-(supa_x/supa)**2  &
+        &   - supb_xx/supb+(supb_x/supb)**2)
+        sup_gg = sup_g*supg + sup*0.5*(supa_gg/supa-(supa_g/supa)**2  &
+        &   - supb_gg/supb+(supb_g/supb)**2)
         sup_xg = sup_x*supg + sup*0.5*((supa_xg-supa_x*supa_g/supa)/supa  &
-                & - (supb_xg-supb_x*supb_g/supb)/supb)
+        &   - (supb_xg-supb_x*supb_g/supb)/supb)
     else
         sup=px*theta
         sup_x = 0.5*px*theta/xr

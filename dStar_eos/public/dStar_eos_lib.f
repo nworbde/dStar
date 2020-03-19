@@ -110,6 +110,7 @@ module dStar_eos_lib
     subroutine eval_crust_eos( &
         &   dStar_eos_handle,rho,T,ionic,ncharged,charged_ids,Yion,Tcs, &
         &   res,phase,chi,components)
+        use exceptions_lib
         use nucchem_def, only: composition_info_type
         use superfluid_def, only: max_number_sf_types, neutron_1S0
         use dStar_eos_private_def
@@ -145,9 +146,15 @@ module dStar_eos_lib
         real(dp) :: f_r,u_r,p_r,s_r,cv_r,dpr_r,dpt_r
         real(dp) :: Gamma,ionQ,p,u,s,cv,dpr,dpt,gamma3m1,gamma1,grad_ad,cp
         integer :: ierr
+        type(assertion) :: neutron_volume=assertion(scope='eval_crust_eos', &
+        &   message='nucleus filling fraction < 1')
+        type(assertion) :: got_pointer=assertion(scope='eval_crust_eos', &
+        &   message='got pointer')
+        type(warning) :: ion_eos_warning=warning(scope='eval_crust_eos', &
+        &   message='problem in ion eos')
         
         call dStar_eos_ptr(dStar_eos_handle, rq, ierr)
-        if (ierr /= 0) return
+        call got_pointer% assert(ierr == 0)
         
         ! electrons...
         ! some ion quantities are defined in terms of these as well.
@@ -191,11 +198,12 @@ module dStar_eos_lib
             uifac = nikT/rho
             pifac = nikT
             sifac = nik/rho
-        else
+        else if (ion_eos_warning% raised(ierr))
             uifac = 0.0; pifac = 0.0; sifac = 0.0
         end if
         
         ! local density of neutrons
+        call neutron_volume% assert(chi < 1.0)
         nn = rho*ionic%Yn/amu/(1.0-chi)
         Tns = Tcs(neutron_1S0)
         call MB77(nn,T,Tns,f_n,u_n,p_n,s_n,cv_n,dpr_n,dpt_n)
