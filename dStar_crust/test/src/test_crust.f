@@ -18,7 +18,8 @@ program test_crust
     type(composition_info_type), dimension(Ntrial) :: ion_info
     integer :: eos_handle, Niso
     real(dp) :: Tref
-    
+    type(assertion) :: sane_eos=assertion(scope='main',message='dlgRho > 0')
+
     call constants_init('',ierr)
     call check_okay('constants_init',ierr)
     
@@ -54,6 +55,7 @@ program test_crust
         call dStar_crust_get_results(lgP(i),lgRho(i),dlgRho(i),lgEps(i),dlgEps(i),ierr)
         call check_okay('dStar_crust_get_results',ierr)
         write(*,'(5(f9.5,tr2))') lgP(i),lgRho(i),dlgRho(i),lgEps(i),dlgEps(i)
+        call sane_eos% assert(dlgRho(i) > 0.0_dp)
     end do
     
     Niso = dStar_crust_get_composition_size()
@@ -74,7 +76,6 @@ program test_crust
 
 contains
     subroutine check_okay(msg,ierr)
-        use exceptions_lib
         character(len=*), intent(in) :: msg
         integer, intent(inout) :: ierr
         type(assertion) :: okay=assertion(scope='main')
