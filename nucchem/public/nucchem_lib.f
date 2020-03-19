@@ -25,15 +25,13 @@ contains
         
         ierr = 0
         call status% report(message= &
-        & 'loading nuclib from '//trim(datadir)//'/nucchem...')
+        & 'Loading nuclib from '//trim(datadir)//'/nucchem')
         call do_load_nuclib(nuclib_filename,nuclib_cache,ierr)
-        call done% report
 
-        write(msg,'(i0,a)') nuclib% Nnuclides, &
-        & ' nuclides retrieved. now writing nuclide dictionary...'
+        write(msg,'(a,i0,a)') 'Retrieved ',nuclib% Nnuclides, &
+        & ' nuclides. Writing nuclide dictionary'
         call status% report(message=msg)
         call do_parse_nuclides(ierr)
-        call done% report
 
         nucchem_is_initialized = .TRUE.
     end subroutine nucchem_init

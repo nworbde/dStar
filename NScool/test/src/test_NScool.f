@@ -4,7 +4,7 @@ program test_NScool
     use NScool_lib
     use argparse
 
-    character(len=*), parameter :: default_dStar_dir = '../../'
+    character(len=*), parameter :: default_dStar_dir = '../..'
     character(len=*), parameter :: default_inlist_file = 'test_inlist'
     character(len=64) :: my_dStar_dir
     character(len=64) :: inlist
