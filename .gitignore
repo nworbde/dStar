@@ -32,3 +32,5 @@ nucchem/data/nuclib_db
 condall06.dat
 conductivity/test/make/test_P3_tab
 conductivity/test/test_P3_tab
+conductivity/test/P3_pcy_tab_output
+conductivity/test/P3_tab_output

@@ -25,7 +25,7 @@ program test_P3_tab
     real(dp), dimension(num_dStar_eos_results) :: res
     character(len=*), parameter :: datadir = '../../data/conductivity'
     type(electron_conductivity_tbl), pointer :: tab
-    real(dp) :: lgrho, lgT, rho, T, eta, Gamma, mu_e, K_e, diff
+    real(dp) :: lgrho, lgT, rho, T, eta, Gamma, mu_e, K_e
     type(conductivity_components) :: kappa
     type(crust_eos_component), dimension(num_crust_eos_components) :: &
     &   eos_components
@@ -33,6 +33,8 @@ program test_P3_tab
 	real(dp), dimension(max_number_sf_types) :: Tcs
     character(len=iso_name_length) :: name(2)
     type(assertion) :: check_okay=assertion(scope='main')
+    real(dp), dimension(13,5,11) :: diff
+    integer :: loc(2), locz(3)
     
     call constants_init('',ierr)
     call check_okay% assert(ierr==0)
@@ -44,6 +46,8 @@ program test_P3_tab
     call check_okay% assert(ierr==0)
     cond_handle = alloc_conductivity_handle(ierr)
     call check_okay% assert(ierr==0)
+
+    call conductivity_set_controls(cond_handle,which_ee_scattering=icond_sy06)
     
     Tcs = 1.0e9_dp
     Z = [ 2, 26 ]
@@ -54,6 +58,7 @@ program test_P3_tab
     do j = 1,2
         name(j)(1:1) = StrUpCase(name(j)(1:1))
     end do
+    diff = 0.0_dp
     composition: do k = 1, 11
         X(1) = 0.1_dp*real(k-1,dp)
         X(2) = 1.0_dp -X(1)
@@ -85,14 +90,39 @@ program test_P3_tab
                 call get_thermal_conductivity(cond_handle,rho,T, &
                 &   chi,Gamma,eta,mu_e,ionic,Tcs(neutron_1S0),kappa)
                 call eval_PPP_electron_table(rho,T,sqrt(ionic% Z2),K_e,ierr)
-                diff = (K_e - kappa% electron_total)/kappa% electron_total
+                diff(i,j,k) = (K_e - kappa% electron_total)/kappa% electron_total
                 write (output_unit, '(3f6.2,6es11.3,f7.3)') &
                     & lgrho,lgT,ionic%Z, &
                     & Gamma,mu_e*mev_to_ergs/boltzmann/T, &
-                    & kappa%ee,kappa%ei,kappa%electron_total, K_e, diff
+                    & kappa%ee,kappa%ei,kappa%electron_total, K_e, diff(i,j,k)
             end do density
         end do temperature
+        
+        write(output_unit,'(a,f7.3)') 'rms(|diff|) = ',norm2(diff(:,:,k))/sqrt(real(13*5,dp))
+        loc = maxloc(abs(diff(:,:,k)))
+        write(output_unit,'(a,f7.3,2(a,f6.2))') 'max(|diff|) = ',maxval(abs(diff(:,:,k))), &
+        &   ' at lg(rho) = ',real(loc(1)-1,dp)/3.0_dp + 5.0_dp, &
+        &   '; lg(T) = ',real(loc(2)-1,dp)*0.5_dp + 7.0_dp
+        loc = minloc(abs(diff(:,:,k)))
+        write(output_unit,'(a,f7.3,2(a,f6.2))') 'min(|diff|) = ',minval(abs(diff(:,:,k))), &
+        &   ' at lg(rho) = ',real(loc(1)-1,dp)/3.0_dp + 5.0_dp, &
+        &   '; lg(T) = ',real(loc(2)-1,dp)*0.5_dp + 7.0_dp
+        
     end do composition
+
+    write(output_unit,'(/,a)') 'overall differences'
+    write(output_unit,'(a,f7.3)') 'rms(|diff|) = ',norm2(diff)/sqrt(real(13*5*11,dp))
+    locz = maxloc(abs(diff))
+    write(output_unit,'(a,f7.3,3(a,f6.2))') 'max(|diff|) = ',maxval(abs(diff)), &
+    &   ' at lg(rho) = ',real(locz(1)-1,dp)/3.0_dp + 5.0_dp, &
+    &   '; lg(T) = ',real(locz(2)-1,dp)*0.5_dp + 7.0_dp, &
+    &   '; X(He) = ',0.1_dp*real(locz(3)-1,dp)
+    locz = minloc(abs(diff))
+    write(output_unit,'(a,f7.3,3(a,f6.2))') 'min(|diff|) = ',minval(abs(diff)), &
+    &   ' at lg(rho) = ',real(locz(1)-1,dp)/3.0_dp + 5.0_dp, &
+    &   '; lg(T) = ',real(locz(2)-1,dp)*0.5_dp + 7.0_dp, &
+    &   '; X(He) = ',0.1_dp*real(locz(3)-1,dp)
+    
     call clear_composition(ionic)
     call conductivity_shutdown
     call dStar_eos_shutdown
