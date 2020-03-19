@@ -76,6 +76,7 @@ contains
         &   message='starting eos module')
         type(failure) :: cond_error=failure(scope='do_startup_microphysics', &
         &   message='starting conductivity module')
+        type(alert) :: status=alert(scope='do_startup_microphysics')
         
         call status% report('Initializing nuclides')
         call nucchem_init(trim(dStar_data_dir),ierr)
