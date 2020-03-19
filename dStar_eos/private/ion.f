@@ -40,6 +40,7 @@ contains
         real(dp) :: rsi,ionQ2,fi,ui,si,pi,cvi,dpri,dpti
         real(dp) :: fm,um,sm,pm,cvm,dprm,dptm
         integer :: i
+        type(alert) :: quantum_effects=alert(scope='ion_mixture')
     
         err = 0
         Mu = amu/Melectron
@@ -56,14 +57,13 @@ contains
             phase = solid_phase
         end if
 
-        ! estimate T_p/T for a mixture and check that quantum corrections can be
-        ! safely neglected in the liquid phase
+        ! estimate T_p/T for a mixture and check that quantum effects are not important in liquid phase
         ionQ2 = 3.0*Gamma_e**2/rs/Mu * ionic% Z2XoA2 *ionic% A / ionic% Z
         ionQ = sqrt(ionQ2)
         if (phase == liquid_phase .and. ionQ2 > Q2_threshold) then
             err = strong_quantum_effects
-            if (.not. rq% suppress_warnings) write(error_unit,*) &
-            &   'ion_mixture: neglecting quantum corrections in liquid phase'
+            if (.not. rq% suppress_warnings) call quantum_effects% report( &
+            &   'strong quantum effects in liquid encountered')
         end if
 
         ! sum contributions
@@ -141,7 +141,7 @@ contains
         real(dp) :: Gamma,theta
         real(dp) :: fie,uie,pie,sie,cvie,dprie,dptie
         real(dp) :: fii,uii,pii,sii,cvii,dprii,dptii
-        real(dp), dimension(number_lattice_products) :: fiil, uiil, piil, siil, cviil, dpriil, dptiil
+        real(dp), dimension(number_lattice_products) :: fiil,uiil,piil,siil,cviil,dpriil, dptiil
         real(dp), parameter :: sevensixth = 7.0/6.0
         Gamma = Gamma_e*Z**fivethird
         theta = Gamma*sqrt(3.0*Melectron/A/amu/rs)/Z**sevensixth
@@ -352,10 +352,12 @@ contains
             sup_x = sup*supx
             supg = 0.5*(supa_g/supa-supb_g/supb)
             sup_g = sup*supg
-            sup_xx = sup_x*supx + sup*0.5*(supa_xx/supa-(supa_x/supa)**2 - supb_xx/supb+(supb_x/supb)**2)
-            sup_gg = sup_g*supg + sup*0.5*(supa_gg/supa-(supa_g/supa)**2 - supb_gg/supb+(supb_g/supb)**2)
+            sup_xx = sup_x*supx + sup*0.5*(supa_xx/supa-(supa_x/supa)**2 &
+            &   - supb_xx/supb+(supb_x/supb)**2)
+            sup_gg = sup_g*supg + sup*0.5*(supa_gg/supa-(supa_g/supa)**2  &
+            &   - supb_gg/supb+(supb_g/supb)**2)
             sup_xg = sup_x*supg + sup*0.5*((supa_xg-supa_x*supa_g/supa)/supa  &
-                    & - (supb_xg-supb_x*supb_g/supb)/supb)
+            &   - (supb_xg-supb_x*supb_g/supb)/supb)
         else
             sup=px*theta
             sup_x = 0.5*px*theta/xr

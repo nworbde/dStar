@@ -10,6 +10,7 @@ contains
     
     subroutine do_load_epochs(s, ierr)
         use iso_fortran_env, only : IOSTAT_END, error_unit
+        use exceptions_lib
         use constants_def, only : julian_day
         use storage, only: allocate_NScool_epoch_arrays
         
@@ -22,6 +23,12 @@ contains
         integer :: col_time, col_Mdot
         real(dp) :: delta_t
         real(dp), dimension(:,:), allocatable :: in_array
+        type(failure) :: file_error=failure(scope='do_load_epochs')
+        type(alert) :: file_not_empty=alert(&
+        &   scope='do_load_epochs',message='unexpected EOF')
+        type(alert) :: bad_token=alert(scope='do_load_epochs')
+        type(failure) :: allocation_error=failure(scope='do_load_epochs', &
+        &   message='allocating storage')
 
         if (.not. s% load_epochs) return
 
@@ -35,10 +42,8 @@ contains
 
         open(newunit=file_id,file=trim(s% epoch_datafile), &
             & status='old',action='read',iostat=ierr)
-        if (ierr /= 0) then
-            call failure('unable to open ' // trim(s% epoch_datafile))
-            return
-        end if
+        if (file_error% raised(ierr, &
+        &   'unable to open ' // trim(s% epoch_datafile))) return
         
         ! there are 5 data flags
         !   number_cycles: allows for a repeating pattern
@@ -53,7 +58,7 @@ contains
             if (t == token_EOF) then
                 ! note this does not raise an error flag, but the number of
                 ! epochs will be 0
-                write(error_unit,*) this_routine // ': unexpected EOF'
+                call file_not_empty% report
                 return
             end if
             if (t == token_value) then
@@ -61,28 +66,28 @@ contains
                 case('number_cycles')
                     t = token(file_id,n,i,buffer,string,advance=.FALSE.)
                     if (t /= token_value) then
-                        call failure('reading number_cycles')
+                        call bad_token% report('reading number_cycles')
                         cycle
                     end if
                     read(string,*) n_cycles
                 case('Mdot_scale')
                     t = token(file_id,n,i,buffer,string,advance=.FALSE.)
                     if (t /= token_value) then
-                        call failure('reading Mdot_scale')
+                        call bad_token% report('reading Mdot_scale')
                         cycle
                     end if
                     read(string,*) s% epoch_Mdot_scale
                 case('time_scale')
                     t = token(file_id,n,i,buffer,string,advance=.FALSE.)
                     if (t /= token_value) then
-                        call failure('reading time_scale')
+                        call bad_token% report('reading time_scale')
                         cycle
                     end if
                     read(string,*) s% epoch_time_scale
                 case('columns')
                     t = token(file_id,n,i,buffer,string,advance=.FALSE.)
                     if (t /= token_string) then
-                        call failure('reading columns')
+                        call bad_token% report('reading columns')
                         cycle
                     end if
                     if (string(1:4) == 'Mdot') then
@@ -90,23 +95,20 @@ contains
                     else if (string(1:4) == 'time') then
                         col_time = 1; col_Mdot = 2
                     else
-                        call failure('reading columns')
+                        call bad_token% report('reading columns')
                         cycle
                     end if
                 case('epochs')
                     exit    ! terminate cycle, read in data table
                 case default
-                    call failure('unexpected token ' // trim(string))
+                    call bad_token% report('unexpected token ' // trim(string))
                 end select
             end if
         end do scan_file
         
         epoch_length = initial_epoch_length
         allocate(in_array(2,epoch_length), stat=ierr)
-        if (ierr /= 0) then
-            call failure('allocate storage')
-            return
-        end if
+        if (allocation_error% raised(ierr)) return
         
         lines_read = 0
         read_table: do
@@ -120,10 +122,7 @@ contains
             if (this_line == size(in_array,dim=2)) then
                 epoch_length = 2*size(in_array,dim=2)
                 call realloc(in_array,2,epoch_length,ierr)
-                if (ierr/=0) then 
-                    call failure('realloc in_array')
-                    exit
-                end if
+                if (allocation_error% raised(ierr)) exit
             end if
         end do read_table
         close(file_id)
@@ -162,12 +161,6 @@ contains
         end if
         
         deallocate(in_array)
-
-    contains
-        subroutine failure(msg)
-            character(len=*), intent(in) :: msg
-            write (error_unit,*) this_routine // ': ' // trim(msg)
-        end subroutine failure
      end subroutine do_load_epochs
      
      subroutine realloc(a,n1,n2,ierr)

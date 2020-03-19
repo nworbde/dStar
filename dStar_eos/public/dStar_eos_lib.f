@@ -3,26 +3,22 @@ module dStar_eos_lib
     
     contains
     subroutine dStar_eos_startup(datadir)
+        use exceptions_lib
         use dStar_eos_private_def
         use helm_alloc
         character(len=*), intent(in) :: datadir
         integer, parameter :: imax = 261, jmax = 101  ! dimensions of our version of helm table
         integer :: ierr
         character(len=128) :: eos_datadir
+        type(failure) :: startup_error=failure(scope='dStar_eos_startup')
         
         call dStar_eos_def_init
         call alloc_helm_table(eos_ht, imax, jmax, ierr)
-        if (ierr /= 0) then
-            write (*,*) 'unable to alloc helm table'
-            return
-        end if
+        if (startup_error% raised(ierr,'unable to alloc helm table')) return
         
         eos_datadir = trim(datadir)//'/eos'
         call read_helm_table(eos_ht,eos_datadir,ierr)
-        if (ierr /=0) then
-            write (*,*) 'unable to read helm table'
-            return
-        end if
+        if (startup_error% raised(ierr,'unable to read helm table')) return
     end subroutine dStar_eos_startup
     
     subroutine dStar_eos_shutdown()
@@ -32,11 +28,14 @@ module dStar_eos_lib
 
     function alloc_dStar_eos_handle(ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         use dStar_eos_private_def
         integer, intent(out) :: ierr
         integer :: alloc_dStar_eos_handle
+        type(failure) :: alloc_error=failure(scope='alloc_dStar_eos_handle')
         alloc_dStar_eos_handle = do_alloc_dStar_eos(ierr)
-        if (ierr /= 0) write(error_unit,*) trim(dstar_eos_private_def_errors(ierr))
+        if (alloc_error% raised(ierr, &
+        &   trim(dstar_eos_private_def_errors(ierr)))) return
     end function alloc_dStar_eos_handle
 
     subroutine free_dStar_eos_handle(handle)
@@ -47,17 +46,21 @@ module dStar_eos_lib
 
     subroutine dStar_eos_ptr(handle, rq, ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         use dStar_eos_private_def
         integer, intent(in) :: handle
         type(dStar_eos_general_info), pointer :: rq
         integer, intent(out) :: ierr
+        type(failure) :: ptr_error=failure(scope='dStar_eos_ptr')
         call get_dStar_eos_ptr(handle,rq,ierr)
-        if (ierr /= 0) write(error_unit,*) trim(dstar_eos_private_def_errors(ierr))
+        if (ptr_error% raised(ierr,trim(dstar_eos_private_def_errors(ierr)))) &
+        &   return
     end subroutine dStar_eos_ptr
     
     subroutine dStar_eos_set_controls(handle,gamma_melt_pt,rsi_melt_pt,nuclide_abundance_threshold, &
         &       pasta_transition_in_fm3,cluster_transition_in_fm3,suppress_warnings)
         use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         use dStar_eos_private_def, only : dStar_eos_general_info
         integer, intent(in) :: handle
         real(dp), intent(in), optional :: gamma_melt_pt, rsi_melt_pt, nuclide_abundance_threshold
@@ -65,13 +68,13 @@ module dStar_eos_lib
         logical, intent(in), optional :: suppress_warnings
         type(dStar_eos_general_info), pointer :: rq
         integer :: ierr
+        type(assertion) :: handle_allocated= &
+        &   assertion(scope='dStar_eos_set_controls', &
+        &   message='unallocated handle passed to dStar_eos_set_controls')
         
         call dStar_eos_ptr(handle,rq,ierr)
         if (ierr /= 0) return
-        if (.not. rq% in_use) then
-            write(error_unit,*) 'unallocated handle passed to dStar_eos_set_controls'
-            return
-        end if
+        call handle_allocated% assert(rq% in_use)
         if (present(gamma_melt_pt)) rq% Gamma_melt = gamma_melt_pt
         if (present(rsi_melt_pt)) rq% rsi_melt = rsi_melt_pt
         if (present(nuclide_abundance_threshold)) rq% Ythresh = nuclide_abundance_threshold
@@ -107,6 +110,7 @@ module dStar_eos_lib
     subroutine eval_crust_eos( &
         &   dStar_eos_handle,rho,T,ionic,ncharged,charged_ids,Yion,Tcs, &
         &   res,phase,chi,components)
+        use exceptions_lib
         use nucchem_def, only: composition_info_type
         use superfluid_def, only: max_number_sf_types, neutron_1S0
         use dStar_eos_private_def
@@ -142,9 +146,15 @@ module dStar_eos_lib
         real(dp) :: f_r,u_r,p_r,s_r,cv_r,dpr_r,dpt_r
         real(dp) :: Gamma,ionQ,p,u,s,cv,dpr,dpt,gamma3m1,gamma1,grad_ad,cp
         integer :: ierr
+        type(assertion) :: neutron_volume=assertion(scope='eval_crust_eos', &
+        &   message='nucleus filling fraction < 1')
+        type(assertion) :: got_pointer=assertion(scope='eval_crust_eos', &
+        &   message='got pointer')
+        type(warning) :: ion_eos_warning=warning(scope='eval_crust_eos', &
+        &   message='problem in ion eos')
         
         call dStar_eos_ptr(dStar_eos_handle, rq, ierr)
-        if (ierr /= 0) return
+        call got_pointer% assert(ierr == 0)
         
         ! electrons...
         ! some ion quantities are defined in terms of these as well.
@@ -188,11 +198,12 @@ module dStar_eos_lib
             uifac = nikT/rho
             pifac = nikT
             sifac = nik/rho
-        else
+        else if (ion_eos_warning% raised(ierr)) then
             uifac = 0.0; pifac = 0.0; sifac = 0.0
         end if
         
         ! local density of neutrons
+        call neutron_volume% assert(chi < 1.0)
         nn = rho*ionic%Yn/amu/(1.0-chi)
         Tns = Tcs(neutron_1S0)
         call MB77(nn,T,Tns,f_n,u_n,p_n,s_n,cv_n,dpr_n,dpt_n)

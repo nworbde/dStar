@@ -28,6 +28,7 @@ module NScool_profile
    subroutine do_write_profile(id,ierr)
        use constants_def
       use utils_lib, only: alloc_iounit, free_iounit
+      use exceptions_lib
       integer, intent(in) :: id
       integer, intent(out) :: ierr
       type(NScool_info), pointer :: s
@@ -35,18 +36,20 @@ module NScool_profile
       integer :: iounit, iz, ih
       real(dp) :: Lnu, Lnuc, grav
       character(len=16) ::profile_date, profile_time, profile_zone
+      type(failure) :: profile_error=failure(scope='do_write_profile')
+      type(failure) :: manifest_error=failure(scope='do_write_profile')
 
       call get_NScool_info_ptr(id,s,ierr)
       if (ierr /= 0) return
+
+      call manifest_error% set_message('failure opening '// &
+      &     trim(s% profile_manifest_filename))
 
       if (profile_first_call) then
           ! write header for profiles manifest
           open(newunit=iounit,file=trim(s% profile_manifest_filename), &
               & iostat=ierr)
-          if (ierr /= 0) then
-              write(*,*) 'failed to open profiles manifest ', &
-                  & trim(s% profile_manifest_filename)
-          else
+          if (.not. manifest_error% raised(ierr)) then
               write(iounit,'(a15,a15,tr4,a)') 'model','time [s]', &
                   & 'base profile filename = '//trim(s% base_profile_filename)
               close(iounit)
@@ -55,15 +58,13 @@ module NScool_profile
       end if
       
       write(filename,filename_fmt) trim(s% base_profile_filename), s% model
+      call profile_error% set_message('failure opening '//filename)
       
       iounit = alloc_iounit(ierr)
       if (ierr /= 0) return
       
       open(unit=iounit,file=trim(filename),action='write',iostat=ierr)
-      if (ierr /= 0) then
-         write(*,*) 'failed to open profile file ',trim(filename)
-         return
-      end if
+      if (profile_error% raised(ierr)) return
       
       Lnu = dot_product(s% enu,s% dm)
       Lnuc = dot_product(s% enuc, s% dm)
@@ -91,11 +92,7 @@ module NScool_profile
       ! now append to the manifest
       open(unit=iounit,file=trim(s% profile_manifest_filename), &
           & position='append',iostat=ierr)
-      if (ierr /= 0) then
-          write (*,*) 'unable to open profile manifest ', &
-              & trim(s% profile_manifest_filename)
-          return
-      end if
+      if (manifest_error% raised(ierr)) return
       write (iounit,'(i15,es15.6)') s% model, s% tsec/julian_day
       close(iounit)
       call free_iounit(iounit)

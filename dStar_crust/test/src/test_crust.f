@@ -1,4 +1,5 @@
 program test_crust
+    use exceptions_lib
     use constants_def, only: dp
     use constants_lib
     use nucchem_def
@@ -17,7 +18,8 @@ program test_crust
     type(composition_info_type), dimension(Ntrial) :: ion_info
     integer :: eos_handle, Niso
     real(dp) :: Tref
-    
+    type(assertion) :: sane_eos=assertion(scope='main',message='dlgRho > 0')
+
     call constants_init('',ierr)
     call check_okay('constants_init',ierr)
     
@@ -53,6 +55,7 @@ program test_crust
         call dStar_crust_get_results(lgP(i),lgRho(i),dlgRho(i),lgEps(i),dlgEps(i),ierr)
         call check_okay('dStar_crust_get_results',ierr)
         write(*,'(5(f9.5,tr2))') lgP(i),lgRho(i),dlgRho(i),lgEps(i),dlgEps(i)
+        call sane_eos% assert(dlgRho(i) > 0.0_dp)
     end do
     
     Niso = dStar_crust_get_composition_size()
@@ -73,13 +76,12 @@ program test_crust
 
 contains
     subroutine check_okay(msg,ierr)
-        use iso_fortran_env, only : error_unit
         character(len=*), intent(in) :: msg
         integer, intent(inout) :: ierr
-        if (ierr /= 0) then
-            write (error_unit,*) trim(msg)//': ierr = ',ierr
-            if (ierr < 0) stop
-        end if
+        type(assertion) :: okay=assertion(scope='main')
+        
+        call okay% set_message(msg)
+        call okay% assert(ierr == 0)
     end subroutine check_okay
 
 end program test_crust

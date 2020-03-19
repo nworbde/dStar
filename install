@@ -29,6 +29,7 @@ mkdir -p include
 mkdir -p data
 
 # now build the modules
+do_one exceptions
 do_one constants
 do_one superfluid
 do_one nucchem

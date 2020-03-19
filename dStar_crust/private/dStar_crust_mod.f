@@ -105,18 +105,21 @@ contains
     end subroutine do_generate_crust_table
     
     subroutine do_read_crust_cache(cache_filename,tab,ierr)
+        use exceptions_lib
         character(len=*), intent(in) :: cache_filename
         type(crust_table_type), pointer :: tab
         integer, intent(out) :: ierr
         integer :: unitno, n
+        type(failure):: cache_error=failure(scope='do_read_crust_cache')
         
         open(newunit=unitno,file=trim(cache_filename), &
         &   action='read',status='old',form='unformatted', iostat=ierr)
-        if (failure('opening'//trim(cache_filename),ierr)) return
+        if (cache_error% raised(ierr,'opening'//trim(cache_filename))) &
+        &   return
         
         read(unitno) n
         call do_allocate_crust_table(tab,n,ierr)
-        if (failure('allocating table',ierr)) then
+        if (cache_error% raised(ierr,'allocating table')) then
             close(unitno)
             return
         end if
@@ -132,16 +135,19 @@ contains
     end subroutine do_read_crust_cache
     
     subroutine do_write_crust_cache(cache_filename,tab,ierr)
+        use exceptions_lib
         character(len=*), intent(in) :: cache_filename
         type(crust_table_type), pointer :: tab
         integer, intent(out) :: ierr
         integer :: unitno
+        type(failure) :: cache_error=failure(scope='do_write_crust_cache')
         
         ierr = 0
         if (tab% nv == 0) return
         open(newunit=unitno, file=trim(cache_filename),action='write', &
         &   form='unformatted',iostat=ierr)
-        if (failure('opening '//trim(cache_filename),ierr)) return
+        if (cache_error% raised(ierr,'opening '//trim(cache_filename))) &
+        &   return
         
         write(unitno) tab% nv
         write(unitno) tab% lgP
@@ -183,15 +189,4 @@ contains
         tab% is_loaded = .FALSE.
     end subroutine do_free_crust_table
         
-    function failure(msg,ierr)
-        use, intrinsic :: iso_fortran_env, only: error_unit
-        character(len=*), intent(in) :: msg
-        integer, intent(in) :: ierr
-        logical :: failure
-        
-        failure = (ierr /= 0)
-        if (failure) then
-            write(error_unit,*) trim(msg),': ierr = ',ierr
-        end if
-    end function failure
 end module dStar_crust_mod

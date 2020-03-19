@@ -3,7 +3,7 @@ module load_sf
     
     contains
     subroutine load_sf_table(prefix,sf_type,ierr)
-        use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         use interp_1d_def
         use interp_1d_lib
         
@@ -15,19 +15,26 @@ module load_sf
         type(sf_table_type), pointer :: tab
         real(dp), dimension(:), pointer :: work=>null()
         real(dp), pointer, dimension(:,:) :: fval
+        type(alert) :: superfluid_type=alert(scope='load_sf_table', &
+        &   message='bad superfluid type')
+        type(alert) :: table_loaded=alert(scope='load_sf_table', &
+        &   message='overwriting already loaded type')
+        type(failure) :: io_failure=failure(scope='load_sf_table', &
+        &   message='unable to open file for reading')
+        type(failure) :: alloc_failure=failure(scope='load_sf_table', &
+        &   message='unable to allocate memory')
         
         if (sf_type <= max_number_sf_types .and. sf_type > 0) then
             tab => sf_tables(sf_type)
         else
             ierr = -9
-            write (error_unit,*) 'load_sf_table: malformed superfluid type'
+            call superfluid_type% report
             return
         end if
         
         ! if the tables are already allocated, issue a warning and scrub the table
         if (tab% is_loaded) then
-            write(error_unit,*) &
-            &    'load_sf_table WARNING: overwriting already loaded table'
+            call table_loaded% report
             call free_sf_table(tab)
         end if
         
@@ -35,10 +42,7 @@ module load_sf
         
         open(newunit=funit,file=filename,status='old',action='read', &
         & iostat = ierr)
-        if (ierr /= 0) then
-            write (error_unit,*) 'unable to open file for reading'
-            return
-        end if
+        if (io_failure% raised(ierr)) return
         
         ! skip the first 3 lines
         read(funit,*)
@@ -48,8 +52,7 @@ module load_sf
         ! now get the number of points and the minimum, maximum kF
         read(funit,*) tab% nv, tab% kF_min, tab% kF_max
         allocate(tab% kF(tab% nv),tab% f(4*tab% nv),stat=ierr)
-        if (ierr /= 0 ) then
-            write(error_unit,*) 'load_sf_table: unable to allocate memory'
+        if (alloc_failure% raised(ierr)) then
             close(funit)
             return
         end if
@@ -68,12 +71,14 @@ module load_sf
     end subroutine load_sf_table
 
     subroutine get_file_name(prefix,sf_type,filename,ierr)
-        use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         character(len=*), intent(in) :: prefix
         integer, intent(in) :: sf_type
         character(len=*), intent(out) :: filename
         integer, intent(out) :: ierr
         character(len=2) :: typecode
+        type(alert) :: invalid_type=alert(scope='get_file_name', &
+        &   message='invalid superfluid type')
         
         ierr = 0
         filename = ''
@@ -86,7 +91,7 @@ module load_sf
                 typecode = 'n3'
             case default
                 ierr = -1
-                write(error_unit,*) 'get_file_name: invalid superfluid type'
+                call invalid_type% report
         end select
         
         if (ierr == 0) then

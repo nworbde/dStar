@@ -1,7 +1,8 @@
 include $(MESA_DIR)/utils/makefile_header
 
-LIB = libsuperfluid.a
-LIB_OBJS = superfluid_def.o load_sf.o superfluid_lib.o
+LIB = libexceptions.a
+LIB_OBJS = 	exceptions_lib.o
+
 DSTAR_LIB = ../../lib
 DSTAR_INC = ../../include
 

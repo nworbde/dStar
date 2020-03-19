@@ -74,18 +74,19 @@ contains
     end subroutine free_NScool_epoch_arrays
         
     subroutine NScool_iso_arrays(s, action, ierr)
+        use exceptions_lib
         type(NScool_info), pointer :: s
         integer, intent(in) :: action
         integer, intent(out) :: ierr
         integer :: nisos
-        
+        type(failure) :: iso_failure=failure(scope='NScool_iso_arrays')
         ierr = 0
         nisos = s% nisos
         do
 !             call do1(s% iso_ids)
 !             if (failed('iso_ids')) exit
             call do1(s% charged_ids)
-            if (failed('charged_ids')) exit
+            if (iso_failure% raised(ierr,'charged_ids')) exit
             return
         end do
         ierr = -1
@@ -95,21 +96,15 @@ contains
             integer, dimension(:), pointer :: ptr
             call do1Dint(ptr, nisos, action, ierr)
         end subroutine do1
-        function failed(str)
-            character(len=*), intent(in) :: str
-            logical :: failed
-            failed = .FALSE.
-            if (ierr == 0) return
-            write (*,*) 'NScool_info_arrays failed for ',trim(str)
-            failed = .TRUE.
-        end function failed
     end subroutine NScool_iso_arrays
 
     subroutine NScool_info_arrays(s, action, ierr)
+        use exceptions_lib
         type(NScool_info), pointer :: s
         integer, intent(in) :: action
         integer, intent(out) :: ierr
         integer :: nz, nisos !, nepochs
+        type(failure) :: info_failure=failure(scope='NScool_info_arrays')
         
         ierr = 0
         nz = s% nz
@@ -118,86 +113,86 @@ contains
         
         do
             call do1(s% dm)
-            if (failed('dm')) exit
+            if (info_failure% raised(ierr,'dm')) exit
 !             call do2(s% X)
-!             if (failed('X')) exit
+!             if (info_failure% raised(ierr,'X')) exit
             call do2(s% Yion)
-            if (failed('Yion')) exit
+            if (info_failure% raised(ierr,'Yion')) exit
             call do1(s% Xneut)
-            if (failed('Xneut')) exit
+            if (info_failure% raised(ierr,'Xneut')) exit
             call do1c(s% ionic)
-            if (failed('ionic')) exit
+            if (info_failure% raised(ierr,'ionic')) exit
             call do1(s% P)
-            if (failed('P')) exit
+            if (info_failure% raised(ierr,'P')) exit
             call do1(s% lnT)
-            if (failed('lnT')) exit
+            if (info_failure% raised(ierr,'lnT')) exit
             call do1(s% T)
-            if (failed('T')) exit
+            if (info_failure% raised(ierr,'T')) exit
             call do1(s% ePhi)
-            if (failed('ePhi')) exit
+            if (info_failure% raised(ierr,'ePhi')) exit
             call do1(s% e2Phi)
-            if (failed('e2Phi')) exit
+            if (info_failure% raised(ierr,'e2Phi')) exit
             call do1(s% eLambda)
-            if (failed('eLambda')) exit
+            if (info_failure% raised(ierr,'eLambda')) exit
             call do1(s% rho)
-            if (failed('rho')) exit
+            if (info_failure% raised(ierr,'rho')) exit
             call do1(s% lnCp)
-            if (failed('lnCp')) exit
+            if (info_failure% raised(ierr,'lnCp')) exit
             call do1(s% Cp)
-            if (failed('Cp')) exit
+            if (info_failure% raised(ierr,'Cp')) exit
             call do1(s% dlnCp_dlnT)
-            if (failed('dlnCp_dlnT')) exit
+            if (info_failure% raised(ierr,'dlnCp_dlnT')) exit
             call do1(s% lnGamma)
-            if (failed('lnGamma')) exit
+            if (info_failure% raised(ierr,'lnGamma')) exit
             call do1(s% Gamma)
-            if (failed('Gamma')) exit
+            if (info_failure% raised(ierr,'Gamma')) exit
             call do1(s% dlnGamma_dlnT)
-            if (failed('dlnGamma_dlnT')) exit
+            if (info_failure% raised(ierr,'dlnGamma_dlnT')) exit
             call do1(s% enu)
-            if (failed('enu')) exit
+            if (info_failure% raised(ierr,'enu')) exit
             call do1(s% lnenu)
-            if (failed('lnenu')) exit
+            if (info_failure% raised(ierr,'lnenu')) exit
             call do1(s% dlnenu_dlnT)
-            if (failed('dlnenu_dlnT')) exit
+            if (info_failure% raised(ierr,'dlnenu_dlnT')) exit
             call do1(s% enuc)
-            if (failed('enuc')) exit
+            if (info_failure% raised(ierr,'enuc')) exit
             
             call do1(s% m)
-            if (failed('m')) exit
+            if (info_failure% raised(ierr,'m')) exit
             call do1(s% area)
-            if (failed('area')) exit
+            if (info_failure% raised(ierr,'area')) exit
             call do1(s% L)
-            if (failed('L')) exit
+            if (info_failure% raised(ierr,'L')) exit
             call do1(s% dm_bar)
-            if (failed('dm_bar')) exit
+            if (info_failure% raised(ierr,'dm_bar')) exit
 !             call do2(s% X_bar)
 !             if (failed('X_bar')) exit
             call do2(s% Yion_bar)
-            if (failed('Yion_bar')) exit
+            if (info_failure% raised(ierr,'Yion_bar')) exit
             call do1(s% Xneut_bar)
-            if (failed('Xneut_bar')) exit
+            if (info_failure% raised(ierr,'Xneut_bar')) exit
             call do1c(s% ionic_bar)
-            if (failed('ionic_bar')) exit
+            if (info_failure% raised(ierr,'ionic_bar')) exit
             call do1(s% P_bar)
-            if (failed('P_bar')) exit
+            if (info_failure% raised(ierr,'P_bar')) exit
             call do1(s% lnT_bar)
-            if (failed('lnT_bar')) exit
+            if (info_failure% raised(ierr,'lnT_bar')) exit
             call do1(s% T_bar)
-            if (failed('T_bar')) exit
+            if (info_failure% raised(ierr,'T_bar')) exit
             call do1(s% ePhi_bar)
-            if (failed('ePhi_bar')) exit
+            if (info_failure% raised(ierr,'ePhi_bar')) exit
             call do1(s% e2Phi_bar)
-            if (failed('e2Phi_bar')) exit
+            if (info_failure% raised(ierr,'e2Phi_bar')) exit
             call do1(s% eLambda_bar)
-            if (failed('eLambda_bar')) exit
+            if (info_failure% raised(ierr,'eLambda_bar')) exit
             call do1(s% rho_bar)
-            if (failed('rho_bar')) exit
+            if (info_failure% raised(ierr,'rho_bar')) exit
             call do1(s% Kcond)
-            if (failed('Kcond')) exit
+            if (info_failure% raised(ierr,'Kcond')) exit
             call do1(s% lnK)
-            if (failed('lnK')) exit
+            if (info_failure% raised(ierr,'lnK')) exit
             call do1(s% dlnK_dlnT)
-            if (failed('dlnK_dlnT')) exit
+            if (info_failure% raised(ierr,'dlnK_dlnT')) exit
 !             call do1epoch(s% t_monitor)
 !             if (failed('t_monitor')) exit
 !             call do1epoch(s% Teff_monitor)
@@ -226,36 +221,30 @@ contains
             type(composition_info_type), dimension(:), pointer :: ptr
             call do1Dcomp(ptr,nz,action, ierr)
         end subroutine do1c
-        function failed(str)
-            character(len=*), intent(in) :: str
-            logical :: failed
-            failed = .FALSE.
-            if (ierr == 0) return
-            write (*,*) 'NScool_info_arrays failed for ',trim(str)
-            failed = .TRUE.
-        end function failed
     end subroutine NScool_info_arrays
 
     subroutine NScool_work_arrays(s,action,ierr)
+        use exceptions_lib
         type(NScool_info), pointer :: s
         integer, intent(in) :: action
         integer, intent(out) :: ierr
         integer :: ntab, nz
+        type(failure) :: work_failure=failure(scope='NScool_work_arrays')
         
         ierr = 0
         nz = s% nz
         ntab = s% n_tab
         do
             call do1(s% tab_lnT)
-            if (failed('tab_lnT')) exit
+            if (work_failure% raised(ierr,'tab_lnT')) exit
             call do2(s% tab_lnenu)
-            if (failed('tab_lnenu')) exit
+            if (work_failure% raised(ierr,'tab_lnenu')) exit
             call do2(s% tab_lnCp)
-            if (failed('tab_lnCp')) exit
+            if (work_failure% raised(ierr,'tab_lnCp')) exit
             call do2(s% tab_lnGamma)
-            if (failed('tab_lnGamma')) exit
+            if (work_failure% raised(ierr,'tab_lnGamma')) exit
             call do2(s% tab_lnK)
-            if (failed('tab_lnK')) exit
+            if (work_failure% raised(ierr,'tab_lnK')) exit
             return
         end do
         ierr = -1
@@ -268,35 +257,29 @@ contains
             real(dp), dimension(:,:), pointer :: ptr
             call do2D(ptr,4*ntab,nz,action,ierr)
         end subroutine do2
-        function failed(str)
-            character(len=*), intent(in) :: str
-            logical :: failed
-            failed = .FALSE.
-            if (ierr == 0) return
-            write (*,*) 'NScool_work_arrays failed for ',trim(str)
-            failed = .TRUE.
-        end function failed
     end subroutine NScool_work_arrays
     
     subroutine NScool_epoch_arrays(s, action, ierr)
+        use exceptions_lib
         type(NScool_info), pointer :: s
         integer, intent(in) :: action
         integer, intent(out) :: ierr
         integer :: nepochs
+        type(failure) :: epoch_failure=failure(scope='NScool_epoch_arrays')
         
         ierr = 0
         nepochs = s% number_epochs        
         do
             call do1(s% epoch_Mdots)
-            if (failed('epoch_Mdots')) exit
+            if (epoch_failure% raised(ierr,'epoch_Mdots')) exit
             call do1(s% epoch_boundaries,start=0)
-            if (failed('epoch_boundaries')) exit
+            if (epoch_failure% raised(ierr,'epoch_boundaries')) exit
             call do1(s% t_monitor)
-            if (failed('t_monitor')) exit
+            if (epoch_failure% raised(ierr,'t_monitor')) exit
             call do1(s% Teff_monitor)
-            if (failed('Teff_monitor')) exit
+            if (epoch_failure% raised(ierr,'Teff_monitor')) exit
             call do1(s% Qb_monitor)
-            if (failed('Qb_monitor')) exit
+            if (epoch_failure% raised(ierr,'Qb_monitor')) exit
             return
         end do
         ierr = -1
@@ -310,14 +293,6 @@ contains
                 call do1D(ptr,nepochs,action,ierr)
             end if
         end subroutine do1
-        function failed(str)
-            character(len=*), intent(in) :: str
-            logical :: failed
-            failed = .FALSE.
-            if (ierr == 0) return
-            write (*,*) 'NScool_epoch_arrays failed for ',trim(str)
-            failed = .TRUE.
-        end function failed
     end subroutine NScool_epoch_arrays
     
     subroutine do1D(ptr,sz1,action,ierr)

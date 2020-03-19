@@ -25,24 +25,28 @@ module NScool_history
    subroutine do_write_history(id,ierr)
       use utils_lib, only: alloc_iounit, free_iounit, append_line
       use constants_def, only: julian_day
+      use exceptions_lib
       integer, intent(in) :: id
       integer, intent(out) :: ierr
       type(NScool_info), pointer :: s
       integer :: iounit, iz, ih
       real(dp) :: Lnu, Lnuc
       character(len=16) ::history_date, history_time, history_zone
+      type(failure) :: file_error=failure(scope='do_write_history')
       
       call get_NScool_info_ptr(id,s,ierr)
       if (ierr /= 0) return
+
+      call file_error% set_message('failed to open '//trim(s% history_filename))
       
       if (history_first_call) then
       
          iounit = alloc_iounit(ierr)
          if (ierr /= 0) return
       
-         open(unit=iounit,file=trim(s% history_filename),action='write',iostat=ierr)
-         if (ierr /= 0) then
-            write(*,*) 'failed to open history file ',trim(s% history_filename)
+         open(unit=iounit, &
+         &  file=trim(s% history_filename),action='write',iostat=ierr)
+         if (file_error% raised(ierr)) then
             call free_iounit(iounit)
             return
          end if
@@ -70,9 +74,9 @@ module NScool_history
       iounit = alloc_iounit(ierr)
       if (ierr /= 0) return
    
-      open(unit=iounit,file=trim(s% history_filename),action='write',position='append',iostat=ierr)
-      if (ierr /= 0) then
-         write(*,*) 'failed to open history file ',trim(s% history_filename)
+      open(unit=iounit,file=trim(s% history_filename), &
+      & action='write',position='append',iostat=ierr)
+      if (file_error% raised(ierr)) then
          call free_iounit(iounit)
          return
       end if
