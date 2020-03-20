@@ -77,7 +77,8 @@ contains
 
     function Rosseland_kappa(rho,T,mu_e,ionic) result(kap)
         ! implements Rosseland mean for free-free and Thompson scattering 
-        ! according to the fit of Potekhin and Chabrier (2001, A&A)
+        ! according to the fit of Potekhin and Yakovlev (2001, A&A 374: 213)
+        !
         use nucchem_def, only: composition_info_type
         use constants_def
         real(dp), intent(in) :: rho,T,mu_e ! mu_e is in MeV
