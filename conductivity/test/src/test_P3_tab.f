@@ -47,8 +47,8 @@ program test_P3_tab
     cond_handle = alloc_conductivity_handle(ierr)
     call check_okay% assert(ierr==0)
 
-    call conductivity_set_controls(cond_handle,which_ee_scattering=icond_sy06)
-    
+    diff = 0.0_dp
+    call conductivity_set_controls(cond_handle,which_ee_scattering=icond_sy06)    
     Tcs = 1.0e9_dp
     Z = [ 2, 26 ]
     N = [ 2, 30 ]
@@ -58,7 +58,7 @@ program test_P3_tab
     do j = 1,2
         name(j)(1:1) = StrUpCase(name(j)(1:1))
     end do
-    diff = 0.0_dp
+
     composition: do k = 1, 11
         X(1) = 0.1_dp*real(k-1,dp)
         X(2) = 1.0_dp -X(1)
@@ -68,9 +68,10 @@ program test_P3_tab
         
         write(output_unit,'(/,2("X(",a,") = ",f3.1,tr4))') &
         &   (trim(name(j)),X(j),j=1,2)
+        write(output_unit,'(2(a,f6.2,tr4))') '<Z> = ',ionic%Z,'<A> = ',ionic% A
         write (output_unit, &
-        &   '(3a6,6a11,a7/,3("======"),6("==========="),"=======")') &
-            & 'lg(r)','lg(T)','<Z>','Gamma','eta_e', &
+        &   '(2a6,6a11,a7/,2("======"),6("==========="),"=======")') &
+            & 'lg(r)','lg(T)','Gamma','eta_e', &
             & 'K_ee','K_ei','K_tot','K_table','diff'
             
         temperature: do j = 1, 5
@@ -91,8 +92,8 @@ program test_P3_tab
                 &   chi,Gamma,eta,mu_e,ionic,Tcs(neutron_1S0),kappa)
                 call eval_PPP_electron_table(rho,T,sqrt(ionic% Z2),K_e,ierr)
                 diff(i,j,k) = (K_e - kappa% electron_total)/kappa% electron_total
-                write (output_unit, '(3f6.2,6es11.3,f7.3)') &
-                    & lgrho,lgT,ionic%Z, &
+                write (output_unit, '(2f6.2,6es11.3,f7.3)') &
+                    & lgrho,lgT, &
                     & Gamma,mu_e*mev_to_ergs/boltzmann/T, &
                     & kappa%ee,kappa%ei,kappa%electron_total, K_e, diff(i,j,k)
             end do density
