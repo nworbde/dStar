@@ -59,8 +59,7 @@ contains
             return
         end if
         
-        cache_filename = &
-        &   trim(datadir)//'/cache/'//trim(tablename)//'.bin'
+        cache_filename = trim(datadir)//'/cache/'//trim(tablename)//'.bin'
         inquire(file=cache_filename,exist=have_cache)
         if (have_cache) then
             call read_PPP_electron_table_cache(cache_filename,tab,ierr)
@@ -73,8 +72,7 @@ contains
         ! If we don't have the table cached, or cannot load it, then read the 
         ! datafile and write to cache
         ierr = 0
-        data_filename =  &
-        &   trim(datadir)//'/'//trim(tablename)//'.dat'
+        data_filename = trim(datadir)//'/'//trim(tablename)//'.dat'
         call read_PPP_electron_table(data_filename,tab,ierr)
         if (read_table_error% raised(ierr)) then
             ierr = unable_to_load_table
