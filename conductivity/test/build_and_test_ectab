@@ -18,5 +18,5 @@ cd ../test/make
 make tabletest
 check_okay
 cd ..
-./test_P3_tab
+./test_P3_tab > P3_tab_output
 check_okay
