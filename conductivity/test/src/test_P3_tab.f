@@ -25,7 +25,7 @@ program test_P3_tab
     type(composition_info_type) :: ionic
     real(dp) :: chi, Xsum
     real(dp), dimension(num_dStar_eos_results) :: res
-    character(len=*), parameter :: datadir = '../../data/conductivity'
+    character(len=*), parameter :: datadir = '../../data'
     type(electron_conductivity_tbl), pointer :: tab
     real(dp), dimension(NX) :: X1
     real(dp), dimension(Nrho) :: lgrho
@@ -41,20 +41,24 @@ program test_P3_tab
     real(dp), dimension(Nrho,NT,NX) :: diff
     integer :: loc(2), locz(3)
     
+    ! initialize microphysics
     call constants_init('',ierr)
     call check_okay% assert(ierr==0)
-    call nucchem_init('../../data',ierr)
+    call nucchem_init(datadir,ierr)
     call check_okay% assert(ierr==0)
-    call dStar_eos_startup('../../data')
-    call conductivity_startup('../../data')
+    call dStar_eos_startup(datadir)
     eos_handle = alloc_dStar_eos_handle(ierr)
     call check_okay% assert(ierr==0)
+    call conductivity_startup(datadir)
     cond_handle = alloc_conductivity_handle(ierr)
     call check_okay% assert(ierr==0)
+    call conductivity_set_controls(cond_handle,which_ee_scattering=icond_pcy)    
 
     diff = 0.0_dp
-    call conductivity_set_controls(cond_handle,which_ee_scattering=icond_pcy)    
+    ! set superfluid temps to a uniform value; we aren't using these
     Tcs = 1.0e9_dp
+
+    ! set composition
     Z = [ 26, 2 ]
     N = [ 30, 2 ]
     A = real(Z+N,dp)
@@ -63,6 +67,7 @@ program test_P3_tab
     name(1:2)(1:1) = [ (StrUpCase(name(j)(1:1)), j=1,2) ]
     Z1 = real(Z(1),dp); Z2 = real(Z(2),dp); A1 = real(A(1),dp); A2 = real(A(2),dp)
 
+    ! set grid axes
     X1 = linspace(NX,Xmin,Xmax)
     lgrho = linspace(Nrho,lgrho_min,lgrho_max)
     lgT = linspace(NT,lgT_min,lgT_max)
@@ -74,6 +79,7 @@ program test_P3_tab
         call compute_composition_moments(2,chem_ids,Y,ionic,Xsum, &
             & ncharged, charged_ids, Yion, exclude_neutrons=.TRUE.)
         
+        ! table header
         write(output_unit,'(/,2("X(",a,") = ",f3.1,tr4))') &
         &   (trim(name(j)),X(j),j=1,2)
         write(output_unit,'(2(a,f6.2,tr4))') '<Z> = ',ionic%Z,'<A> = ',ionic% A
@@ -105,6 +111,7 @@ program test_P3_tab
             end do density
         end do temperature
         
+        ! comparison for this composition
         write(output_unit,'(a,f7.3)') 'rms(|diff|) = ',norm2(diff(:,:,k))/sqrt(real(Nrho*5,dp))
         loc = maxloc(abs(diff(:,:,k)))
         write(output_unit,'(a,f7.3,2(a,f6.2))') 'max(|diff|) = ',maxval(abs(diff(:,:,k))), &
@@ -116,6 +123,7 @@ program test_P3_tab
         &   '; lg(T) = ',lgT(loc(2))
     end do composition
 
+    ! global comparison
     write(output_unit,'(/,a)') 'overall differences'
     write(output_unit,'(a,f7.3)') 'rms(|diff|) = ',norm2(diff)/sqrt(real(Nrho*NT*NX,dp))
     locz = maxloc(abs(diff))
@@ -128,8 +136,7 @@ program test_P3_tab
     &   ' at lg(rho) = ',lgrho(locz(1)), &
     &   '; lg(T) = ',lgT(locz(2)), &
     &   '; X(',trim(name(1)),') = ',X1(locz(3))
-    
-    call clear_composition(ionic)
+
     call conductivity_shutdown
     call dStar_eos_shutdown
     call nucchem_shutdown
