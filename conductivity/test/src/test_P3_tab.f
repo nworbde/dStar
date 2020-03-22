@@ -80,7 +80,7 @@ program test_P3_tab
             & ncharged, charged_ids, Yion, exclude_neutrons=.TRUE.)
         
         ! table header
-        write(output_unit,'(/,2("X(",a,") = ",f3.1,tr4))') &
+        write(output_unit,'(2("X(",a,") = ",f3.1,tr4))') &
         &   (trim(name(j)),X(j),j=1,2)
         write(output_unit,'(2(a,f6.2,tr4))') '<Z> = ',ionic%Z,'<A> = ',ionic% A
         write (output_unit, &
@@ -121,10 +121,11 @@ program test_P3_tab
         write(output_unit,'(a,f7.3,2(a,f6.2))') 'min(|diff|) = ',minval(abs(diff(:,:,k))), &
         &   ' at lg(rho) = ',lgrho(loc(1)), &
         &   '; lg(T) = ',lgT(loc(2))
+        write(output_unit,*)
     end do composition
 
     ! global comparison
-    write(output_unit,'(/,a)') 'overall differences'
+    write(output_unit,'(a)') 'overall differences'
     write(output_unit,'(a,f7.3)') 'rms(|diff|) = ',norm2(diff)/sqrt(real(Nrho*NT*NX,dp))
     locz = maxloc(abs(diff))
     write(output_unit,'(a,f7.3,2(a,f6.2),a,a,a,f6.2)') 'max(|diff|) = ',maxval(abs(diff)), &
@@ -143,20 +144,34 @@ program test_P3_tab
     
 contains
     function get_tabulated_conductivity(rho,T,Y,Z1,Z2,A1,A2,ionic) result(K_e)
-        ! This is an average over the electron conductivity, assuming that ei
-        ! scattering is proportional to n_i = Y_i*rho/m_u = density of each nuclide.
-        ! The factor of Z_i/A_i/Y_e corrects the conductivity of each species for the 
-        ! number density of electrons in the mixture.
         real(dp), intent(in) :: rho,T,Y(2),Z1,Z2,A1,A2
         type(composition_info_type), intent(in) :: ionic
         integer :: ierr
         real(dp) :: K_e, K_e1, K_e2
         type(assertion) :: interp_okay=assertion(scope='get_tabulated_conductivity')
-        call eval_PPP_electron_table(rho,T,Z1,K_e1,ierr)
-        call interp_okay% assert(ierr == 0)
-        call eval_PPP_electron_table(rho,T,Z2,K_e2,ierr)
-        call interp_okay% assert(ierr == 0)
-        K_e = ionic% Ye/ionic% A/(Z1*Y(1)/A1/K_e1 + Z2*Y(2)/A2/K_e2)
+        character(len=*), parameter :: method = 'rms Z'   ! 'mean Z', 'rms Z', 'density averaged'
+
+        select case(method)
+        case ('mean Z')
+            call eval_PPP_electron_table(rho,T,ionic% Z,K_e,ierr)
+            call interp_okay% assert(ierr == 0)
+        case ('rms Z')
+            call eval_PPP_electron_table(rho,T,sqrt(ionic% Z2),K_e,ierr)
+            call interp_okay% assert(ierr == 0)
+        case ('density averaged')
+            ! Average over the electron conductivity, assuming that ei scattering is 
+            ! proportional to n_i = Y_i*rho/m_u = density of each nuclide. The factor 
+            ! of Z_i/A_i/Y_e corrects the conductivity of each species for n_e, the 
+            ! number density of electrons in the mixture, which the overall conductivity
+            ! is proportional to.
+            call eval_PPP_electron_table(rho,T,Z1,K_e1,ierr)
+            call interp_okay% assert(ierr == 0)
+            call eval_PPP_electron_table(rho,T,Z2,K_e2,ierr)
+            call interp_okay% assert(ierr == 0)
+            K_e = ionic% Ye/ionic% A/(Z1*Y(1)/A1/K_e1 + Z2*Y(2)/A2/K_e2)
+        case default
+            stop 'bad selection'
+        end select
     end function get_tabulated_conductivity
     function linspace(jmax,xmin,xmax)
         integer, intent(in) :: jmax
