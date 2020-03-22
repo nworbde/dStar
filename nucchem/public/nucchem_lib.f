@@ -17,7 +17,8 @@ contains
         character(len=160) :: nuclib_cache
         integer :: indx
         type(alert) :: status=alert(level=2,scope='nucchem_init')
-        type(alert) :: done=alert(level=2,scope='nucchem_init',message='done')
+        type(assertion) :: io_okay=assertion(scope='nucchem_init',message='load nuclib')
+        type(assertion) :: parse_okay=assertion(scope='nucchem_init',message='parse nuclides')
         character(len=128) :: msg
 
         nuclib_filename = trim(datadir)//'/nucchem/'//nuclib_db
@@ -27,11 +28,13 @@ contains
         call status% report(message= &
         & 'Loading nuclib from '//trim(datadir)//'/nucchem')
         call do_load_nuclib(nuclib_filename,nuclib_cache,ierr)
+        call io_okay% assert(ierr==0)
 
         write(msg,'(a,i0,a)') 'Retrieved ',nuclib% Nnuclides, &
         & ' nuclides. Writing nuclide dictionary'
         call status% report(message=msg)
         call do_parse_nuclides(ierr)
+        call parse_okay% assert(ierr == 0)
 
         nucchem_is_initialized = .TRUE.
     end subroutine nucchem_init
