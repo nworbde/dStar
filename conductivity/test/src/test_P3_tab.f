@@ -40,6 +40,12 @@ program test_P3_tab
     type(assertion) :: check_okay=assertion(scope='main')
     real(dp), dimension(Nrho,NT,NX) :: diff
     integer :: loc(2), locz(3)
+    character(len=16) :: method ! 'mean Z', 'rms Z', 'Z2/Z', 'density averaged'
+    
+    method='mean Z'
+    if (command_argument_count() > 0) then
+        call get_command_argument(1,method)
+    end if
     
     ! initialize microphysics
     call constants_init('',ierr)
@@ -72,6 +78,7 @@ program test_P3_tab
     lgrho = linspace(Nrho,lgrho_min,lgrho_max)
     lgT = linspace(NT,lgT_min,lgT_max)
     
+    write(output_unit,'(a)') 'method: '//trim(method)
     composition: do k = 1, NX
         X(1) = X1(k)
         X(2) = 1.0_dp -X(1)
@@ -101,7 +108,7 @@ program test_P3_tab
                 mu_e = res(i_mu_e)
                 call get_thermal_conductivity(cond_handle,rho,T, &
                 &   chi,Gamma,eta,mu_e,ionic,Tcs(neutron_1S0),kappa)
-                K_e = get_tabulated_conductivity(rho,T,Y,Z1,Z2,A1,A2,ionic)
+                K_e = get_tabulated_conductivity(trim(method),rho,T,Y,Z1,Z2,A1,A2,ionic)
                 diff(i,j,k) = (K_e - kappa% electron_total)/kappa% electron_total
                 write (output_unit, '(2f6.2,7es11.3,f7.3)') &
                     & lgrho(i),lgT(j), &
@@ -143,13 +150,13 @@ program test_P3_tab
     call nucchem_shutdown
     
 contains
-    function get_tabulated_conductivity(rho,T,Y,Z1,Z2,A1,A2,ionic) result(K_e)
+    function get_tabulated_conductivity(method,rho,T,Y,Z1,Z2,A1,A2,ionic) result(K_e)
+        character(len=*), intent(in) :: method
         real(dp), intent(in) :: rho,T,Y(2),Z1,Z2,A1,A2
         type(composition_info_type), intent(in) :: ionic
         integer :: ierr
         real(dp) :: K_e, K_e1, K_e2
         type(assertion) :: interp_okay=assertion(scope='get_tabulated_conductivity')
-        character(len=*), parameter :: method = 'rms Z'   ! 'mean Z', 'rms Z', 'density averaged'
 
         select case(method)
         case ('mean Z')
@@ -157,6 +164,9 @@ contains
             call interp_okay% assert(ierr == 0)
         case ('rms Z')
             call eval_PPP_electron_table(rho,T,sqrt(ionic% Z2),K_e,ierr)
+            call interp_okay% assert(ierr == 0)
+        case ('Z2/Z')
+            call eval_PPP_electron_table(rho,T,ionic% Z2/ionic% Z,K_e,ierr)
             call interp_okay% assert(ierr == 0)
         case ('density averaged')
             ! Average over the electron conductivity, assuming that ei scattering is 

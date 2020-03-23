@@ -10,7 +10,7 @@ function check_okay {
 		exit 1
 	fi
 }
-
+method=$1
 cd ../make
 make
 check_okay
@@ -18,5 +18,5 @@ cd ../test/make
 make tabletest
 check_okay
 cd ..
-./test_P3_tab > P3_tab_output
+./test_P3_tab $method > P3_tab_output
 check_okay
