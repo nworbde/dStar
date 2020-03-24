@@ -109,6 +109,7 @@ program test_P3_tab
                 call get_thermal_conductivity(cond_handle,rho,T, &
                 &   chi,Gamma,eta,mu_e,ionic,Tcs(neutron_1S0),kappa)
                 K_e = get_tabulated_conductivity(trim(method),rho,T,Y,Z1,Z2,A1,A2,ionic)
+                if (kappa%eQ > 0.0_dp) K_e = 1.0/(1.0/K_e + 1.0/kappa%eQ)
                 diff(i,j,k) = (K_e - kappa% electron_total)/kappa% electron_total
                 write (output_unit, '(2f6.2,7es11.3,f7.3)') &
                     & lgrho(i),lgT(j), &
