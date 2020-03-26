@@ -26,14 +26,12 @@ program test_P3_tab
     real(dp) :: chi, Xsum
     real(dp), dimension(num_dStar_eos_results) :: res
     character(len=*), parameter :: datadir = '../../data'
-    type(electron_conductivity_tbl), pointer :: tab
     real(dp), dimension(NX) :: X1
     real(dp), dimension(Nrho) :: lgrho
     real(dp), dimension(NT) :: lgT
     real(dp) :: rho,T,Gamma,eta,mu_e,K_e,K_e1,K_e2,Z1,Z2,A1,A2
     type(conductivity_components) :: kappa
-    type(crust_eos_component), dimension(num_crust_eos_components) :: &
-    &   eos_components
+    type(crust_eos_component), dimension(num_crust_eos_components) :: eos_components
     integer :: phase
 	real(dp), dimension(max_number_sf_types) :: Tcs
     character(len=iso_name_length) :: name(2)
@@ -47,6 +45,9 @@ program test_P3_tab
         call get_command_argument(1,method)
     end if
     
+    ! turn off all status message
+    call set_verbosity(1)
+    
     ! initialize microphysics
     call constants_init('',ierr)
     call check_okay% assert(ierr==0)
@@ -55,6 +56,8 @@ program test_P3_tab
     call dStar_eos_startup(datadir)
     eos_handle = alloc_dStar_eos_handle(ierr)
     call check_okay% assert(ierr==0)
+    ! Suppress the warnings for degenerate ions
+    call dStar_eos_set_controls(eos_handle,suppress_warnings=.TRUE.)
     call conductivity_startup(datadir)
     cond_handle = alloc_conductivity_handle(ierr)
     call check_okay% assert(ierr==0)
@@ -65,8 +68,8 @@ program test_P3_tab
     Tcs = 1.0e9_dp
 
     ! set composition
-    Z = [ 26, 2 ]
-    N = [ 30, 2 ]
+    Z = [ 26, 6 ]
+    N = [ 30, 6 ]
     A = real(Z+N,dp)
     chem_ids = [ (get_nuclide_index_from_ZN(Z(k),N(k)),k=1,2) ]
     name = [ (nuclib% name(chem_ids(j)), j=1,2) ]
