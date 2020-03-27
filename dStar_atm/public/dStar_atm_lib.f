@@ -40,7 +40,9 @@ contains
         real(dp), intent(in) :: grav,Plight,Pb
         integer, intent(out) :: ierr
         type(failure) :: load_atm_failure=failure(scope='dStar_atm_load_table')
-        write (error_unit,'(a)') 'loading atmosphere model '//prefix
+        type(alert) :: status=alert(scope='dStar_atm_load_table')
+        
+        call status% report('loading atmosphere model '//prefix)
         call do_load_atm_table(prefix, grav, Plight, Pb, ierr)
         if (load_atm_failure% raised(ierr)) return
     end subroutine dStar_atm_load_table

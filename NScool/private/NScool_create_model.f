@@ -233,10 +233,8 @@ contains
         s% Mtotal = stov% mass(stov% nzs) + s% Mcore
         ! R in km
         s% Rtotal = stov% radius(stov% nzs)*length_g*1.0e-5 + s% Rcore
-        s% grav = (s% Mtotal) * mass_g * Gnewton /  &
-        &   (s% Rtotal*1.0e5)**2 * s% eLambda_bar(1)
+        s% grav = (s% Mtotal) * mass_g * Gnewton / (s% Rtotal*1.0e5)**2 * s% eLambda_bar(1)
         Plight = s% grav * 10.0_dp**s% lg_atm_light_element_column
-        write(error_unit,indent1) 'loading atmosphere model'
         call dStar_atm_load_table(s% atm_model, s% grav, Plight, s% Psurf, ierr)
         if (atm_load_error% raised(ierr)) return        
     end subroutine do_setup_crust_zones
