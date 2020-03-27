@@ -3,13 +3,14 @@ module dStar_atm_lib
     
 contains
     subroutine dStar_atm_startup(datadir, ierr)
-        use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         character(len=*), intent(in) :: datadir
         integer, intent(out) :: ierr
+        type(alert) :: already_initialized=alert(level=1,scope='dStar_atm_startup', &
+        &   message='module already initialized')
         if (atm_is_initialized) then
             ierr = 1
-            write(error_unit,*) 'dStar_atm_startup: ', &
-            &    'package already initialized'
+            call already_initialized% report
             return
         end if
         atm_datadir = trim(datadir)//'/atm_data'
@@ -33,21 +34,19 @@ contains
     end subroutine dStar_atm_free_table
     
     subroutine dStar_atm_load_table(prefix,grav,Plight,Pb,ierr)
-        use iso_fortran_env, only : error_unit
+        use exceptions_lib
         use dStar_atm_mod, only : do_load_atm_table
         character(len=*), intent(in) :: prefix
         real(dp), intent(in) :: grav,Plight,Pb
         integer, intent(out) :: ierr
-        
+        type(failure) :: load_atm_failure=failure(scope='dStar_atm_load_table')
         write (error_unit,'(a)') 'loading atmosphere model '//prefix
         call do_load_atm_table(prefix, grav, Plight, Pb, ierr)
-        if (ierr /= 0) then
-            write(error_unit,'(a,i3)') 'dStar_atm_load_one: ierr = ',ierr
-        end if
+        if (load_atm_failure% raised(ierr)) return
     end subroutine dStar_atm_load_table
     
     subroutine dStar_atm_get_results(lgTb,lgTeff,dlgTeff,lgflux,dlgflux,ierr)
-        use iso_fortran_env, only : error_unit
+        use exceptions_lib
         use interp_1d_lib, only : interp_value_and_slope
         real(dp), intent(in) :: lgTb
         real(dp), intent(out) :: lgTeff,lgflux,dlgTeff,dlgflux
@@ -55,23 +54,18 @@ contains
         real(dp) :: lgT
         type(atm_table_type), pointer :: tab
         character(len=*), parameter :: routine_name = 'dStar_atm_get_results'
+        type(assertion) :: table_loaded=assertion(scope='dStar_atm_get_results', &
+        &   message='table is loaded')
+        type(alert) :: status=alert(scope='dStar_atm_get_results',level=0)
         tab => atm_table
-        if (.not.tab% is_loaded) then
-            ierr = -9
-            write(error_unit,*) routine_name//': table is not loaded'
-            return
-        end if
+        call table_loaded% assert(tab% is_loaded)
 
         ! clip lgTb to table
         lgT = min(max(lgTb,tab% lgTb_min),tab% lgTb_max)
         call interp_value_and_slope(tab% lgTb, tab% nv, tab% lgTeff, lgT, lgTeff, dlgTeff, ierr)
-        if (ierr /= 0) then
-            write (error_unit,'(a,i3)') routine_name//': ierr = ',ierr
-        end if
+        if (ierr /= 0) call status% report('unable to interpolate lgTeff')
         call interp_value_and_slope(tab% lgTb, tab% nv, tab% lgflux, lgT, lgflux, dlgflux, ierr)
-        if (ierr /= 0) then
-            write (error_unit,'(a,i3)') routine_name//': ierr = ',ierr
-        end if
+        if (ierr /= 0) call status% report('unable to interpolate flux')
     end subroutine dStar_atm_get_results
 
 end module dStar_atm_lib
