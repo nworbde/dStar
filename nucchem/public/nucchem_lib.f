@@ -142,7 +142,6 @@ contains
         use utils_lib, only: integer_dict_lookup
         character(len=*), intent(in) :: nuclei
         integer :: indx, ierr
-        character(len=*), parameter :: routine_name='get_nuclide_index'
         type(assertion) :: initialized=assertion( &
         &   scope='get_nuclide_index', &
         &   message='nucchem module is not initialized')

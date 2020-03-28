@@ -12,6 +12,10 @@ default: install
 	
 tabletest: test_P3_tab
 	cp $< ..
+	
+tabulate_conductivity: tabulate_conductivity.o
+	$(LOADER) $(FCopenmp) -o $@ tabulate_conductivity.o $(LOAD_LOCAL) $(LOAD_OTHER)
+	cp $@ ..
 
 $(TEST) : $(TEST_OBJS)
 	$(LOADER) $(FCopenmp) -o $@ $(TEST_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
