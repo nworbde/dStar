@@ -8,26 +8,24 @@ DSTAR_INC = ../../../include
 TEST = tester
 TEST_OBJS = test_cond.o
 
+EXPERIMENTAL = tabulate_conductivity test_tabulated_mixture
+
 default: install
-	
-tabletest: test_P3_tab
-	cp $< ..
-	
-tabulate_conductivity: tabulate_conductivity.o
-	$(LOADER) $(FCopenmp) -o $@ tabulate_conductivity.o $(LOAD_LOCAL) $(LOAD_OTHER)
-	cp $@ ..
 
 $(TEST) : $(TEST_OBJS)
 	$(LOADER) $(FCopenmp) -o $@ $(TEST_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
+	
+tabulate_conductivity: tabulate_conductivity.o
+	$(LOADER) $(FCopenmp) -o $@ $< $(LOAD_LOCAL) $(LOAD_OTHER)
 
-test_P3_tab: test_P3_tab.o
-	$(LOADER) $(FCopenmp) -o $@ test_P3_tab.o $(LOAD_LOCAL) $(LOAD_OTHER)
+test_tabulated_mixture: test_tabulated_mixture.o
+	$(LOADER) $(FCopenmp) -o $@ $< $(LOAD_LOCAL) $(LOAD_OTHER)
 
 %.o: $(TEST_SRC_DIR)/%.f
 	$(TEST_COMPILE) $(FCfree) $(FCimpno) -I$(DSTAR_INC) $<
 
-install: $(TEST)
-	cp $(TEST) ..
+install: $(TEST) $(EXPERIMENTAL)
+	cp $(TEST) $(EXPERIMENTAL) ..
 
 clean:
-	-@rm -f *.o *.mod $(TEST)
+	-@rm -f *.o *.mod $(TEST) $(EXPERIMENTAL)

@@ -1,4 +1,4 @@
-program test_P3_tab
+program test_tabulated_mixture
     use iso_fortran_env, only: output_unit, error_unit
     use utils_lib, only: StrUpCase
     use exceptions_lib
@@ -193,4 +193,4 @@ contains
         real(dp), dimension(jmax) :: linspace
         linspace = [ (xmin + (xmax-xmin)*real(j-1,dp)/real(jmax-1,dp), j=1,jmax) ]
     end function linspace
-end program test_P3_tab
+end program test_tabulated_mixture
