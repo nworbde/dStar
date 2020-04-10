@@ -50,7 +50,7 @@ module NScool_profile
           open(newunit=iounit,file=trim(s% profile_manifest_filename), &
               & iostat=ierr)
           if (.not. manifest_error% raised(ierr)) then
-              write(iounit,'(a15,a15,tr4,a)') 'model','time [s]', &
+              write(iounit,'(a15,a15,tr4,a)') 'model','time [d]', &
                   & 'base profile filename = '//trim(s% base_profile_filename)
               close(iounit)
           end if
