@@ -159,7 +159,7 @@ contains
         real(dp), intent(in) :: rho,T,Y(2),Z1,Z2,A1,A2
         type(composition_info_type), intent(in) :: ionic
         integer :: ierr
-        real(dp) :: K_e, K_e1, K_e2
+        real(dp) :: K_e, K_e1, K_e2, rho1, rho2
         type(assertion) :: interp_okay=assertion(scope='get_tabulated_conductivity')
 
         select case(method)
@@ -174,15 +174,15 @@ contains
             call interp_okay% assert(ierr == 0)
         case ('density averaged')
             ! Average over the electron conductivity, assuming that ei scattering is 
-            ! proportional to n_i = Y_i*rho/m_u = density of each nuclide. The factor 
-            ! of Z_i/A_i/Y_e corrects the conductivity of each species for n_e, the 
-            ! number density of electrons in the mixture, which the overall conductivity
-            ! is proportional to.
-            call eval_PPP_electron_table(rho,T,Z1,K_e1,ierr)
+            ! proportional to n_i = Y_i*rho/m_u = density of each nuclide. The density 
+            ! is adjusted so that n_e is the same for each call.
+            rho1 = ionic% Ye*A1/Z1 * rho
+            call eval_PPP_electron_table(rho1,T,Z1,K_e1,ierr)
             call interp_okay% assert(ierr == 0)
-            call eval_PPP_electron_table(rho,T,Z2,K_e2,ierr)
+            rho2 = ionic% Ye*A2/Z2 * rho
+            call eval_PPP_electron_table(rho2,T,Z2,K_e2,ierr)
             call interp_okay% assert(ierr == 0)
-            K_e = ionic% Ye/ionic% A/(Z1*Y(1)/A1/K_e1 + Z2*Y(2)/A2/K_e2)
+            K_e = ionic% Ye/(Z1*Y(1)/K_e1 + Z2*Y(2)/K_e2)
         case default
             stop 'bad selection'
         end select

@@ -27,3 +27,5 @@ condall06.dat
 tabulate_conductivity
 test_tabulated_mixture
 
+tabulate_mixture
+conductivity/test/inlist
