@@ -21,7 +21,7 @@ contains
         t3  = -3.249 + 0.1678*xi - 0.04706*xi2
   
         Gbar    =  t1 + t2*theta + t3*theta2
-        kTh = 8.0*onethird*pi*avogadro*(electroncharge**2/Melectron/clight2)**2*Ye/Gbar
+        kTh = Thomson*avogadro*Ye/Gbar
     end function electron_scattering
 
     ! Calculates the free-free Gaunt factor using a fitting

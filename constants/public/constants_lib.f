@@ -13,7 +13,7 @@ contains
         ierr = 0
         call const_init(mesa_dir_init,ierr)
         call mesa_const_init% assert(ierr==0)
-        call initialize_constants
+!         call initialize_constants
     end subroutine constants_init
 
 end module constants_lib

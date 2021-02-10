@@ -303,7 +303,6 @@ contains
         integer, intent(out) :: ierr
         real(dp) :: lnrho_ph,lnrho
         integer :: i, maximum_iterations
-        real(dp) :: sigma_Th
         real(dp) :: lnrho_guess, kappa_Th, Pgas, fallback_Pphoto
         real(dp) :: lnrho1, lnrho3, dlnrho, ph1, ph3, eps_lnrho, eps_ph
         character(len=*), parameter :: this_routine='find_photospheric_pressure'
@@ -323,8 +322,7 @@ contains
         fallback_Pphoto = 2.0_dp*onethird*arad*Teff**4
 
         ! scale tolerance to a thomson scattering atmosphere
-        sigma_Th = 8.0_dp*onethird*pi*(electroncharge**2/Melectron/clight2)**2
-        kappa_Th = sigma_Th*avogadro*rpar(icomp_Ye)
+        kappa_Th = Thomson*avogadro*rpar(icomp_Ye)
         eps_ph = default_tolerance_photosphere_condition*tau*grav/kappa_Th
         
         ! use initial guess with ideal gas pressure and thomson scattering
