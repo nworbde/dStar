@@ -22,7 +22,7 @@ program tabulate_conductivity
     real(dp), dimension(:), allocatable :: lgrho, lgT
     ! storage for lg(K) (conductivity, both fml and table), eta_e (eletron degeneracy),
     ! Gamma (Coulomb pot. between ions/kT) 
-    real(dp), dimension(:,:), allocatable :: lgK_fml, lgK_tab, eta_e, Gamma
+    real(dp), dimension(:,:), allocatable :: lgK, eta_e, Gamma
 
     ! user inputs
     ! directory for EOS and composition datafiles
@@ -110,7 +110,7 @@ program tabulate_conductivity
     lgT = linspace(NlgT,lgT_min,lgT_max)
 
     ! allocate tables
-    allocate(lgK_fml(NlgT,Nlgrho),lgK_tab(NlgT,Nlgrho))
+    allocate(lgK(NlgT,Nlgrho))
     allocate(eta_e(NlgT,Nlgrho),Gamma(NlgT,Nlgrho))
     
     ! main loop
@@ -127,25 +127,116 @@ program tabulate_conductivity
             Gamma(j,i) = res(i_Gamma)
             mu_e = res(i_mu_e)
             eta_e(j,i) = mu_e*mev_to_ergs/boltzmann/T
-            call get_thermal_conductivity(cond_handle,rho,T, &
-            &   chi,Gamma(j,i),eta,mu_e,ionic,Tcs(neutron_1S0),kappa)
-            lgK_fml(j,i) = log10(kappa% electron_total)
-            call eval_PPP_electron_table(rho,T,ionic% Z,K_e,ierr)
-            lgK_tab(j,i) = log10(K_e)
+            call interpolate_conductivity(cond_handle,rho,T, &
+            &   chi,Gamma(j,i),eta,mu_e,ionic,Tcs(neutron_1S0),K_e)
+            lgK(j,i) = log10(K_e)
         end do temperature
     end do density
     
     ! write out tables for lg(K), mu_e, eta, Gamma
-    call write_table('lgK_fml',lgK_fml)
+    call write_table('lgK',lgK)
     call write_table('eta_e',eta_e)
     call write_table('Gamma',Gamma)
-    call write_table('lgK_tab',lgK_tab)
 
     call conductivity_shutdown
     call dStar_eos_shutdown
     call nucchem_shutdown
     
 contains
+    subroutine interpolate_conductivity(cond_handle,rho,T, &
+        &   chi, Gamma, eta, mu_e, ionic, Tcn, K_e)
+        integer, intent(in) :: cond_handle
+        real(dp), intent(in) :: rho,T,chi, Gamma,eta, mu_e
+        type(composition_info_type), intent(in) :: ionic
+        real(dp), intent(in) :: Tcn ! neutron critical temperature
+        real(dp), intent(out) :: K_e
+        ! Psi is E_F/kB T. We compute it using degenerate non-relativisitic formula so it is a straight
+        ! boundary in lgRho-lgT space
+        real(dp), parameter :: Gamma_max=160.0_dp, Psi_max=100.0_dp
+        real(dp), parameter :: lgRho_max=9.25_dp, delta=0.5_dp, lgRho_min = lgRho_max-delta
+        real(dp), parameter :: a_Gamma = onethird, a_Psi = twothird
+        real(dp) :: lgGamma_max, lgGamma_min, lgPsi_max, lgPsi_min
+        real(dp) :: b_Gamma, b_Psi, f_Gamma, f_Psi, xGamma, xPsi, xV, yV
+        real(dp) :: lgPsi, lgGamma
+        real(dp) :: lgRho, lgT
+        real(dp) :: x, y, d, alpha, beta, K_e_tbl, K_e_fml
+        type(conductivity_components) :: kappa
+        type(assertion) :: tbl_okay=assertion(scope='interpolate_conductivity')
+        
+        x = log10(ionic% Ye * rho)
+        y = log10(T)
+        lgGamma_max = log10(Gamma_max)
+        lgGamma_min = lgGamma_max - delta*sqrt(a_Gamma**2+1)
+        lgGamma = log10(Gamma)
+        b_Gamma =  lgGamma + y - a_Gamma*x - lgGamma_max
+        f_Gamma = sqrt(a_Gamma**2+1.0_dp)
+        lgPsi_max = log10(Psi_max)
+        lgPsi_min = lgPsi_max - delta*sqrt(a_Psi**2+1)
+        b_Psi = log10(0.5*hbar**2/me/boltzmann) + twothird*log10(3.0*pi**2/amu) - lgPsi_max
+        lgPsi = b_Psi + lgPsi_max + a_Psi*x - y
+        f_Psi = sqrt(a_Psi**2+1.0_dp)
+        
+        if (x >= lgRho_max .or. ((lgGamma >= lgGamma_max) .and. (lgPsi >= lgPsi_max))) then
+            ! use formula (this is the most common case)
+            call get_thermal_conductivity(cond_handle,rho,T, &
+            &   chi,Gamma,eta,mu_e,ionic,Tcn,kappa)
+            K_e = kappa% electron_total
+
+        else if (x < lgRho_min .and. ((lgGamma < lgGamma_min) .or. (lgPsi < lgPsi_min))) then
+            ! use table
+            call eval_PPP_electron_table(rho,T,ionic% Z,K_e,ierr)
+            call tbl_okay% assert(ierr==0)
+
+        else
+            ! we are in the boundary, so interpolate between table and formula
+            ! we expect the most common case is 
+            ! that the max Gamma line is the closest boundary
+            if (lgGamma >= lgGamma_min .and. lgGamma < lgGamma_max) then
+                d = (lgGamma_max-lgGamma)/f_Gamma
+                ! check for edge case near vertex at max density line
+                if (x >= lgRho_min .and. x < lgRho_max) then
+                    d = min(d,lgRho_max-x)
+                ! otherwise, check for edge case near vertex with max Psi line
+                else if (lgPsi >= lgPsi_min .and. lgPsi < lgPsi_max) then
+                    ! compute x of vertex between max Gamma, max Psi lines
+                    xV = (b_Gamma-b_Psi)/(a_Psi-a_Gamma)
+                    ! compute x of nearest point on max Gamma line
+                    xGamma = (a_Gamma*(y-b_Gamma)+x)/f_Gamma**2
+                    if (xGamma < xV) then
+                        ! the nearest boundary is either the vertex
+                        ! or the max Psi line
+                        xPsi = (a_Psi*(y-b_Psi)+x)/f_Psi**2
+                        if (xPsi < xV) then
+                            ! the max Psi line is the nearest boundary
+                            d = (lgPsi_max-lgPsi)/f_Psi
+                        else
+                            ! the nearest boundary point is the vertex
+                            ! between the max Psi and max Gamma lines 
+                            yV = a_Gamma*xV + b_Gamma
+                            d = sqrt((x-xV)**2 + (y-yV)**2)
+                        end if
+                    end if
+                end if
+            else if (x >= lgRho_min .and. x < lgRho_max) then
+                ! we are not close to the max Gamma line, but we are close to the max density line
+                d = lgRho_max - x
+            else if (lgPsi >= lgPsi_min .and. lgPsi < lgPsi_max) then
+                ! we are only close to the max Psi line
+                d = abs(y-b_Psi-a_Psi*x)/f_Psi
+            end if
+            
+            ! Aet our interpolation coefficients.
+            ! As a safeguard, we clip d/delta to [0,1]
+            alpha = min(max(d/delta,0.0_dp),1.0_dp)
+            beta = 1.0-alpha
+            call get_thermal_conductivity(cond_handle,rho,T, &
+            &   chi,Gamma,eta,mu_e,ionic,Tcn,kappa)
+            K_e_fml = kappa% electron_total
+            call eval_PPP_electron_table(rho,T,ionic% Z,K_e_tbl,ierr)
+            call tbl_okay% assert(ierr==0)
+            K_e = alpha*K_e_tbl + beta*K_e_fml
+        end if
+    end subroutine interpolate_conductivity
     subroutine write_table(prefix,tab)
         character(len=*), intent(in) :: prefix
         real(dp), dimension(NlgT,Nlgrho), intent(in) :: tab
@@ -158,7 +249,7 @@ contains
         select case(prefix)
         case ('Gamma','eta_e')
             write(body_fmt,'("(f8.2,",i0,"f8.1)")') NlgT
-        case('lgK_fml','lgK_tab')
+        case('lgK')
             write(body_fmt,'("(",i0,"f8.2)")') NlgT+1
         end select
         open(newunit=iounit,file=filename,action='write',iostat=ierr)
