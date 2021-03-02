@@ -38,11 +38,11 @@ function fetch_and_verify {
 }
 
 function get_datafile {
-    zip='.xz'
     db=$1
     tmpfile="tmp_$db"
     arxv=$2
-    unzip=`which xzcat`
+    unzip=`which xz`
+    unzip="$unzip --decompress --stdout"
     $unzip $arxv > $tmpfile
     check_okay
     mv -i $tmpfile $db
@@ -74,9 +74,13 @@ function verify_datafile {
     return 0
 }
 
-LIB=condall06.dat
-MD5=7b4c54a84b8943a890f55b6df848bb34
-LIB_ZIP=condall06.dat.xz
+LIB=condtab.dat
+LIB_ZIP=${LIB}.xz
+MD5=9128d616d54877e883b424fc23717880
+
+# LIB=condall06.dat
+# MD5=7b4c54a84b8943a890f55b6df848bb34
+# LIB_ZIP=condall06.dat.xz
 
 echo
 echo "Installing electron conductivity table"

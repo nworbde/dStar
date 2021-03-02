@@ -13,7 +13,7 @@ module PPP_electron
     integer, parameter, private :: conductivity_filename_length = 256
     character(len=conductivity_filename_length) :: conductivity_datadir    
     
-    character(len=*), parameter :: tablename = 'condall06'
+    character(len=*), parameter :: tablename = 'condtab'
     
     type electron_conductivity_tbl
         logical :: is_loaded = .FALSE.
