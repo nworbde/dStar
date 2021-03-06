@@ -76,7 +76,8 @@ This version of `dStar` has been tested with `MESA` version 10398 and 11701 and 
 
 ## How to install
   1. Follow the instructions on the MESA website to build a working version of `MESA`, and ensure that the environment variable `MESA_DIR` points to that directory.
-  2. After forking or cloning the dStar repository, go into the top-level directory and type `./install`.  If you had compiled it previously, you should do a `./clean` first to force a clean install.
+  2. Install git lfs from https://git-lfs.github.com/ appropriate for the operating system you are using. Run the command: $ git lfs install. Reclone the dStar repository if necessary.
+  3. After forking or cloning the dStar repository, go into the top-level directory and type `./install`.  If you had compiled it previously, you should do a `./clean` first to force a clean install.
 
 ### What the installation does
 For each module, the install script
