@@ -1,38 +1,6 @@
 module conductivity_def
     use constants_def, only: dp
-
-    ! used for mask array to control which components are included
-    ! in regions where a tabulated electron conduction is used, 
-    ! only the total can be used. May need to rethink this control.
-    !
-    integer, parameter :: &
-    &       icond_ee    = 1,     &  ! electron conduction, electron scattering
-    &       icond_ei    = 2,     &  ! electron conduction, ion scattering
-    &       icond_eQ    = 3,     &  ! electron conduction, impurity scattering
-    &       icond_sf    = 5,     &  ! neutron superfluid conduction
-    &       icond_nn    = 4,     &  ! neutron conduction, ion scattering
-    &       icond_nQ    = 6,     &  ! neutron conduction, impurity scattering
-    &       icond_kap   = 7         ! radiative, electron scatt. & free-free
     
-    integer, parameter :: num_conductivity_channels = 7
-    logical, dimension(num_conductivity_channels), parameter ::  &
-    &   cond_use_all = [ .TRUE., .TRUE., .TRUE., .TRUE., .TRUE., .TRUE., .TRUE.]
-    logical, dimension(num_conductivity_channels), parameter :: &
-    &   cond_use_only_electrons = [ .TRUE., .TRUE., .TRUE., &
-    &   .FALSE., .FALSE., .FALSE., .FALSE. ]
-    logical, dimension(num_conductivity_channels), parameter :: &
-    &   cond_use_only_kap = [ .FALSE., .FALSE., .FALSE., &
-    &   .FALSE., .FALSE., .FALSE., .TRUE.]
-    logical, dimension(num_conductivity_channels), parameter ::  &
-    &   cond_exclude_sf = [ .TRUE., .TRUE., .TRUE., &
-    &   .FALSE., .TRUE., .TRUE., .TRUE. ]
-    logical, dimension(num_conductivity_channels), parameter :: &
-    &   cond_exclude_neutrons = [ .TRUE., .TRUE., .TRUE., &
-    &   .FALSE., .FALSE., .FALSE., .TRUE. ]
-    logical, dimension(num_conductivity_channels), parameter :: &
-    &   cond_exclude_radiation = [ .TRUE., .TRUE., .TRUE., &
-    &   .TRUE., .TRUE., .TRUE., .FALSE. ]
-
     ! flag to control which ee scattering fmla. is used. 
     ! default: Shternin & Yakovlev (2006)
     integer, parameter :: icond_sy06 = 1
