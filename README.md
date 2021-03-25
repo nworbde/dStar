@@ -69,10 +69,10 @@ Check out `tools/reader.py`. This contains a python class for reading the output
 
 ## Dependencies
   * [git-lfs](https://git-lfs.github.com): the data files are stored using `git lfs`, which needs to be installed prior to cloning the repository.
-  * [MESA](http://mesa.sourceforge.net): `dStar` makes use of the `MESA` numerical, utility, and equation of state libraries.
+  * [MESA](http://mesa.sourceforge.net): `dStar` makes use of the `MESA` numerical, utility, and equation of state libraries. Because of changes to how `MESA` handles physical constants, **you must use version 15140 or later**.
   * [MESA SDK](http://www.astro.wisc.edu/~townsend/static.php?ref=mesasdk): the compilation of both `MESA` and `dStar` has been tested using a specific build environment.
 
-This version of `dStar` has been tested with `MESA` version 10398 and 11701 and the 2018 January 27 (or later) version of the `MESA SDK`.
+This version of `dStar` has been tested with `MESA` version 15140 and the 2020 December 18 version of the `MESA SDK` for MacOS, `mesasdk-x86_64-macos-20.12.2`.
 
 ## How to install
   1. Follow the instructions on the MESA website to build a working version of `MESA`, and ensure that the environment variable `MESA_DIR` points to that directory.
