@@ -74,6 +74,7 @@ module NScool_def
       
         ! administrative
         integer :: eos_handle
+        integer :: cond_handle
      
         character(len=256) :: base_profile_filename
         character(len=256) :: history_filename

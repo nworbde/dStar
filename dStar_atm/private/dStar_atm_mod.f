@@ -4,7 +4,7 @@ module dStar_atm_mod
 contains
     
     subroutine do_load_atm_table(prefix,grav,Plight,Pb,ierr)
-        use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         character(len=*), intent(in) :: prefix
         real(dp), intent(in) :: grav,Plight,Pb
         integer, intent(out) :: ierr
@@ -12,11 +12,12 @@ contains
         character(len=atm_filename_length) :: table_name, cache_filename
         logical :: have_cache
         integer :: unitno
+        type(alert) :: status=alert(scope='do_load_atm_table')
         
         tab => atm_table
         ! if the table is already allocated, issue a warning and scrub the table
         if (tab% is_loaded) then
-            write(error_unit,'(a)') 'do_load_atm_table: overwriting already loaded table'
+            call status% report('overwriting already loaded table')
             call do_free_atm_table(tab)
         end if
 
@@ -30,13 +31,12 @@ contains
         
         ! if we don't have the table, or could not load it, then generate a 
         ! new one and write to cache
-        write (error_unit, '(a)') 'generating table '//trim(table_name)//'...'
+        call status% report('generating table '//trim(table_name))
         tab% nv = atm_default_number_table_points
         tab% lgTb_min = atm_default_lgTbmin
         tab% lgTb_max = atm_default_lgTbmax
         call do_generate_atm_table(prefix,grav,Plight,Pb,tab)
         tab% is_loaded = .TRUE.
-        write (error_unit,'(a)') 'done'
         
         if (.not.have_cache) then
             call do_write_atm_cache(cache_filename,tab,ierr)
@@ -44,6 +44,7 @@ contains
     end subroutine do_load_atm_table
     
     subroutine do_generate_atm_table(prefix,grav,Plight,Pb,tab)
+        use exceptions_lib
         use pcy97
         use bc09
         use interp_1d_def
@@ -56,6 +57,10 @@ contains
         real(dp) :: lgTbmin, delta_lgTb, lgTeffmin, delta_lgTeff
         integer :: N, i, ierr
         real(dp), dimension(:), allocatable :: lgTeff, lgflux, lgTb
+        type(assertion) :: prefix_okay=assertion(scope='do_generate_atm_table', &
+        &   message='atmosphere prefix is okay')
+        type(assertion) :: atm_model_made=assertion(scope='do_generate_atm_table', &
+        &   message='successfully generated atmosphere model')
 
         N = tab% nv
         allocate(lgTeff(N),lgflux(N),lgTb(N))
@@ -74,11 +79,10 @@ contains
             lgTeff = [ (lgTeffmin + real(i-1,dp)*(delta_lgTeff)/real(N-1,dp), &
             &   i = 1, N) ]
             call do_get_bc09_Teff(grav, Plight, Pb, lgTb, lgTeff, lgflux, ierr)
-            if (failure('fatal error: unable to generate atmosphere model',ierr)) stop
+            call atm_model_made% assert(ierr == 0)
             
             case default
-            print *,'malformed prefix in do_generate_atm_table'
-            stop
+            call prefix_okay% assert(.FALSE.)
         end select 
 
         call do_allocate_atm_table(tab, N, ierr)
@@ -100,18 +104,22 @@ contains
     end subroutine do_generate_atm_table
     
     subroutine do_read_atm_cache(cache_filename,tab,ierr)
+        use exceptions_lib
         character(len=*), intent(in) :: cache_filename
         type(atm_table_type), pointer :: tab
         integer, intent(out) :: ierr
         integer :: unitno, n
+        type(failure) :: opening_file_failure=failure(scope='do_read_atm_cache')
+        type(failure) :: allocating_table_failure=failure(scope='do_read_atm_cache', &
+        &   message='allocating atmosphere table')
         
         open(newunit=unitno,file=trim(cache_filename), &
         &   action='read',status='old',form='unformatted', iostat=ierr)
-        if (failure('opening'//trim(cache_filename),ierr)) return
+        if (opening_file_failure% raised(ierr,'opening'//trim(cache_filename))) return
         
         read(unitno) n
         call do_allocate_atm_table(tab,n,ierr)
-        if (failure('allocating table',ierr)) then
+        if (allocating_table_failure% raised(ierr)) then
             close(unitno)
             return
         end if
@@ -127,16 +135,21 @@ contains
     end subroutine do_read_atm_cache
     
     subroutine do_write_atm_cache(cache_filename,tab,ierr)
+        use exceptions_lib
         character(len=*), intent(in) :: cache_filename
         type(atm_table_type), pointer :: tab
         integer, intent(out) :: ierr
         integer :: unitno
+        type(assertion) :: table_exists=assertion(scope='do_write_atm_cache', &
+        &   message='table exists')
+        type(failure) :: opening_table_failure=failure(scope='do_write_atm_cache')
         
         ierr = 0
-        if (tab% nv == 0) return
+        call table_exists% assert(tab% nv > 0)
+        
         open(newunit=unitno, file=trim(cache_filename),action='write', &
         &   form='unformatted',iostat=ierr)
-        if (failure('opening '//trim(cache_filename),ierr)) return
+        if (opening_table_failure% raised(ierr,'opening '//trim(cache_filename))) return
         
         write(unitno) tab% nv
         write(unitno) tab% lgTb
@@ -179,16 +192,4 @@ contains
         nullify(tab% lgflux)
         tab% is_loaded = .FALSE.
     end subroutine do_free_atm_table
-        
-    function failure(msg,ierr)
-        use, intrinsic :: iso_fortran_env, only: error_unit
-        character(len=*), intent(in) :: msg
-        integer, intent(in) :: ierr
-        logical :: failure
-        
-        failure = (ierr /= 0)
-        if (failure) then
-            write(error_unit,*) trim(msg),': ierr = ',ierr
-        end if
-    end function failure
 end module dStar_atm_mod

@@ -12,6 +12,11 @@ function check_okay {
 }
 
 this_module=${PWD##*/}
+datafile="data/condtab.dat"
+./fetch_data
+mkdir -p ../data/conductivity/cache
+cp $datafile ../data/conductivity/
+check_okay
 ./build_and_test
 check_okay
 cd make

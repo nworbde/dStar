@@ -4,7 +4,7 @@ module dStar_crust_mod
 contains
     
     subroutine do_load_crust_table(prefix,eos_handle,Tref,ierr)
-        use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         character(len=*), intent(in) :: prefix
         integer, intent(in) :: eos_handle
         real(dp), intent(in) :: Tref
@@ -15,11 +15,18 @@ contains
         character(len=crust_filename_length) :: table_name, cache_filename
         logical :: have_cache
         integer :: unitno
+        type(alert) :: overwrite=alert(scope='do_load_crust_table', &
+        &   message='overwriting previously loaded table')
+        character(len=128) :: alert_msg
+        type(alert) :: status=alert(scope='do_load_crust_table')
+        type(warning) :: cache_write_failure=warning(scope='do_load_crust_table', &
+        &   message='unable to write cache')
         
+        ierr = 0
         tab => crust_table
         ! if the table is already allocated, issue a warning and scrub the table
         if (tab% is_loaded) then
-            write(error_unit,'(a)') 'do_load_crust_table: overwriting already loaded table'
+            call overwrite% report
             call do_free_crust_table(tab)
         end if
 
@@ -33,6 +40,7 @@ contains
         
         ! if we don't have the table, or could not load it, then generatue a 
         ! new one and write to cache
+        ierr = 0
         tab% nv = crust_default_number_table_points
         tab% lgP_min = crust_default_lgPmin
         tab% lgP_max = crust_default_lgPmax
@@ -43,16 +51,19 @@ contains
         
         ! write informative message about range of table
         if (dbg) then
-            write(error_unit,'(a,2f8.3)') 'do_load_crust_table: lgNb min, max = ', &
-            &   10.0**(minval(lgRho_val(1,:)-log10(amu))-39.0), 10.0**(maxval(lgRho_val(1,:)-log10(amu))-39.0)
-            write(error_unit,'(t21,a,2f8.3)') 'lgP min, max = ', &
+            write(alert_msg,'(a,2f8.3)') 'lgNb min, max = ', &
+            &   10.0**(minval(lgRho_val(1,:)-log10(amu))-39.0), &
+            &   10.0**(maxval(lgRho_val(1,:)-log10(amu))-39.0)
+            call status% report(alert_msg)
+            write(alert_msg,'(t21,a,2f8.3)') 'lgP min, max = ', &
             &   tab% lgP_min, tab% lgP_max
+            call status% report(alert_msg)
         end if
         
         if (.not.have_cache) then
             call do_write_crust_cache(cache_filename,tab,ierr)
+            if (cache_write_failure% raised(ierr)) return
         end if
-        
     end subroutine do_load_crust_table
     
     subroutine do_generate_crust_table(prefix,eos_handle,Tref,tab)

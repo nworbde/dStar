@@ -1,6 +1,7 @@
 module neutrino_def
     use constants_def, only : dp
-    ! routines for evaluating neutrino emissivity from uniform nuclear matter.  rates use analytical fmla. published by Yakovlev
+    ! routines for evaluating neutrino emissivity from uniform nuclear matter.  
+    ! the rates use analytical fmla. published by Yakovlev
     ! and collaborators.
 
     ! the routines take a logical array to control which channels are included 

@@ -1,12 +1,14 @@
 program test_cond
     use, intrinsic :: iso_fortran_env, only: output_unit
+    use exceptions_lib
     use constants_lib
     use nucchem_def
     use nucchem_lib
     use dStar_eos_lib
     use conductivity_lib
     
-    integer :: eos_handle,ierr,i,j
+    character(len=*), parameter :: datadir = '../../data'
+    integer :: eos_handle,cond_handle,ierr,i,j
     ! composition taken from HZ090 for Fe-chain accreted crust
     integer, dimension(2:14), parameter ::  zz = [2,2,2,2,26,26,26,26,24,20,14,24,24], &
     &   aa = [4,4,4,4,56,56,56,56,56,56,46,96,96]
@@ -17,11 +19,26 @@ program test_cond
     type(composition_info_type) :: ionic
     real(dp) :: chi,Xsum
     real(dp), dimension(num_dStar_eos_results) :: res
+    type(assertion) :: check_okay=assertion(scope='main')
     
     call constants_init('',ierr)
-    call nucchem_init('../../data',ierr)
-    call dStar_eos_startup('../../data')
+    call check_okay% assert(ierr==0)
+
+    call nucchem_init(datadir,ierr)
+    call check_okay% assert(ierr==0)
+
+    call dStar_eos_startup(datadir)
+    call conductivity_startup(datadir)
+
     eos_handle = alloc_dStar_eos_handle(ierr)
+    call check_okay% assert(ierr==0)    
+    cond_handle = alloc_conductivity_handle(ierr)
+    call check_okay% assert(ierr==0)
+    
+    ! for this test, we include neutrons and keep the rad'n on
+    call conductivity_set_controls(cond_handle, &
+    &   include_neutrons=.TRUE., include_superfluid_phonons=.TRUE., &
+    &   lgrho_rad_off = 14.5_dp, lgrho_rad_on = 14.5_dp )
     
     write (output_unit, '(5a6,10a14,/,5("======"),10("=============="))') &
         & 'lg(r)','lg(T)','<Z>','<A>','Y_n', &
@@ -41,7 +58,10 @@ program test_cond
         ionic% Q = 4.0
         call do_one(10.0_dp**i)
     end do
+    
     call clear_composition(ionic)
+    call conductivity_shutdown()
+    call dStar_eos_shutdown()
     call nucchem_shutdown
 
     contains
@@ -70,8 +90,8 @@ program test_cond
             eta = res(i_Theta) !1.0/TpT
             Gamma = res(i_Gamma)
             mu_e = res(i_mu_e)
-            call get_thermal_conductivity(rho,T,chi,Gamma,eta,mu_e,ionic, &
-            &   Tcs(neutron_1S0),kappa)
+            call get_thermal_conductivity(cond_handle,rho,T, &
+            &   chi,Gamma,eta,mu_e,ionic,Tcs(neutron_1S0),kappa)
             write (output_unit, '(5f6.2,10es14.6)') &
                 & lgr,lgT,ionic%Z,ionic%A,ionic%Yn, &
                 & Gamma,mu_e*mev_to_ergs/boltzmann/T, &

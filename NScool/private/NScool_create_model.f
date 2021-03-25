@@ -1,5 +1,5 @@
 module create_model
-    use NScool_def
+     use NScool_def
     use constants_def, only: dp
     use constants_lib
     use nucchem_def
@@ -12,9 +12,12 @@ module create_model
     use dStar_atm_lib
     use NScool_crust_tov
 
+    ! for tabulation of coefficients as a fcn of temprerature
     integer, parameter :: number_table_pts = 128
     real(dp), parameter :: lgT_tab_min = 7.0
     real(dp), parameter :: lgT_tab_max = 10.0
+    
+    character(len=*), parameter, private :: indent1 = '(tr4,"* ",a)'
     
 contains
     
@@ -23,6 +26,9 @@ contains
         integer, intent(in) :: id
         integer, intent(out) :: ierr
         type(NScool_info), pointer :: s
+        type(assertion) :: got_pointer=assertion(scope='do_create_crust_model')
+        type(failure) :: microphysics_error=failure(scope='do_create_crust_model', &
+        &   message='staring microphysics')
         type(failure) :: zone_error=failure(scope='do_create_crust_model', &
         &   message='setting crust zones')
         type(failure) :: composition_error= &
@@ -30,10 +36,12 @@ contains
         &   message='setting crust composition')
         type(failure) :: transport_error=failure( &
         &   scope='do_create_crust_model',message='setting crust transport')
-        type(assertion) :: got_pointer=assertion(scope='do_create_crust_model')
         
         call get_NScool_info_ptr(id,s,ierr)
         call got_pointer% assert(ierr==0)
+        
+        call do_startup_microphysics(s, ierr)
+        if (microphysics_error% raised(ierr)) return
         
         call do_setup_crust_zones(s, ierr)
         if (zone_error% raised(ierr)) return
@@ -45,6 +53,88 @@ contains
         if (transport_error% raised(ierr)) return
     end subroutine do_create_crust_model
     
+    subroutine do_startup_microphysics(s, ierr)
+        use, intrinsic :: iso_fortran_env, only: error_unit, output_unit
+        use exceptions_lib
+        use constants_def
+        use nucchem_lib
+        use superfluid_lib
+        use dStar_eos_lib
+        use conductivity_def
+        use conductivity_lib
+        use NScool_private_def, only: dStar_data_dir
+
+        type(NScool_info), pointer :: s
+        integer, intent(out) :: ierr
+        type(failure) :: nucchem_error=failure(scope='do_startup_microphysics', &
+        &   message='initializing nucchem module')
+        type(failure) :: superfluid_error=failure(scope='do_startup_microphysics', &
+        &   message='starting superfluid module')
+        type(failure) :: gap_error=failure(scope='do_startup_microphysics', &
+        &   message='loading gaps')
+        type(failure) :: eos_error=failure(scope='do_startup_microphysics', &
+        &   message='starting eos module')
+        type(failure) :: cond_error=failure(scope='do_startup_microphysics', &
+        &   message='starting conductivity module')
+        type(alert) :: status=alert(scope='do_startup_microphysics')
+        
+        call status% report('Initializing nuclides')
+        call nucchem_init(trim(dStar_data_dir),ierr)
+        if (nucchem_error% raised(ierr)) return
+        
+        call status% report('Loading superfluid gaps')
+        call sf_startup(trim(dStar_data_dir),ierr)
+        if (superfluid_error% raised(ierr)) return
+        call sf_load_gaps( &
+        &   trim(s% which_proton_1S0_gap),  &
+        &   trim(s% which_neutron_1S0_gap), &
+        &   trim(s% which_neutron_3P2_gap), ierr)
+        if (gap_error% raised(ierr)) return
+        sf_scale(1:max_number_sf_types) = s% scale_sf_critical_temperatures
+    
+        call status% report('Setting EOS options')
+        call dStar_eos_startup(trim(dStar_data_dir))
+        s% eos_handle = alloc_dStar_eos_handle(ierr)
+        if (eos_error% raised(ierr)) return
+        ! switch off the warnings about quantum effects
+        call dStar_eos_set_controls(s% eos_handle,suppress_warnings=.TRUE.)
+        if (s% eos_gamma_melt_pt > 0.0)  &
+        &   call dStar_eos_set_controls(s% eos_handle, &
+        &   gamma_melt_pt=s% eos_gamma_melt_pt)
+        if (s% eos_rsi_melt_pt > 0.0)  &
+        &   call dStar_eos_set_controls(s% eos_handle, &
+        &   rsi_melt_pt=s% eos_rsi_melt_pt)
+        if (s% eos_nuclide_abundance_threshold > 0.0)  &
+        & call dStar_eos_set_controls(s% eos_handle, &
+        &   nuclide_abundance_threshold=s% eos_nuclide_abundance_threshold)
+        if (s% eos_pasta_transition_in_fm3 > 0.0)  &
+        & call dStar_eos_set_controls(s% eos_handle, &
+        &   pasta_transition_in_fm3=s% eos_pasta_transition_in_fm3)
+        if (s% eos_cluster_transition_in_fm3 > 0.0)  &
+        & call dStar_eos_set_controls(s% eos_handle, &
+        &   cluster_transition_in_fm3=s% eos_cluster_transition_in_fm3)
+ 
+        call status% report('Setting thermal conductivity options')
+        call conductivity_startup(trim(dStar_data_dir))
+        s% cond_handle = alloc_conductivity_handle(ierr)
+        if (cond_error% raised(ierr)) return
+        call conductivity_set_controls(s% cond_handle, &
+        &   include_neutrons=s% use_neutron_conductivity, &
+        &   include_superfluid_phonons=s% use_superfluid_phonon_conductivity)
+        if (s% rad_full_off_lgrho > 0.0) &
+        &   call conductivity_set_controls(s% cond_handle, &
+        &   lgrho_rad_off=s% rad_full_off_lgrho)
+        if (s% rad_full_on_lgrho > 0.0) &
+        &   call conductivity_set_controls(s% cond_handle, &
+        &   lgrho_rad_on=s% rad_full_on_lgrho)
+        if (s% use_pcy_for_ee_scattering)  &
+        &   call conductivity_set_controls(s% cond_handle, &
+        &   which_ee_scattering=icond_pcy)
+        if (s% use_page_for_eQ_scattering)  &
+        &   call conductivity_set_controls(s% cond_handle, &
+        &   which_eQ_scattering=icond_eQ_page)            
+    end subroutine do_startup_microphysics
+    
     subroutine do_setup_crust_zones(s, ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit, output_unit
         use exceptions_lib
@@ -52,6 +142,8 @@ contains
         use nucchem_lib
         use superfluid_lib
         use dStar_eos_lib
+        use conductivity_def
+        use conductivity_lib
         use dStar_crust_def
         use dStar_crust_lib
         use NScool_private_def, only: dStar_data_dir
@@ -64,14 +156,6 @@ contains
         real(dp), dimension(:), pointer :: y
         real(dp) :: Plight
         type(alert) :: status=alert(scope='do_setup_crust_zones')
-        type(failure) :: nucchem_error=failure(scope='do_setup_crust_zones', &
-        &   message='initializing nucchem module')
-        type(failure) :: superfluid_error=failure(scope='do_setup_crust_zones', &
-        &   message='starting superfluid module')
-        type(failure) :: gap_error=failure(scope='do_setup_crust_zones', &
-        &   message='loading gaps')
-        type(failure) :: eos_error=failure(scope='do_setup_crust_zones', &
-        &   message='starting eos module')
         type(failure) :: crust_error=failure(scope='do_setup_crust_zones', &
         &   message='starting crust module')
         type(failure) :: crust_table_error=failure(scope='do_setup_crust_zones', &
@@ -82,41 +166,13 @@ contains
         &   message='integrating TOV eqns')
         type(failure) :: atm_load_error=failure(scope='do_setup_crust_zones', &
         &   message='loading atm table')
-            
-        call status% report('Initializing nuclides')
-        call nucchem_init(trim(dStar_data_dir),ierr)
-        if (nucchem_error% raised(ierr)) return
+        type(assertion) :: allocation_okay=assertion(scope='do_setup_crust_zones', &
+        &   message='memory allocated')
         
-        call status% report('Loading superfluid gaps')
-        call sf_startup(trim(dStar_data_dir),ierr)
-        if (superfluid_error% raised(ierr)) return
-        call sf_load_gaps(trim(s% which_proton_1S0_gap), trim(s% which_neutron_1S0_gap), &
-            & trim(s% which_neutron_3P2_gap), ierr)
-        if (gap_error% raised(ierr)) return
-        sf_scale(1:max_number_sf_types) = s% scale_sf_critical_temperatures
-    
-        call status% report('Setting EOS options')
-        call dStar_eos_startup(trim(dStar_data_dir))
-        s% eos_handle = alloc_dStar_eos_handle(ierr)
-        if (eos_error% raised(ierr)) return
-        ! switch off the warnings about quantum effects
-        call dStar_eos_set_controls(s% eos_handle,suppress_warnings=.TRUE.)
-        if (s% eos_gamma_melt_pt > 0.0)  &
-        & call dStar_eos_set_controls(s% eos_handle,gamma_melt_pt=s% eos_gamma_melt_pt)
-        if (s% eos_rsi_melt_pt > 0.0)  &
-        & call dStar_eos_set_controls(s% eos_handle,rsi_melt_pt=s% eos_rsi_melt_pt)
-        if (s% eos_nuclide_abundance_threshold > 0.0)  &
-        & call dStar_eos_set_controls(s% eos_handle,nuclide_abundance_threshold=s% eos_nuclide_abundance_threshold)
-        if (s% eos_pasta_transition_in_fm3 > 0.0)  &
-        & call dStar_eos_set_controls(s% eos_handle,pasta_transition_in_fm3=s% eos_pasta_transition_in_fm3)
-        if (s% eos_cluster_transition_in_fm3 > 0.0)  &
-        & call dStar_eos_set_controls(s% eos_handle,cluster_transition_in_fm3=s% eos_cluster_transition_in_fm3)
-            
         call status% report('Loading crust model')
         call dStar_crust_startup(trim(dStar_data_dir),ierr)
         if (crust_error% raised(ierr)) return
         call dStar_crust_load_table('hz90',s% eos_handle, s% Tcore, ierr)
-        if (crust_table_error% raised(ierr)) return
 
         call status% report('Loading atmosphere model')
         call dStar_atm_startup(trim(dStar_data_dir),ierr)
@@ -126,13 +182,12 @@ contains
         allocate(y(num_tov_variables))
         call tov_integrate(log10(s% Pcore), log10(s% Psurf), s% Mcore, s% Rcore, s% target_resolution_lnP, y, ierr)
         if (tov_error% raised(ierr)) return
-        deallocate(y)
-        
-        ! allocate the info arrays
+        deallocate(y)        
         stov => tov_model
         s% nz = stov% nzs - 1
         s% nisos = dStar_crust_get_composition_size()
         call allocate_NScool_info_arrays(s, ierr)
+        call allocation_okay% assert(ierr==0)
         
         call status% report('Computing facial quantities')
         s% P_bar(1:s% nz) = stov% pressure(stov% nzs:2:-1) * pressure_g
@@ -178,11 +233,8 @@ contains
         s% Mtotal = stov% mass(stov% nzs) + s% Mcore
         ! R in km
         s% Rtotal = stov% radius(stov% nzs)*length_g*1.0e-5 + s% Rcore
-        s% grav = (s% Mtotal) * mass_g * Gnewton /  &
-        &   (s% Rtotal*1.0e5)**2 * s% eLambda_bar(1)
-
+        s% grav = (s% Mtotal) * mass_g * Gnewton / (s% Rtotal*1.0e5)**2 * s% eLambda_bar(1)
         Plight = s% grav * 10.0_dp**s% lg_atm_light_element_column
-        
         call dStar_atm_load_table(s% atm_model, s% grav, Plight, s% Psurf, ierr)
         if (atm_load_error% raised(ierr)) return        
     end subroutine do_setup_crust_zones
@@ -200,7 +252,7 @@ contains
         type(alert) :: qimp=alert(scope='do_setup_crust_composition')
         character(len=128) :: qimp_msg
         type(alert) :: status=alert(scope='do_setup_crust_composition')
-        
+                
         ! this routine assumes that we have already run do_setup_crust_zones
         ierr = 0
         allocate(lgP_bar(s% nz))
@@ -247,12 +299,10 @@ contains
         use interp_1d_def
         use interp_1d_lib
         use storage
-        use utils_lib, only: is_bad_num
         
         type(NScool_info), pointer :: s
         integer, intent(out) :: ierr
         logical, dimension(num_crust_nu_channels) :: nu_channels
-        logical, dimension(num_conductivity_channels) :: cond_channels
         type(crust_neutrino_emissivity_channels) :: eps_nu
         integer :: iz, itemp, ieos
         integer :: eos_phase
@@ -267,12 +317,16 @@ contains
         ! for error checking
         real(dp), dimension(:), allocatable :: delP
         type(alert) :: status=alert(scope='do_setup_crust_transport')
+        type(assertion) :: interpolation_okay=assertion(scope='do_setup_crust_transport', &
+        &    message='interpolation coefficients computed')
+        type(assertion) :: allocation_okay=assertion(scope='do_setup_crust_transport', &
+        &    message='allocation okay')
         
         ierr = 0
         s% n_tab = number_table_pts
         
         call allocate_NScool_work_arrays(s, ierr)
-        if (ierr /= 0) return
+        call allocation_okay% assert(ierr == 0)
         
         ! set up the conductivity and neutrino channels
         nu_channels = [ s% use_crust_nu_pair,  &
@@ -280,15 +334,7 @@ contains
         &               s% use_crust_nu_plasma, &
         &               s% use_crust_nu_bremsstrahlung,  &
         &               s% use_crust_nu_pbf ]
-        
-        cond_channels = [ s% use_ee_conductivity, &
-        &                 s% use_ei_conductivity,  &
-        &                 s% use_eQ_conductivity,  &
-        &                 s% use_sf_conductivity,  &
-        &                 s% use_nph_conductivity, &
-        &                 s% use_nQ_conductivity, &
-        &                 s% use_rad_opacity ]
-        
+                
         s% tab_lnT(1:s% n_tab) = [(lgT_tab_min*ln10 + (lgT_tab_max-lgT_tab_min)*ln10*real(itemp-1,dp)/real(s% n_tab-1,dp), &
         &   itemp = 1, s% n_tab)]
         
@@ -314,16 +360,6 @@ contains
                 &   Tc, eos_results, eos_phase, chi, components)
                 lnCp_val(1,itemp) = log(eos_results(i_Cp))
                 lnGamma_val(1,itemp) = log(eos_results(i_Gamma))
-!                 if (is_bad_num(lnCp_val(1,itemp)) .and. itemp == 40) then
-!                     print *,'bad CV'
-!                     do ieos = 1, num_crust_eos_components
-!                         print *, ieos
-!                         print *,components(ieos)
-!                     end do
-!                     print *, s% ionic(iz), s% Yion(1:s% ncharged,iz)
-!                 end if
-!   Set the pressure based on the lowest temperature in the table.
-!                 if (itemp == 1) s% P(iz) = exp(eos_results(i_lnP))
 
                 ! perform interpolation of density to first cell face
                 if (iz == 1 .and. itemp == 1) then
@@ -349,12 +385,15 @@ contains
             lnEnu_interp(1:4*s% n_tab) => s% tab_lnEnu(1:4*s% n_tab,iz)
             call interp_pm(s% tab_lnT, s% n_tab, lnEnu_interp, pm_work_size, work, &
             &   'do_setup_crust_transport: lnEnu', ierr)
+            call interpolation_okay% assert(ierr == 0)
             lnCp_interp(1:4*s% n_tab) => s% tab_lnCp(1:4*s% n_tab,iz)
             call interp_pm(s% tab_lnT, s% n_tab, lnCp_interp, pm_work_size, work, &
             &   'do_setup_crust_transport: lnCp', ierr)
+            call interpolation_okay% assert(ierr == 0)
             lnGamma_interp(1:4*s% n_tab) => s% tab_lnGamma(1:4*s% n_tab, iz)
             call interp_pm(s% tab_lnT, s% n_tab, lnGamma_interp, pm_work_size, work,  &
             &   'do_setup_crust_transport: Gamma', ierr)
+            call interpolation_okay% assert(ierr == 0)
             deallocate(work)
             
         end do
@@ -383,22 +422,21 @@ contains
                 if (itemp == 1)  &
                 &   delP(iz) = abs(1.0 - exp(eos_results(i_lnP))/s% P_bar(iz))
                                 
-                call get_thermal_conductivity(s% rho_bar(iz), Ttab, chi, &
+                call get_thermal_conductivity(s% cond_handle, &
+                &   s% rho_bar(iz), Ttab, chi, &
                 &   eos_results(i_Gamma), eos_results(i_Theta), &
                 &   eos_results(i_mu_e), s% ionic_bar(iz), Tc(neutron_1S0), &
-                &   Kcomponents, use_pcy=s% use_pcy_for_ee_scattering, &
-                &   use_page=s% use_page_for_eQ_scattering, &
-                &   which_components=cond_channels)
+                &   Kcomponents)
                 lnKcond_val(1,itemp) = log(Kcomponents% total)
 
             end do
             allocate(work(s% n_tab*pm_work_size))
             lnKcond_interp(1:4*s% n_tab) => s% tab_lnK(1:4*s% n_tab,iz)
             call interp_pm(s% tab_lnT, s% n_tab, lnKcond_interp, pm_work_size, work, &
-        &   'do_setup_crust_transport: lnK', ierr)
+            &   'do_setup_crust_transport: lnK', ierr)
+            call interpolation_okay% assert(ierr == 0)
             deallocate(work)
         end do
-!         write (*,'(a,es15.8,a,es15.8)') 'max dP = ',maxval(delP),' at ',s% P_bar(maxloc(delP))
         deallocate(delP)
         
     end subroutine do_setup_crust_transport

@@ -161,6 +161,7 @@ contains
             call integer_dict_define(nuclide_dict, &
             & trim(adjustl(nuclib% name(indx))),indx,ierr)
         end do
+        if (ierr /= 0) return
         call integer_dict_create_hash(nuclide_dict,ierr)
     end subroutine do_parse_nuclides
     

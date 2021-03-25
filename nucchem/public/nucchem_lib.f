@@ -2,9 +2,6 @@ module nucchem_lib
     use nucchem_def
     implicit none
 
-    character(len=*), parameter, private :: mod_name = 'nucchem_lib'
-    character(len=*), parameter, private :: err_fmt = '(a,":",a,"> ",a)'
-
 contains    
     subroutine nucchem_init(datadir, ierr)
         use exceptions_lib
@@ -17,7 +14,8 @@ contains
         character(len=160) :: nuclib_cache
         integer :: indx
         type(alert) :: status=alert(level=2,scope='nucchem_init')
-        type(alert) :: done=alert(level=2,scope='nucchem_init',message='done')
+        type(assertion) :: io_okay=assertion(scope='nucchem_init',message='load nuclib')
+        type(assertion) :: parse_okay=assertion(scope='nucchem_init',message='parse nuclides')
         character(len=128) :: msg
 
         nuclib_filename = trim(datadir)//'/nucchem/'//nuclib_db
@@ -25,13 +23,15 @@ contains
         
         ierr = 0
         call status% report(message= &
-        & 'Loading nuclib from '//trim(datadir)//'/nucchem')
+        &   'Loading nuclib from '//trim(datadir)//'/nucchem')
         call do_load_nuclib(nuclib_filename,nuclib_cache,ierr)
+        call io_okay% assert(ierr==0)
 
         write(msg,'(a,i0,a)') 'Retrieved ',nuclib% Nnuclides, &
-        & ' nuclides. Writing nuclide dictionary'
+        &   ' nuclides. Writing nuclide dictionary'
         call status% report(message=msg)
         call do_parse_nuclides(ierr)
+        call parse_okay% assert(ierr == 0)
 
         nucchem_is_initialized = .TRUE.
     end subroutine nucchem_init
@@ -142,34 +142,30 @@ contains
         use utils_lib, only: integer_dict_lookup
         character(len=*), intent(in) :: nuclei
         integer :: indx, ierr
-        character(len=*), parameter :: routine_name='get_nuclide_index'
         type(assertion) :: initialized=assertion( &
         &   scope='get_nuclide_index', &
         &   message='nucchem module is not initialized')
         
         call initialized% assert(nucchem_is_initialized)
-!         if (.not. nucchem_is_initialized) then
-!             call uninitialized_nucchem% report
-!             indx = nuclide_not_found
-!             return
-!          end if
-         ierr = 0
-         call integer_dict_lookup(nuclide_dict, nuclei, indx, ierr)
-         if (ierr /= 0) indx = nuclide_not_found
+        ierr = 0
+        call integer_dict_lookup(nuclide_dict, nuclei, indx, ierr)
+        if (ierr /= 0) indx = nuclide_not_found
   end function get_nuclide_index
   
     ! get index of nuclei given charge, neutron numbers
     function get_nuclide_index_from_ZN(Z,N) result(indx)
-        use iso_fortran_env, only : error_unit
+        use exceptions_lib
         use nucchem_def
         
         integer, intent(in) :: Z, N
         character(len=*), parameter :: routine_name='get_nuclide_index'
         character(len=iso_name_length) :: nuclide
         integer :: indx
+        type(alert) :: bad_charge_number=alert(scope='get_nuclide_index_from_ZN', &
+        &   message='invalid charge number')
         
         if (Z < 0 .or. Z > max_element_Z) then
-            write(error_unit,err_fmt) mod_name,routine_name,'bad charge number'
+            call bad_charge_number% report
             indx = nuclide_not_found
             return
         end if
