@@ -1,7 +1,7 @@
 include $(MESA_DIR)/utils/makefile_header
 
 LIB = libconductivity.a
-LIB_OBJS = conductivity_def.o eval_conductivity.o eval_core_conductivity.o conductivity_lib.o
+LIB_OBJS = conductivity_def.o electron_conductivity.o neutron_conductivity.o photon_conductivity.o PPP_electron.o eval_conductivity.o conductivity_lib.o
 DSTAR_LIB = ../../lib
 DSTAR_INC = ../../include
 

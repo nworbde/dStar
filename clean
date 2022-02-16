@@ -38,10 +38,11 @@ function clean_data_caches {
 echo
 echo "cleaning dStar packages..."
 
+do_one exceptions
 do_one constants
 do_one superfluid
-do_one neutrino
 do_one nucchem
+do_one neutrino
 do_one dStar_eos
 do_one conductivity
 do_one dStar_atm
@@ -59,6 +60,7 @@ clean_data_caches nucchem
 clean_data_caches eos
 clean_data_caches atm_data
 clean_data_caches crust_data
+clean_data_caches conductivity
 #clean_data_caches core_data
 
 echo

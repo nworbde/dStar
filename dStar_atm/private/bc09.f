@@ -26,8 +26,9 @@ module bc09
     integer, parameter :: number_base_rpar = ikappa
     ! further storage can be tacked on at end of rpar for Yion's
     
-    integer, parameter :: ihandle = 1
-    integer, parameter :: iNcharged = ihandle + 1
+    integer, parameter :: ieoshandle = 1
+    integer, parameter :: icondhandle = ieoshandle + 1
+    integer, parameter :: iNcharged = icondhandle + 1
     integer, parameter :: number_base_ipar = iNcharged
     ! further storage can be tacked on at end of ipar for charged id's
     
@@ -42,8 +43,10 @@ module bc09
 contains
     
     subroutine do_get_bc09_Teff(grav, Plight, Pb, lgTb, lgTeff, lgflux, ierr)
+        use exceptions_lib
         use constants_def
         use dStar_eos_lib
+        use conductivity_lib
         
         real(dp), intent(in) :: grav    ! surface gravity, in the local frame
         real(dp), intent(in) :: Plight  ! pressure at which layer of light elements terminates
@@ -53,11 +56,21 @@ contains
         real(dp), intent(out), dimension(:) :: lgflux   ! flux
         integer, intent(out) :: ierr
         integer :: i, n
-        integer :: eos_handle
+        integer :: eos_handle, cond_handle
         real(dp) :: lgyb, lgy_light, rho_ph
+        type(failure) :: integration_failure=failure(scope='do_get_bc09_Teff', &
+        &   message='while integrating over atmosphere')
+        character(len=128) :: msg
+        type(alert) :: status=alert(scope='do_get_bc09_Teff')
         
         ! constants, nucchem, and dStar_eos must be initialized
         eos_handle = alloc_dStar_eos_handle(ierr)
+        cond_handle = alloc_conductivity_handle(ierr)
+        call conductivity_set_controls(cond_handle, &
+        &   include_neutrons=.FALSE., &
+        &   include_superfluid_phonons=.FALSE., &
+        &   lgrho_rad_off=10.0_dp, lgrho_rad_on=9.0_dp)
+        
         lgyb = log10(Pb/grav)
         lgy_light = log10(Plight/grav)
         
@@ -65,20 +78,25 @@ contains
         ! start at the highest temperature and work down; array is assumed to be in ascending order
         n = size(lgTeff)
         do i = n,1,-1
-            call do_integrate_bc09_atm(grav,lgyb,lgy_light,lgTeff(i),lgTb(i),rho_ph,eos_handle,ierr)
-            if (ierr < 0) then
-                print *,'error in atmosphere integration with lgTeff = ', lgTeff(i)
+            call do_integrate_bc09_atm( &
+            &   grav,lgyb,lgy_light,lgTeff(i),lgTb(i),rho_ph, &
+            &   eos_handle,cond_handle,ierr)
+            if (integration_failure% raised(ierr)) then
+                write(msg,'(a,f7.3)') 'lgTeff = ',lgTeff(i)
+                call status% report(trim(msg))
                 return
             end if
             lgflux(i) = 4.0_dp*lgTeff(i)+log10(sigma_SB)
         end do
         
+        call free_conductivity_handle(cond_handle)
         call free_dStar_eos_handle(eos_handle)
     end subroutine do_get_bc09_Teff
     
     subroutine do_integrate_bc09_atm( &
-    &   grav,lgyb,lgy_light,lgTeff,lgTb,rho,eos_handle,ierr)
+    &   grav,lgyb,lgy_light,lgTeff,lgTb,rho,eos_handle,cond_handle,ierr)
         use iso_fortran_env, only: error_unit
+        use exceptions_lib
         use constants_def
         use nucchem_def
         use nucchem_lib
@@ -90,7 +108,7 @@ contains
         real(dp), intent(in) :: lgTeff  ! log_10(K)
         real(dp), intent(out) :: lgTb   ! log_10(K)
         real(dp), intent(inout) :: rho  ! set < 0 to compute a guess, on output, contains rho_photosphere
-        integer, intent(in) :: eos_handle
+        integer, intent(in) :: eos_handle, cond_handle
         integer, intent(out) :: ierr
         ! composition
         integer, parameter :: number_species = 2
@@ -110,14 +128,17 @@ contains
         real(dp), pointer, dimension(:) :: lnT4=>null()
         integer, pointer, dimension(:) :: iwork=>null()
         real(dp), pointer, dimension(:) :: work=>null()
+        character(len=*), parameter :: this_routine='do_integrate_bc09_atm'
+        type(alert) :: status=alert(scope=this_routine)
+        type(assertion) :: composition_is_good=assertion(scope=this_routine,message='got nuclides')
+        type(failure) :: photosphere_failure=failure(scope=this_routine, &
+        &   message='located photosphere')
+        character(len=128) :: msg
         
         ierr = 0
         ! composition is a He/Fe mix
         chem_ids = [ get_nuclide_index('he4'), get_nuclide_index('fe56') ]
-        if (any(chem_ids == nuclide_not_found)) then    ! this is a fatal error
-            ierr = nuclide_not_found
-            return
-        endif
+        call composition_is_good% assert(all(chem_ids /= nuclide_not_found))
         
         ! set size of data structure        
         lrpar = number_base_rpar + number_species
@@ -155,19 +176,19 @@ contains
         rpar(iTeff) = Teff
         rpar(number_base_rpar + 1:number_base_rpar+ncharged) = Yion(:)
         
-        ipar(ihandle) = eos_handle
+        ipar(ieoshandle) = eos_handle
+        ipar(icondhandle) = cond_handle
         ipar(iNcharged) = ncharged
         ipar(number_base_ipar+1:number_base_ipar+ncharged) = charged_ids(:)
         
-        if (dbg) write (error_unit,*) 'finding photosphere...'
         call find_photospheric_pressure(Teff,grav,tau,rho,P,kappa, &
             &   lrpar, rpar, lipar, ipar, ierr)
-        if (ierr /= 0) return
-
+        if (photosphere_failure% raised(ierr)) return
         if (dbg) then
-            write (error_unit,*) 'done'
-            write (error_unit,'(2(a,es11.4))') 'rho = ',rho,'; kappa = ',kappa
+            write (msg,'(2(a,es11.4))') 'rho = ',rho,'; kappa = ',kappa
+            call status% report(trim(msg))
         end if
+        
         ! anchor the eos information
         rpar(irho) = rho
         rpar(itemp) = Teff
@@ -175,7 +196,7 @@ contains
         rpar(ikappa) = kappa
 
         ! start the integration
-        if (dbg) write (error_unit,*) 'starting integration'
+        if (dbg) call status% report('starting integration')
         call dop853_work_sizes(1,0,liwork,lwork)
         allocate(lnT4(1),iwork(liwork),work(lwork))
         
@@ -203,13 +224,13 @@ contains
         &   lrpar, rpar, lipar, ipar, lout, idid)
         
         if (idid < 0) then
-            write (error_unit,*) 'error in integration'
-            write (error_unit,'(2(a,f8.4))') 'lnP = ',lnP,'; lnT4 = ',lnT4(1)
-            ierr = idid 
+            write (msg,'(2(a,f8.4))') 'lnP = ',lnP,'; lnT4 = ',lnT4(1)
+            call status% report(msg)
+            ierr = idid
             return
         end if
 
-        if (dbg) write (error_unit,*) 'integrating over heavy layer'
+        if (dbg) call status% report('integrating over heavy layer')
         ! now integrate over the heavy layer
         Y = [0.0_dp, 1.0_dp]/nuclib% A(chem_ids)
         call compute_composition_moments(number_species,chem_ids,Y,ionic,Xsum, &
@@ -249,7 +270,6 @@ contains
             &   lrpar, rpar, lipar, ipar, lout, idid)
         
             if (idid < 0) then
-                write (error_unit,*) 'error in integration'
                 ierr = idid
                 return
             end if
@@ -261,7 +281,7 @@ contains
       
     subroutine find_photospheric_pressure(Teff,grav,tau,rho_ph,P_ph,kappa, &
         &   lrpar,rpar,lipar,ipar,ierr)
-        use iso_fortran_env, only: error_unit
+        use exceptions_lib
         use constants_def
         use nucchem_def
         use nucchem_lib
@@ -283,9 +303,15 @@ contains
         integer, intent(out) :: ierr
         real(dp) :: lnrho_ph,lnrho
         integer :: i, maximum_iterations
-        real(dp) :: sigma_Th
         real(dp) :: lnrho_guess, kappa_Th, Pgas, fallback_Pphoto
         real(dp) :: lnrho1, lnrho3, dlnrho, ph1, ph3, eps_lnrho, eps_ph
+        character(len=*), parameter :: this_routine='find_photospheric_pressure'
+        type(alert) :: negative_pressure=alert(scope=this_routine, &
+        &   message='negative photosphere gas pressure')
+        type(warning) :: bracketed_root=warning(scope=this_routine,message='unable to bracket root')
+        type(warning) :: converged_density=warning(scope=this_routine)
+        character(len=128) :: msg
+        type(alert) :: bad_density=alert(scope=this_routine)
         
         ierr = 0
 
@@ -296,15 +322,14 @@ contains
         fallback_Pphoto = 2.0_dp*onethird*arad*Teff**4
 
         ! scale tolerance to a thomson scattering atmosphere
-        sigma_Th = 8.0_dp*onethird*pi*(electroncharge**2/Melectron/clight2)**2
-        kappa_Th = sigma_Th*avogadro*rpar(icomp_Ye)
+        kappa_Th = Thomson*avogadro*rpar(icomp_Ye)
         eps_ph = default_tolerance_photosphere_condition*tau*grav/kappa_Th
         
         ! use initial guess with ideal gas pressure and thomson scattering
         if (rho_ph < 0.0_dp) then
             Pgas = tau*grav/kappa_Th - onethird*arad*Teff**4
             if (Pgas < 0.0_dp) then
-                write(error_unit,*) 'negative photosphere gas pressure'
+                call negative_pressure% report
                 ierr = negative_photosphere_gas_pressure
                 P_ph = fallback_Pphoto
                 kappa = kappa_Th
@@ -319,8 +344,7 @@ contains
         dlnrho = 0.1_dp
         call look_for_brackets(lnrho_guess, dlnrho, lnrho1, lnrho3, photosphere, ph1, ph3, &
              & maximum_iterations, lrpar, rpar, lipar, ipar, ierr)
-        if (ierr /= 0) then
-            write(error_unit,*) 'unable to bracket root: ierr = ', ierr
+        if (bracketed_root% raised(ierr)) then
             P_ph = fallback_Pphoto
             rho_ph = exp(lnrho_guess)
             kappa = rpar(ikappa)
@@ -330,8 +354,9 @@ contains
         lnrho_ph = safe_root_with_initial_guess(photosphere,lnrho_guess,lnrho1,lnrho3,ph1,ph3, &
             &   maximum_iterations,eps_lnrho,eps_ph,lrpar,rpar,lipar,ipar,ierr)
 
-        if (ierr /= 0) then
-            write(error_unit,*) 'unable to converge on photospheric density: ',lnrho_guess,lnrho_ph
+        if (converged_density% raised(ierr)) then
+            write(msg,'(a,2es13.4)') 'ln(rho_guess), ln(rho) = ',lnrho_guess,lnrho_ph
+            call bad_density% report(trim(msg))
             P_ph = fallback_Pphoto
             rho_ph = exp(lnrho_guess)
             kappa = rpar(ikappa)
@@ -359,7 +384,7 @@ contains
        real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
        integer, intent(out) :: ierr
        real(dp) :: rho, gravity, tau_ph, Teff, P, kappa, Gamma, eta, mu_e, Xsum, chi
-       integer :: eos_handle, ncharged, phase
+       integer :: eos_handle, cond_handle, ncharged, phase
        type(composition_info_type) :: ionic
        type(conductivity_components) :: K
        real(dp), dimension(num_dStar_eos_results) :: res
@@ -387,7 +412,8 @@ contains
        tau_ph = rpar(itau)
        Teff = rpar(iTeff)
        
-       eos_handle = ipar(ihandle)
+       eos_handle = ipar(ieoshandle)
+       cond_handle = ipar(icondhandle)
        ncharged = ipar(iNcharged)
        charged_ids(1:ncharged)=>ipar(number_base_ipar+1:number_base_ipar+ncharged)
        Yion(1:ncharged)=>rpar(number_base_rpar+1:number_base_rpar+ncharged)
@@ -402,9 +428,9 @@ contains
        eta = res(i_Theta) !1.0/TpT
        mu_e = res(i_mu_e)
        Gamma = res(i_Gamma)
-       call get_thermal_conductivity(rho,Teff,chi, &
+       call get_thermal_conductivity(cond_handle,rho,Teff,chi, &
            & Gamma,eta,mu_e,ionic,Tcs(neutron_1S0), &
-           & K,which_components=cond_exclude_sf) !cond_use_only_kap)
+           & K)
        kappa = 4.0*onethird*arad*clight*Teff**3/rho/K% total
        rpar(ikappa) = kappa
        rpar(ipres) = P
@@ -413,46 +439,46 @@ contains
     end function photosphere
     
     subroutine deriv(n, lnP, h, lnT4, dlnT4dlnP, lrpar, rpar, lipar, ipar, ierr)
-       use constants_def
-       use nucchem_def
-       use nucchem_lib
-       use dStar_eos_lib
-       use conductivity_lib
-       use utils_lib
+        use exceptions_lib
+        use constants_def
+        use nucchem_def
+        use nucchem_lib
+        use dStar_eos_lib
+        use conductivity_lib
+        use utils_lib
 
-       integer, intent(in) :: n, lrpar, lipar
-       real(dp), intent(in) :: lnP, h
-       real(dp), intent(inout) :: lnT4(:)   ! 4.0*ln(T/Teff)
-       real(dp), intent(inout) :: dlnT4dlnP(:)
-       integer, intent(inout), pointer :: ipar(:) ! (lipar)
-       real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
-       integer, intent(out) :: ierr ! nonzero means retry with smaller timestep.
-       real(dp) :: Teff, grav, rho, P, T, kappa, del_ad
-       
-       ierr = 0
-       ! unpack the arguments
-       Teff = rpar(iTeff)
-       grav = rpar(igrav)
-       rho = rpar(irho)
-
-       P = exp(lnP)
-       T = Teff*exp(0.25*lnT4(1))
-       
-       call get_coefficients(P,T,rho,lrpar,rpar,lipar,ipar,kappa,del_ad,ierr)
-       if (ierr /= 0) then
-           print *,'unable to get coefficients'
-           return
-       end if
-       
-       dlnT4dlnP(1) = 0.75_dp*kappa*P/grav/exp(lnT4(1))
-       dlnT4dlnP(1)  = min(dlnT4dlnP(1), 4.0*del_ad)       
-
-       ! store the new anchor point
-       rpar(irho) = rho
+        integer, intent(in) :: n, lrpar, lipar
+        real(dp), intent(in) :: lnP, h
+        real(dp), intent(inout) :: lnT4(:)   ! 4.0*ln(T/Teff)
+        real(dp), intent(inout) :: dlnT4dlnP(:)
+        integer, intent(inout), pointer :: ipar(:) ! (lipar)
+        real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
+        integer, intent(out) :: ierr ! nonzero means retry with smaller timestep.
+        real(dp) :: Teff, grav, rho, P, T, kappa, del_ad
+        type(failure) :: got_coefficients_failure=failure(scope='deriv',message='unable to get coefficients')
+        
+        ierr = 0
+        ! unpack the arguments
+        Teff = rpar(iTeff)
+        grav = rpar(igrav)
+        rho = rpar(irho)
+        
+        P = exp(lnP)
+        T = Teff*exp(0.25*lnT4(1))
+        
+        call get_coefficients(P,T,rho,lrpar,rpar,lipar,ipar,kappa,del_ad,ierr)
+        if (got_coefficients_failure% raised(ierr)) return
+        
+        dlnT4dlnP(1) = 0.75_dp*kappa*P/grav/exp(lnT4(1))
+        dlnT4dlnP(1)  = min(dlnT4dlnP(1), 4.0*del_ad)       
+        
+        ! store the new anchor point
+        rpar(irho) = rho
 
     end subroutine deriv
 
     subroutine get_coefficients(P,T,rho,lrpar,rpar,lipar,ipar,kappa,del_ad,ierr)
+        use exceptions_lib
         use constants_def
         use superfluid_def, only: max_number_sf_types, neutron_1S0
         use nucchem_def, only: composition_info_type
@@ -468,7 +494,7 @@ contains
         real(dp), intent(out) :: del_ad
         integer, intent(out) :: ierr
         type(composition_info_type) :: ionic
-        integer :: ncharged, eos_handle
+        integer :: ncharged, eos_handle, cond_handle
         integer, dimension(:), pointer :: charged_ids=>null()
         real(dp), dimension(:), pointer :: Yion=>null()
         real(dp) :: lnrho,lnrho_guess, Gamma, eta, mu_e, chi
@@ -476,13 +502,14 @@ contains
         real(dp), dimension(num_dStar_eos_results) :: res
         integer :: phase
         type(conductivity_components) :: K
+        type(failure) :: got_density_failure=failure(scope='get_coefficients', &
+        &   message='unable to get density')
+        type(assertion) :: eos_is_sane=assertion(scope='get_coefficients', &
+        &   message='EOS is behaving')
         
         lnrho_guess = log(rho)
         lnrho = get_lnrho_from_PT(P,T,lnrho_guess,lrpar,rpar,lipar,ipar,ierr)
-        if (ierr /= 0) then
-            print *,'unable to get density'
-            return
-        end if
+        if (got_density_failure% raised(ierr)) return
         
         rho = exp(lnrho)
         chi = use_default_nuclear_size
@@ -497,7 +524,8 @@ contains
         &    Ye = rpar(icomp_Ye), &
         &    Yn = rpar(icomp_Yn), &
         &    Q = rpar(icomp_Q) )
-        eos_handle = ipar(ihandle)
+        eos_handle = ipar(ieoshandle)
+        cond_handle = ipar(icondhandle)
         ncharged = ipar(iNcharged)
         charged_ids(1:ncharged) => ipar(number_base_ipar+1:number_base_ipar+ncharged)
         Yion(1:ncharged) => rpar(number_base_rpar+1:number_base_rpar+ncharged)
@@ -506,27 +534,19 @@ contains
                 &   Tcs, res,phase,chi)
                 
         ! check for good eos
-        if (abs(exp(res(i_lnP))-P) > 1.0e-3_dp*P) then
-            print *, 'bad rootfind: ',rho,T,P,exp(res(i_lnP)),ionic% Z, ionic %A
-            stop
-        end if
+        call eos_is_sane% assert(abs(exp(res(i_lnP))-P) < 1.0e-3_dp*P)
         
         eta = res(i_Theta) !1.0/TpT
         Gamma = res(i_Gamma)
         mu_e = res(i_mu_e)
         del_ad = res(i_grad_ad)
-        call get_thermal_conductivity(rho,T,chi, &
-            & Gamma,eta,mu_e,ionic,Tcs(neutron_1S0), &
-            & K,which_components=cond_exclude_sf)
+        call get_thermal_conductivity(cond_handle,rho,T,chi, &
+            & Gamma,eta,mu_e,ionic,Tcs(neutron_1S0),K)
         kappa = 4.0*onethird*arad*clight*T**3/rho/K% total
-        
-!         if (dbg) then
-!             print *,rho,eta,Gamma,mu_e,del_ad,kappa
-!         end if
     end subroutine get_coefficients
 
     function get_lnrho_from_PT(P,T,lnrho_guess,lrpar,rpar,lipar,ipar,ierr) result(lnrho)
-        use iso_fortran_env, only: error_unit
+        use exceptions_lib
         use constants_def
         use nucchem_def, only: composition_info_type
         use dStar_eos_lib
@@ -545,6 +565,12 @@ contains
         real(dp), parameter :: default_tolerance = 1.0e-12_dp
         integer :: maximum_iterations
         real(dp) :: eps_rho,eps_p
+        type(failure) :: bracket_density=failure(scope='get_lnrho_from_PT', &
+        &   message='unable to bracket density')
+        type(failure) :: converged_density=failure(scope='get_lnrho_from_PT', &
+        &   message='unable to converge to density')
+        type(alert) :: density_guess=alert(scope='get_lnrho_from_PT')
+        character(len=128) :: msg
         
         ierr = 0
                     
@@ -561,29 +587,21 @@ contains
         call look_for_brackets(lnrho_guess, dlnrho, lnrho1, lnrho3,  &
         &   eval_pressure, p1, p3, maximum_iterations,  &
         &   lrpar, rpar, lipar, ipar, ierr)
-        if (ierr /= 0) then
-            write(error_unit,*) 'unable to bracket density: ierr = ', ierr
-            return
-        end if
+        if (bracket_density% raised(ierr)) return
         
         lnrho = safe_root_with_initial_guess(eval_pressure,lnrho_guess,lnrho1,lnrho3,p1,p3, &
             &   maximum_iterations,eps_rho,eps_p,lrpar,rpar,lipar,ipar,ierr)
 
-        if (ierr /= 0) then
-            write(error_unit,'(a,2(es13.4))') 'unable to converge to density: ',lnrho_guess,lnrho
+        if (converged_density% raised(ierr)) then
+            write(msg,'(a,2(es13.4))') 'ln(rho_guess), ln(rho) = ',lnrho_guess,lnrho
+            call density_guess% report(trim(msg))
             return
-        end if
-
-!         print *,'eval p =', eval_pressure(lnrho,dlnPdlnrho,lrpar,rpar,lipar,ipar,ierr)
-        if (ierr /=0 ) then
-            print *,'problem in eval_pressure'
-            return
-        end if
-        
+        end if        
     end function get_lnrho_from_PT
 
     real(dp) function eval_pressure(lnrho, dlnPdlnrho, lrpar, rpar, lipar, ipar, ierr)
        ! returns with ierr = 0 if was able to evaluate lnP and dlnP/dlnrho at rho
+       use exceptions_lib
        use constants_def
        use superfluid_def, only: max_number_sf_types
        use nucchem_def
@@ -604,12 +622,14 @@ contains
        real(dp), dimension(num_dStar_eos_results) :: res
        integer, pointer, dimension(:) :: charged_ids=>null()
        real(dp), pointer, dimension(:) :: Yion=>null()
+       type(assertion) :: composition_is_sane=assertion(scope='eval_pressure', &
+       &    message='mass fractions sum to 1')
 
        ierr = 0
        rho = exp(lnrho)
        T = rpar(itemp)
        Pwant = rpar(ipres)
-       eos_handle = ipar(ihandle)
+       eos_handle = ipar(ieoshandle)
        ncharged = ipar(iNcharged)
        charged_ids(1:ncharged)=>ipar(number_base_ipar+1:number_base_ipar+ncharged)
        Yion(1:ncharged)=>rpar(number_base_rpar+1:number_base_rpar+ncharged)
@@ -626,10 +646,7 @@ contains
        &    Yn = rpar(icomp_Yn), &
        &    Q = rpar(icomp_Q) )
 
-       if (sum(Yion*nuclib% A(charged_ids)) - 1.0_dp > 4.0*epsilon(1.0_dp)) then
-           print *,'bad composition:', Yion(1:ncharged), charged_ids(1:ncharged)
-           stop
-       end if
+       call composition_is_sane% assert(sum(Yion*nuclib% A(charged_ids)) - 1.0_dp < 4.0*epsilon(1.0_dp))
        
        Tcs = 0.0_dp
        call eval_crust_eos(eos_handle,rho,T,ionic,ncharged,charged_ids,Yion, &

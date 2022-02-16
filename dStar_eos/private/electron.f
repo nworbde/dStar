@@ -8,6 +8,7 @@ module electron_eos
 contains
 
 subroutine get_helm_eos_results(rho,T,ionic,f,u,p,s,cv,dpr,dpt,eta)
+    use exceptions_lib
     use constants_def, only: dp
     use dStar_eos_def
     use helm
@@ -19,6 +20,8 @@ subroutine get_helm_eos_results(rho,T,ionic,f,u,p,s,cv,dpr,dpt,eta)
     real(dp), dimension(num_helm_results) :: helm_res
     logical, parameter :: clip = .true.
     integer :: ierr
+    type(failure) :: helm_error=failure(scope='get_helm_eos_results', &
+    &   message='error in helmeos2')
     
     ! Xfrac and Zfrac are not used by helm, so set to a nonsensical value
     Xfrac = -1.0; Zfrac = -1.0
@@ -33,7 +36,7 @@ subroutine get_helm_eos_results(rho,T,ionic,f,u,p,s,cv,dpr,dpt,eta)
     logT = log10(T)
     logRho = log10(rho)
     call helmeos2(T,logT,rho,logRho,Zfrac,Xfrac,abar,zbar,helm_res,clip,ierr)
-    if (ierr /= 0) return
+    if (helm_error% raised(ierr)) return
     
     ! store the results
     u = helm_res(h_eele)
@@ -136,7 +139,7 @@ subroutine ee_exchange(Gamma_e,rs,f,u,p,s,cv,dpr,dpt)
 
     exp1th = exp(-1.0/theta)
 
-  c = (0.872496+0.025248*exp1th)*e
+    c = (0.872496+0.025248*exp1th)*e
     c_h = 0.025248*exp1th/theta2*e+c*e_h/e
     c_hh = 0.025248*exp1th/theta2*(e_h+(1.0-2.0*theta)/theta2*e) &
             & +c_h*e_h/e+c*e_hh/e-c*(e_h/e)**2

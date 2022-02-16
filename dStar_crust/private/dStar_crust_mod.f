@@ -5,8 +5,7 @@ module dStar_crust_mod
 contains
     
     subroutine do_load_crust_table(prefix,eos_handle,Tref,ierr)
-        use constants_def
-        use, intrinsic :: iso_fortran_env, only: error_unit
+        use exceptions_lib
         character(len=*), intent(in) :: prefix
         integer, intent(in) :: eos_handle
         real(dp), intent(in) :: Tref
@@ -17,11 +16,18 @@ contains
         character(len=crust_filename_length) :: table_name, cache_filename
         logical :: have_cache
         integer :: unitno
-
+        type(alert) :: overwrite=alert(scope='do_load_crust_table', &
+        &   message='overwriting previously loaded table')
+        character(len=128) :: alert_msg
+        type(alert) :: status=alert(scope='do_load_crust_table')
+        type(warning) :: cache_write_failure=warning(scope='do_load_crust_table', &
+        &   message='unable to write cache')
+        
+        ierr = 0
         tab => crust_table
         ! if the table is already allocated, issue a warning and scrub the table
         if (tab% is_loaded) then
-            write(error_unit,'(a)') 'do_load_crust_table: overwriting already loaded table'
+            call overwrite% report
             call do_free_crust_table(tab)
         end if
 
@@ -32,9 +38,10 @@ contains
             call do_read_crust_cache(cache_filename,tab,ierr)
             if (ierr == 0) return
         end if
-
-        ! if we don't have the table, or could not load it, then generate the
-        ! default and write it to cache
+        
+        ! if we don't have the table, or could not load it, then generatue a 
+        ! new one and write to cache
+        ierr = 0
         tab% nv = crust_default_number_table_points
         tab% lgP_min = crust_default_lgPmin
         tab% lgP_max = crust_default_lgPmax
@@ -45,20 +52,19 @@ contains
 
         ! write informative message about range of table
         if (dbg) then
-            lgRho_val(1:4,1:tab% nv) => tab% lgRho(1:4*tab% nv)
-            write(error_unit,'(a,2f8.3)')  &
-            &   'do_load_crust_table: lgNb min, max = ', &
+            write(alert_msg,'(a,2f8.3)') 'lgNb min, max = ', &
             &   10.0**(minval(lgRho_val(1,:)-log10(amu))-39.0), &
             &   10.0**(maxval(lgRho_val(1,:)-log10(amu))-39.0)
-            write(error_unit,'(t21,a,2f8.3)') 'lgP min, max = ', &
+            call status% report(alert_msg)
+            write(alert_msg,'(t21,a,2f8.3)') 'lgP min, max = ', &
             &   tab% lgP_min, tab% lgP_max
-            nullify(lgRho_val)
+            call status% report(alert_msg)
         end if
 
         if (.not.have_cache) then
             call do_write_crust_cache(cache_filename,tab,ierr)
+            if (cache_write_failure% raised(ierr)) return
         end if
-
     end subroutine do_load_crust_table
     
     subroutine do_generate_default_crust_table(prefix,eos_handle,tab,ierr)
@@ -191,19 +197,22 @@ contains
     end subroutine do_generate_default_crust_table
     
     subroutine do_read_crust_cache(cache_filename,tab,ierr)
+        use exceptions_lib
         character(len=*), intent(in) :: cache_filename
         type(crust_table_type), pointer :: tab
         integer, intent(out) :: ierr
         integer :: unitno, n, nisos
+        type(failure):: cache_error=failure(scope='do_read_crust_cache')
         
         open(newunit=unitno,file=trim(cache_filename), &
         &   action='read',status='old',form='unformatted', iostat=ierr)
-        if (failure('opening'//trim(cache_filename),ierr)) return
+        if (cache_error% raised(ierr,'opening'//trim(cache_filename))) &
+        &   return
         
         read(unitno) n
         read(unitno) nisos
         call do_allocate_crust_table(tab,n,nisos,ierr)
-        if (failure('allocating table',ierr)) then
+        if (cache_error% raised(ierr,'allocating table')) then
             close(unitno)
             return
         end if
@@ -222,16 +231,20 @@ contains
     end subroutine do_read_crust_cache
     
     subroutine do_write_crust_cache(cache_filename,tab,ierr)
+        use exceptions_lib
         character(len=*), intent(in) :: cache_filename
         type(crust_table_type), pointer :: tab
         integer, intent(out) :: ierr
         integer :: unitno
+        type(failure) :: cache_error=failure(scope='do_write_crust_cache')
         
         ierr = 0
         if (tab% nv == 0 .or. tab% nisos == 0) return
         open(newunit=unitno, file=trim(cache_filename),action='write', &
         &   form='unformatted',iostat=ierr)
-        if (failure('opening '//trim(cache_filename),ierr)) return
+        if (cache_error% raised(ierr,'opening '//trim(cache_filename))) &
+        &   return
+        
         write(unitno) tab% nv
         write(unitno) tab% nisos
         write(unitno) tab% network
@@ -328,7 +341,7 @@ contains
         
         lrpar = ncharged + 11 + 4
         allocate(rpar(lrpar))
-        
+
         ! last value of rpar is a guess for the density; if 0, will be calculated for relativistic electron gas
         rpar(lrpar) = 0.0
         do i = 1, Ntab
@@ -446,4 +459,5 @@ contains
             write(error_unit,*) trim(msg),': ierr = ',ierr
         end if
     end function failure
+
 end module dStar_crust_mod

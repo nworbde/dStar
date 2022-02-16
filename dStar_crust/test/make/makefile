@@ -2,7 +2,7 @@ include $(MESA_DIR)/utils/makefile_header
 
 DSTAR_LIB_DIR = ../../../lib
 LOAD_LOCAL = -L$(LOCAL_LIB_DIR) -ldstar_crust
-LOAD_OTHER = -L$(DSTAR_LIB_DIR) -ldstar_eos -lsuperfluid -lnucchem -lconstants -L$(MESA_LIB_DIR) $(LOAD_MESA_NUMERICS)
+LOAD_OTHER = -L$(DSTAR_LIB_DIR) -lexceptions -ldstar_eos -lsuperfluid -lnucchem -lconstants -L$(MESA_LIB_DIR) $(LOAD_MESA_NUMERICS)
 DSTAR_INC = ../../../include
 
 TEST = tester

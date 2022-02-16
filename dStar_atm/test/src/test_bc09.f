@@ -18,6 +18,7 @@ program test_bc09
     call constants_init('',ierr)
     call nucchem_init('../../data',ierr)
     call dStar_eos_startup('../../data')
+    call conductivity_startup('../../data')
 
     grav = 2.43e14_dp
     lgyb = log10(4.3e13_dp)
@@ -43,6 +44,7 @@ program test_bc09
     write (*,'(4f10.4)') (lgTeff_bc(i),lgTb(i),lgTeff_pcy(i), &
         &   ln10*(lgTeff_bc(i)-lgTeff_pcy(i)),i=1,Ntab)
     
+    call conductivity_shutdown
     call dStar_eos_shutdown
     call nucchem_shutdown
 

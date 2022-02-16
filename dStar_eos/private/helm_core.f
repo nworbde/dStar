@@ -162,7 +162,7 @@
      >         clip_to_table_boundaries, must_skip_elec_pos, ierr)
 
       use dStar_eos_def
-      use const_def
+      use const_def, asol=>crad
       use utils_lib, only: is_bad_num
       
       implicit none
