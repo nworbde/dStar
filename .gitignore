@@ -23,11 +23,11 @@ dStar_crust/preprocessor/process_abuntime
 dStar_crust/preprocessor/make/process_abuntime
 dStar_crust/preprocessor/print_abuntime
 dStar_crust/preprocessor/make/print_abuntime
-dStar_crust/preprocessor/abuntime_isos
-dStar_crust/preprocessor/abuntime_summary
-dStar_crust/data/rp03_isos
-dStar_crust/data/rp03_summary
-dStar_crust/data/rp03.bin
+dStar_crust/preprocessor/generate_HZ90
+dStar_crust/preprocessor/make/generate_HZ90
+dStar_crust/data/*_isos
+dStar_crust/data/*_summary
+dStar_crust/data/*.bin
 dStar_eos/data/helm_table.dat
 nucchem/data/nuclib_db
 condall06.dat

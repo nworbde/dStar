@@ -22,6 +22,8 @@ contains
         type(alert) :: status=alert(scope='do_load_crust_table')
         type(warning) :: cache_write_failure=warning(scope='do_load_crust_table', &
         &   message='unable to write cache')
+        type(failure) :: crust_table_failure=failure(scope='do_load_crust_table', &
+            message='unable to generate crust table')
         
         ierr = 0
         tab => crust_table
@@ -47,7 +49,7 @@ contains
         tab% lgP_max = crust_default_lgPmax
         tab% T = Tref
         call do_generate_default_crust_table(prefix,eos_handle,tab,ierr)
-        if (failure('do_generate_default_crust_table',ierr)) return
+        if (crust_table_failure% raised(ierr)) return
         tab% is_loaded = .TRUE.
 
         ! write informative message about range of table

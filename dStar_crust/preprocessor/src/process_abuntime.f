@@ -1,19 +1,19 @@
 program process_abuntime
-    use iso_fortran_env, only: error_unit, output_unit
-    use constants_def, only: dp
-    use constants_lib
+    use exceptions_lib
+    use const_def, only: dp
     use nucchem_def
     use nucchem_lib
 	use superfluid_def
 	use superfluid_lib
 	use dStar_eos_lib
     use abuntime
+    use composition_handler
 
-    real(dp), parameter :: lgP_increment = 0.005_dp
-    character(len=*), parameter ::  &
-        & abuntime_filename ='../data/rp03.data', &
-        & abuntime_cache = '../data/rp03.bin'
-
+    character(len=*), parameter :: datadir = '../data/'
+    integer :: argument_count
+    character(len=64) :: argument
+    character(len=64) :: abuntime_stem,abuntime_filename, abuntime_cache
+    real(dp) :: lgP_increment, abundance_threshold
     integer :: nz, nion !, ncharged
     real(dp), dimension(:,:), allocatable :: Yion,Yout,Ytot
     character(len=iso_name_length), dimension(:), allocatable :: isos,isonet, &
@@ -22,45 +22,53 @@ program process_abuntime
     integer :: k,ierr, eos_handle, iDelta(1)
     real(dp), dimension(:), allocatable :: lgP,lgPtot
     integer :: nnet, i, j, ntot,nztot
+    
+    character(len=128) :: alert_msg
+    type(alert) :: status=alert(scope='process_abuntime')
+    type(assertion) :: command_arguments=assertion(scope='process_abuntime', &
+        & message='USAGE: process_abuntime <file stem> <increment in lgP> <abundance threshold>')
+    type(assertion) :: nucchem_load_okay=assertion(scope='process_abuntime', &
+        & message='unable to initialize nucchem')
+    type(assertion) :: abuntime_load_okay=assertion(scope='process_abuntime', &
+        & message='read_abuntime file')
+    type(assertion) :: abuntime_reduction_okay=assertion(scope='process_abuntime', &
+        & message='reduce abuntime file')
+    type(assertion) :: abuntime_cache_okay=assertion(scope='process_abuntime', &
+        & message='write abuntime cache')
+
+    argument_count = command_argument_count()
+    call command_arguments% assert(argument_count==3)
+    
+    call get_command_argument(1,argument)
+    read(argument,*) abuntime_stem
+    call get_command_argument(2,argument)
+    read(argument,*) lgP_increment
+    call get_command_argument(3,argument)
+    read(argument,*) abundance_threshold
+    
+    abuntime_filename = datadir//trim(abuntime_stem)
+    abuntime_cache = datadir//trim(abuntime_stem)//'.bin'
 
     ierr = 0
-    call constants_init('',ierr)
-    call check_okay('constants_init',ierr)
     call nucchem_init('../../data/',ierr)
-    call check_okay('nucchem_init',ierr)
+    call nucchem_load_okay% assert(ierr==0)
     
-    write(output_unit,'(a)') 'preprocessing JINA crust tables'
-
-    write(error_unit,'(/,a)') 'reading '//abuntime_filename//' ...'
-    call read_abuntime(abuntime_filename, nz, nion, T, lgP, &
+    write(alert_msg,'(a)') 'reading '//trim(abuntime_filename)
+    call status% report(alert_msg)
+    call read_abuntime(trim(abuntime_filename), nz, nion, T, lgP, &
     &   isos, Yion, ierr,lgP_increment)
-    call check_okay('read_abuntime',ierr)
-    write(error_unit,'(a)') 'done'
+    call abuntime_load_okay% assert(ierr==0)
 
-    write(error_unit,'(/,a)') 'processing table...'
-    call reduce_abuntime(nz,nion,isos,lgP,Yion,nnet,isonet,Yout,ierr)
-    call expand_abuntime(nz,nnet,isonet,lgP,Yout,lgP_increment, &
-        & nztot,ntot,network,lgPtot,Ytot,ierr)
-    write(error_unit,'(a)') 'done'
+    write(alert_msg,'(a)') 'processing table...'
+    call reduce_abuntime(nz,nion,isos,lgP,Yion,nnet,isonet,Yout,ierr,abundance_threshold)
+    call abuntime_reduction_okay% assert(ierr == 0)
+    
+    write(alert_msg,'(a)') 'writing cache to '//trim(abuntime_cache)
+    call status% report(alert_msg)
+    call write_composition_cache(trim(abuntime_cache),nz,nnet,isonet,T,lgP,Yout,ierr)
+    call abuntime_cache_okay% assert(ierr == 0)
 
-    write(error_unit,'(/,a)') 'writing cache to '//abuntime_cache//'...'
-    call write_abuntime_cache(abuntime_cache,nztot,ntot,network,T, &
-    &   lgPtot,Ytot,ierr)
-    call check_okay('write_abuntime_cache',ierr)
-    write(error_unit,'(a)') 'done'
-
-    deallocate(lgP,isos,Yion,isonet,Yout,lgPtot,Ytot,network)
+    deallocate(lgP,isos,Yion,isonet,Yout)
 	call nucchem_shutdown
-
-contains
-	subroutine check_okay(msg,ierr)
-		use iso_fortran_env, only : error_unit
-		character(len=*), intent(in) :: msg
-		integer, intent(inout) :: ierr
-		if (ierr /= 0) then
-			write (error_unit,*) trim(msg)//': ierr = ',ierr
-			if (ierr < 0) stop
-		end if
-	end subroutine check_okay
 
 end program process_abuntime

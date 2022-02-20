@@ -1,5 +1,5 @@
 module dStar_crust_def
-    use constants_def, only: dp
+    use constants_def
     use nucchem_def, only: iso_name_length
 
     integer, parameter :: crust_default_number_table_points = 2048
