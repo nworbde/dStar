@@ -13,14 +13,13 @@ program process_abuntime
     integer :: argument_count
     character(len=64) :: argument
     character(len=64) :: abuntime_stem,abuntime_filename, abuntime_cache
-    real(dp) :: lgP_increment, abundance_threshold
+    real(dp) :: lgP_increment, abundance_threshold, T
     integer :: nz, nion !, ncharged
     real(dp), dimension(:,:), allocatable :: Yion,Yout,Ytot
+    real(dp), dimension(:), allocatable :: lgP,lgPtot
     character(len=iso_name_length), dimension(:), allocatable :: isos,isonet, &
     &   network
-    real(dp) :: T
-    integer :: k,ierr, eos_handle, iDelta(1)
-    real(dp), dimension(:), allocatable :: lgP,lgPtot
+    integer :: ierr
     integer :: nnet, i, j, ntot,nztot
     
     character(len=128) :: alert_msg
@@ -33,6 +32,8 @@ program process_abuntime
         & message='read_abuntime file')
     type(assertion) :: abuntime_reduction_okay=assertion(scope='process_abuntime', &
         & message='reduce abuntime file')
+    type(assertion) :: abuntime_extension_okay=assertion(scope='process_abuntime', &
+        & message='extend abuntime file')
     type(assertion) :: abuntime_cache_okay=assertion(scope='process_abuntime', &
         & message='write abuntime cache')
 
@@ -63,9 +64,12 @@ program process_abuntime
     call reduce_abuntime(nz,nion,isos,lgP,Yion,nnet,isonet,Yout,ierr,abundance_threshold)
     call abuntime_reduction_okay% assert(ierr == 0)
     
+    call extend_abuntime(nz,nnet,isonet,lgP,Yout,lgP_increment,nztot,ntot,network,lgPtot,Ytot,ierr)
+    call abuntime_extension_okay% assert(ierr==0)
+    
     write(alert_msg,'(a)') 'writing cache to '//trim(abuntime_cache)
     call status% report(alert_msg)
-    call write_composition_cache(trim(abuntime_cache),nz,nnet,isonet,T,lgP,Yout,ierr)
+    call write_composition_cache(trim(abuntime_cache),nztot,ntot,network,lgPtot,Ytot,ierr)
     call abuntime_cache_okay% assert(ierr == 0)
 
     deallocate(lgP,isos,Yion,isonet,Yout)

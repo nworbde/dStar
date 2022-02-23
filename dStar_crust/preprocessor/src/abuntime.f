@@ -3,14 +3,14 @@ module abuntime
     use const_def, only: dp, pi
     use utils_def
     use utils_lib
-    use nucchem_def, only: iso_name_length
+    use nucchem_def
     
     real(dp), parameter :: gravity = 1.85052e14_dp
     real(dp), parameter :: mdot = 8.8e4_dp*0.3_dp
     real(dp), parameter :: default_lgP_increment = 0.005_dp
     real(dp), parameter :: default_abundance_threshold = 0.01_dp
-    
-    type(integer_dict), pointer, save :: isodir=>null()
+    real(dp), parameter :: default_lgPmin = 22.0
+    real(dp), parameter :: default_lgPmax = 33.5
     
 contains
 
@@ -169,103 +169,101 @@ contains
         end do
     end subroutine reduce_abuntime
 
-!     subroutine expand_abuntime(nz,nion,isos,lgP,Y,lgP_increment, &
-!     & nzout,nnet,network,lgPout,Yout,ierr)
-!         use nucchem_def
-!         use dStar_crust_def
-!         use hz90
-!         real(dp), parameter :: transition_width = 0.02_dp
-!         integer, intent(in) :: nz,nion
-!         character(len=iso_name_length), dimension(:), intent(in) :: isos
-!         real(dp), dimension(:), intent(in) :: lgP
-!         real(dp), dimension(:,:), intent(in) :: Y
-!         real(dp), intent(in) :: lgP_increment
-!         integer, intent(out) :: nzout, nnet
-!         character(len=iso_name_length), dimension(:), allocatable, intent(out) :: network
-!         real(dp), dimension(:), allocatable, intent(out) :: lgPout
-!         real(dp), dimension(:,:), allocatable, intent(out) :: Yout
-!         integer, intent(out) :: ierr
-!         character(len=iso_name_length), dimension(nion+HZ90_number) :: tmp_net
-!         integer :: indx, n_top, n_bottom, i
-!         real(dp) :: abuntime_lgP_min, abuntime_lgP_max
-!         real(dp), dimension(:,:), allocatable :: Y_HZ90
-!         integer :: ncharged
-!         integer, dimension(HZ90_number) :: charged_ids
-!         real(dp), dimension(:), allocatable :: Xneut
-!         type(composition_info_type), dimension(:), allocatable :: ion_info
-!
-!         ! make the network the union of the network and that of HZ90
-!         nnet = 0
-!         do i=1,nion
-!             nnet = nnet+1
-!             call integer_dict_define(isodir, adjustl(isos(i)), nnet, ierr)
-!             tmp_net(nnet) = isos(i)
-!         end do
-!         do i=1,HZ90_number
-!             call integer_dict_lookup(isodir, HZ90_network(i), indx, ierr)
-!             if (ierr == -1) then
-!                 nnet = nnet+1
-!                 call integer_dict_define(isodir, HZ90_network(i), nnet, ierr)
-!                 tmp_net(nnet) = HZ90_network(i)
-!             end if
-!         end do
-!         allocate(network(nnet))
-!         network = tmp_net(1:nnet)
-!
-!         abuntime_lgP_min = minval(lgP)
-!         abuntime_lgP_max = maxval(lgP)
-!
-!         ! pad the table using HZ90
-!         n_top = 0
-!         n_bottom = 0
-!         n_top = (abuntime_lgP_min - crust_default_lgPmin)/lgP_increment
-!         n_bottom = (crust_default_lgPmax - abuntime_lgP_max)/lgP_increment
-!         nzout = n_top + nz + n_bottom
-!         allocate(lgPout(nzout),Yout(nnet,nzout))
-!         lgPout(1:n_top) = [ (crust_default_lgPmin+real(i-1)*lgP_increment, &
-!         & i=1,n_top) ]
-!         lgPout(n_top+1:n_top+nz) = lgP
-!         lgPout(n_top+nz+1:nzout) = [ (abuntime_lgP_max+real(i)*lgP_increment,i=1,n_bottom) ]
-!
-!         Yout = 0.0_dp
-!         allocate(Y_HZ90(HZ90_number,n_top),Xneut(n_top),ion_info(n_top))
-!
-!         call do_make_crust(lgPout(1:n_top), Y_HZ90, Xneut, charged_ids, ncharged, ion_info)
-!         do i = 1, HZ90_number
-!             call integer_dict_lookup(isodir,HZ90_network(i),indx,ierr)
-!             Yout(indx,1:n_top) = Y_HZ90(i,:)
-!         end do
-!         Yout(1:nion,1:n_top) = spread(Y(1:nion,1),2,n_top)
-!
-!         Yout(1:nion,n_top+1:n_top+nz) = Y(:,:)
-!
-!         deallocate(Y_HZ90,Xneut,ion_info)
-!         allocate(Y_HZ90(HZ90_number,n_bottom),Xneut(n_bottom),ion_info(n_bottom))
-!         call do_make_crust(lgPout(n_top+nz+1:nzout),Y_HZ90,Xneut,charged_ids,ncharged,ion_info)
-!         do i = 1, HZ90_number
-!             call integer_dict_lookup(isodir,HZ90_network(i),indx,ierr)
-!             Yout(indx,n_top+nz+1:nzout) = Y_HZ90(i,:)
-!         end do
-!         deallocate(Y_HZ90,Xneut,ion_info)
-!
-!         ! smooth the transitions
-!         do i = 1, nnet
-!             where(lgPout <= abuntime_lgP_min .and.  &
-!                 & lgPout >= abuntime_lgP_min-2*transition_width)
-!                 Yout(i,:) =  Yout(i,n_top+1)* &
-!                 &   cos(0.5*pi*(abuntime_lgP_min-lgPout)/2/transition_width) + &
-!                 &   Yout(i,:)* (1.0- &
-!                 &   cos(0.5*pi*(abuntime_lgP_min-lgPout)/2/transition_width))
-!             end where
-!             where(lgPout >= abuntime_lgP_max .and.  &
-!                 & lgPout <= abuntime_lgP_max+2*transition_width)
-!                 Yout(i,:) =  Yout(i,n_top+nz)* &
-!                 &   cos(0.5*pi*(lgPout-abuntime_lgP_max)/2/transition_width) + &
-!                 &   Yout(i,:)* (1.0- &
-!                 &   cos(0.5*pi*(lgPout-abuntime_lgP_max)/2/transition_width))
-!             end where
-!         end do
-!     end subroutine expand_abuntime
+    subroutine extend_abuntime(nz,nion,isos,lgP,Y,lgP_increment,nzout,nnet,network,lgPout,Yout,ierr)
+        use HZ90_comp
+        use exceptions_lib
+        implicit none
+        real(dp), parameter :: lgP_blend_width = 0.2_dp
+        integer, intent(in) :: nz,nion
+        character(len=iso_name_length), dimension(nion), intent(in) :: isos
+        real(dp), dimension(nz), intent(in) :: lgP
+        real(dp), dimension(nion,nz), intent(in) :: Y
+        real(dp), intent(in) :: lgP_increment
+        integer, intent(out) :: nzout,nnet
+        character(len=iso_name_length), dimension(:), allocatable, intent(out) :: network
+        real(dp), dimension(:), allocatable, intent(out) :: lgPout
+        real(dp), dimension(:,:), allocatable, intent(out) :: Yout
+        integer, intent(out) :: ierr
+        
+        character(len=iso_name_length), dimension(:), allocatable :: tmp_net
+        type(integer_dict), pointer :: isodir=>null()
+        integer, dimension(:), allocatable :: indcs, indcsHZ90
+        real(dp) :: lgPlow, lgPhigh
+        real(dp), dimension(:,:), allocatable :: Yab,YHZ90
+        real(dp), dimension(:), allocatable :: alpha, beta
+        integer :: nlow, nhigh, i, indx
+        type(assertion) :: dictionary_definition_okay = assertion(scope='extend_abuntime', &
+        &   message='error in adding to network dictionary')
+        character(len=128) :: alert_msg
+        type(alert) :: status = alert(scope='extend_abuntime')
+        
+        ! construct union of abuntime network and HZ90
+        allocate(tmp_net(nion+HZ90_number_isos))
+        allocate(indcs(nion),indcsHZ90(HZ90_number_isos))
+        nnet = 0
+        do i = 1, nion
+            nnet = nnet + 1
+            call integer_dict_define(isodir,adjustl(isos(i)), nnet, ierr)
+            call dictionary_definition_okay% assert(ierr==0)
+            tmp_net(nnet) = isos(i)
+            indcs(i) = nnet
+        end do
+        do i = 1, HZ90_number_isos
+            call integer_dict_lookup(isodir, adjustl(HZ90_network(i)), indx, ierr)
+            if (ierr == -1) then
+                nnet = nnet + 1
+                call integer_dict_define(isodir,adjustl(HZ90_network(i)), nnet, ierr)
+                call dictionary_definition_okay% assert(ierr==0)
+                tmp_net(nnet) = HZ90_network(i)
+                indcsHZ90(i) = nnet
+            else
+                indcsHZ90(i) = indx
+            end if
+        end do
+        allocate(network(nnet))
+        network = tmp_net(1:nnet)
+        deallocate(tmp_net)
+        
+        ! extend lg P to lower, higher values
+        lgPlow = minval(lgP)
+        lgPhigh = maxval(lgP)
+        nlow = max(int((lgPlow - default_lgPmin)/lgP_increment),1)
+        nhigh = max(int((default_lgPmax - lgPhigh)/lgP_increment),1)
+        nzout = nlow+nz+nhigh
+        allocate(lgPout(nzout),alpha(nzout),beta(nzout))
+        allocate(Yab(nion,nzout),YHZ90(HZ90_number_isos,nzout))
 
+        lgPout(1:nlow) = (/(minval(lgP) - lgP_increment*i,i=nlow,1,-1)/)
+        lgPout(nlow+1:nlow+nz) = lgP
+        lgPout(nlow+nz+1:nzout) = (/(maxval(lgP) + lgP_increment*i, i= 1, nhigh)/)
+        
+        write(alert_msg,'(2(a,f7.3,"--",f7.3))') 'extending lgP range from ',lgPlow,lgPhigh, &
+        &   ' to ',minval(lgPout),maxval(lgPout)
+        call status% report(alert_msg)
+
+        Yab(:,1:nlow) = spread(Y(:,1),2,nlow)
+        Yab(:,nlow+1:nlow+nz) = Y
+        Yab(:,nlow+nz+1:nzout) = spread(Y(:,nz),2,nhigh)        
+        call do_generate_HZ90_table(lgPout,YHZ90)
+        
+        allocate(Yout(nnet,nzout),source = 0.0_dp)
+        where(lgPout <= lgPhigh)
+            beta = 0.0_dp
+        else where(lgPout > lgPhigh+lgP_blend_width)
+            beta = 1.0_dp
+        else where(lgPout > lgPhigh .and. lgPout <= lgPhigh+lgP_blend_width)
+            beta = (lgPout(:)-lgPhigh)/lgP_blend_width
+        end where
+        alpha = 1.0_dp-beta
+        do i = 1, nion
+            Yout(indcs(i),:) = Yab(i,:)*alpha(:)
+        end do
+        do i = 1, HZ90_number_isos
+            Yout(indcsHZ90(i),:) = Yout(indcsHZ90(i),:) + YHZ90(i,:)*beta(:)
+        end do
+        
+        deallocate(YHZ90,Yab,indcs,indcsHZ90,alpha,beta)
+        
+    end subroutine extend_abuntime
     
 end module abuntime

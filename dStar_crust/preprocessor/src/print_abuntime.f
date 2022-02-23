@@ -49,7 +49,7 @@ program print_abuntime
     call nucchem_init('../../data/',ierr)
     call nucchem_load_okay% assert(ierr==0)
     
-    call read_composition_cache(cache_filename,nz,nion,isos,T,lgP,Yion,ierr)
+    call read_composition_cache(cache_filename,nz,nion,isos,lgP,Yion,ierr)
     call read_cache_okay% assert(ierr==0)
     open(newunit=iso_unit,file=iso_filename,action='write',status='unknown')
     write(iso_unit,'(a5)') isos

@@ -6,13 +6,13 @@ LOAD_OTHER = -L$(DSTAR_LIB_DIR) -ldstar_eos -lsuperfluid -lnucchem -lconstants -
 DSTAR_INC = ../../../include
 
 HZ90_GENERATOR = generate_HZ90
-HZ90_GENERATOR_OBJS = comp_cache.o generate_HZ90.o
+HZ90_GENERATOR_OBJS =  HZ90_comp.o composition_handler.o generate_HZ90.o
 
 PREPROCESSOR = process_abuntime
-PREPROCESSOR_OBJS = abuntime.o comp_cache.o process_abuntime.o
+PREPROCESSOR_OBJS = abuntime.o composition_handler.o HZ90_comp.o process_abuntime.o
 
 PRINTER = print_abuntime
-PRINTER_OBJS = comp_cache.o print_abuntime.o
+PRINTER_OBJS = composition_handler.o print_abuntime.o
 
 default: install
 
