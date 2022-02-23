@@ -9,7 +9,7 @@ HZ90_GENERATOR = generate_HZ90
 HZ90_GENERATOR_OBJS =  HZ90_comp.o composition_handler.o generate_HZ90.o
 
 PREPROCESSOR = process_abuntime
-PREPROCESSOR_OBJS = abuntime.o composition_handler.o HZ90_comp.o process_abuntime.o
+PREPROCESSOR_OBJS = HZ90_comp.o abuntime.o composition_handler.o process_abuntime.o
 
 PRINTER = print_composition
 PRINTER_OBJS = composition_handler.o print_composition.o
