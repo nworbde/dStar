@@ -3,14 +3,13 @@ module composition_handler
     implicit none
     
 contains
-    subroutine write_composition_cache(cache_filename,nz,nion,isos,T,lgP,Y,ierr)
+    subroutine write_composition_cache(cache_filename,nz,nion,isos,lgP,Y,ierr)
         use const_def, only: dp
         use exceptions_lib
         use nucchem_def, only: iso_name_length
         character(len=*), intent(in) :: cache_filename
         integer, intent(in) :: nz, nion
         character(len=iso_name_length), intent(in), dimension(:) :: isos ! nion
-        real(dp), intent(in) :: T
         real(dp), intent(in), dimension(:) :: lgP   ! nz
         real(dp), intent(in), dimension(:,:) :: Y   ! nion, nz
         integer, intent(out) :: ierr
@@ -25,20 +24,18 @@ contains
         write(unitno) nz
         write(unitno) nion
         write(unitno) isos
-        write(unitno) T
         write(unitno) lgP
         write(unitno) Y
         close(unitno)
     end subroutine write_composition_cache
 
-    subroutine read_composition_cache(cache_filename,nz,nion,isos,T,lgP,Y,ierr)
+    subroutine read_composition_cache(cache_filename,nz,nion,isos,lgP,Y,ierr)
         use const_def, only: dp
         use exceptions_lib
         use nucchem_def, only: iso_name_length
         character(len=*), intent(in) :: cache_filename
         integer, intent(out) :: nz,nion
         character(len=iso_name_length), dimension(:), allocatable, intent(out) :: isos
-        real(dp), intent(out) :: T
         real(dp), dimension(:), allocatable, intent(out) :: lgP
         real(dp), dimension(:,:), allocatable, intent(out) :: Y
         integer, intent(out) :: ierr
@@ -53,17 +50,15 @@ contains
 
         read(unitno) nz
         read(unitno) nion
-        print *,nz,nion
         allocate(isos(nion), lgP(nz), Y(nion,nz),stat=ierr)
         if (allocate_table_failure% raised(ierr)) then
             close(unitno)
             return
         end if
         read(unitno) isos
-        read(unitno) T
         read(unitno) lgP
         read(unitno) Y
         close(unitno)
     end subroutine read_composition_cache
-
+    
 end module composition_handler
