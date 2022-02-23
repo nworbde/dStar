@@ -1,4 +1,4 @@
-program print_abuntime
+program print_composition
     use exceptions_lib
     use const_def, only: dp
     use nucchem_def
@@ -26,13 +26,13 @@ program print_abuntime
     integer :: summary_unit, iso_unit, ncharged, n_indx
 
     character(len=128) :: alert_msg
-    type(assertion) :: command_arguments=assertion(scope='print_abuntime', &
+    type(assertion) :: command_arguments=assertion(scope='print_composition', &
         & message='USAGE: print_composition <file stem> <abundance threshold>')
     type(assertion) :: nucchem_load_okay=assertion(scope='process_abuntime', &
         & message='unable to initialize nucchem')
-    type(assertion) :: read_cache_okay=assertion(scope='print_abuntime', &
+    type(assertion) :: read_cache_okay=assertion(scope='print_composition', &
         & message='read_abuntime_cache')
-    type(alert) :: status = alert(scope='print_abuntime')
+    type(alert) :: status = alert(scope='print_composition')
 
     argument_count = command_argument_count()
     call command_arguments% assert(argument_count==2)
@@ -100,4 +100,4 @@ program print_abuntime
     deallocate(isos,Yion,lgP)
     call nucchem_shutdown
     
-end program print_abuntime
+end program print_composition
