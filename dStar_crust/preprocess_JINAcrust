@@ -1,19 +1,65 @@
 #!/bin/bash
 
-function check_okay {
-	if [ $? -ne 0 ]
-	then
-		echo
-		pwd
-		echo "FAILED"
-		echo
-		exit 1
-	fi
+# defaults
+datadir=../data
+deltaP=0.005
+threshold=0.001
+print_threshold=0.01
+
+usage() {
+    echo "Usage: $0 [db stem] [-d delta P] [-t threshold]"}
+    echo
+    echo "preprocesses abuntime files, with the name of the file in the parameter [db stem].
+The option [delta P] controls the spacing in log(P) and threshold sets the minimum abundance (relative to the max abundance at a given point) for a species to be tracked."
 }
 
-archive=JINAcrust.txz
-datafile=rp03.data
-datadir=../data
+exit_abnormal() {
+    usage
+    exit 1
+}
+
+check_okay() {
+    if [ $? -ne 0 ]; then
+        echo
+        pwd
+        echo "$1 FAILED"
+        echo
+        exit 1
+    fi
+}
+
+stem=$1
+shift
+if [ -z "$stem" ]; then
+    echo $USAGE 1>&2
+    echo
+    echo $LONG_USAGE 1>&2
+    exit 1
+fi
+
+while getopts ":d:t:p:" options; do
+    case "${options}" in
+    d)
+        deltaP=${OPTARG}
+        ;;
+    t)
+        threshold=${OPTARG}
+        ;;
+    p)
+        print_threshold=${OPTARG}
+        ;;
+    :)
+        echo "Error: -${OPTARG} requires an argument"
+        exit_abnormal
+        ;;
+    *)
+        exit_abnormal
+        ;;
+    esac
+done
+
+datafile=$stem
+archive=$stem+'.txz'
 
 cd preprocessor
 cd make
@@ -24,16 +70,15 @@ cd ..
 if [ ! -f $datadir/$datafile ]; then
     if [ -f $datadir/$archive ]; then
         tar -xf $archive
-        check_okay
+        check_okay "tar -xf $archive"
     else
         echo "$datafile not found"
         exit 1
     fi
 fi
 
-./process_abuntime
-check_okay
-rm $datadir/$datafile
-./print_abuntime
-check_okay
+./process_abuntime $stem $deltaP $threshold
+check_okay "./process_abuntime $stem $deltaP $threshold"
+./print_composition $stem $print_threshold
+check_okay "./print_composition $stem $print_threshold"
 cd ..

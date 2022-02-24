@@ -299,7 +299,7 @@ contains
        call sf_get_results(kFp,kFn,Tcs)
        call eval_crust_eos(eos_handle,rho,T,ionic,ncharged, &
        &    charged_ids,Yion,Tcs,res,phase,chi,eos_components)
-       Eint = res(i_lnE)
+       Eint = exp(res(i_lnE))
        
        lgPwant = rpar(ncharged+12)
        lgP = res(i_lnP)/ln10
