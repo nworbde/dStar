@@ -7,10 +7,10 @@ threshold=0.001
 print_threshold=0.01
 
 usage() {
-    echo "Usage: $0 [db stem] [-d delta P] [-t threshold]"}
+    echo "Usage: $0 [db stem] [-d delta P] [-t threshold] [-p print threshold]"}
     echo
     echo "preprocesses abuntime files, with the name of the file in the parameter [db stem].
-The option [delta P] controls the spacing in log(P) and threshold sets the minimum abundance (relative to the max abundance at a given point) for a species to be tracked."
+The option [delta P] controls the spacing in log(P) and threshold sets the minimum abundance (relative to the max abundance at a given point) for a species to be tracked. The print threshold sets the level of detail in the summary."
 }
 
 exit_abnormal() {
@@ -31,10 +31,7 @@ check_okay() {
 stem=$1
 shift
 if [ -z "$stem" ]; then
-    echo $USAGE 1>&2
-    echo
-    echo $LONG_USAGE 1>&2
-    exit 1
+    exit_abnormal
 fi
 
 while getopts ":d:t:p:" options; do
@@ -64,7 +61,7 @@ archive=$stem+'.txz'
 cd preprocessor
 cd make
 make
-check_okay
+check_okay("make")
 cd ..
 
 if [ ! -f $datadir/$datafile ]; then
@@ -73,7 +70,7 @@ if [ ! -f $datadir/$datafile ]; then
         check_okay "tar -xf $archive"
     else
         echo "$datafile not found"
-        exit 1
+        exit_abnormal
     fi
 fi
 

@@ -1,1 +1,0 @@
-preprocesses abuntime files, with the name of the file in the parameter [db stem]. The option [delta P] controls the spacing in log(P) and threshold sets the minimum abundance (relative to the max abundance at a given point) for a species to be tracked. 2
