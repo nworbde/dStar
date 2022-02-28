@@ -38,6 +38,7 @@ contains
         cache_filename = trim(crust_datadir)//'/cache/'//trim(table_name)//'.bin'
         inquire(file=cache_filename,exist=have_cache)
         if (have_cache) then
+            call status% report('loading crust table '//trim(cache_filename))
             call do_read_crust_cache(cache_filename,tab,ierr)
             if (ierr == 0) return
         end if
@@ -45,6 +46,9 @@ contains
         ! if we don't have the table, or could not load it, then generatue a 
         ! new one and write to cache
         ierr = 0
+        write(alert_msg,'(a,es9.2,a)') 'generating crust table using composition profile '//trim(prefix)// &
+        &   ' at T = ',Tref,' K'
+        call status% report(alert_msg)
         call do_generate_crust_table(prefix,eos_handle,Tref, tab,ierr)
         if (crust_table_failure% raised(ierr)) return
         tab% is_loaded = .TRUE.
