@@ -50,9 +50,9 @@ program test_crust
    
     lgP = [(26.5+5.0*real(i-1,dp)/real(Ntrial-1,dp),i=1,Ntrial)]
     
-    write (*,'(/,5(a9,tr2),/)') 'lg(P)','lg(rho)','D lg(rho)','lg(Eps)','D ln(Eps)'
+    write (*,'(/,5(a9,tr2),/)') 'lg(P)','lg(rho)','D lg(rho)','lg(Eps)','D lg(Eps)'
     do i = 1,Ntrial
-        call dStar_crust_get_eos(lgP(i),lgRho(i),dlgRho(i),lgEps(i),dlgEps(i),ierr)
+        call dStar_crust_get_results(lgP(i),lgRho(i),dlgRho(i),lgEps(i),dlgEps(i),ierr)
         call check_okay('dStar_crust_get_results',ierr)
         write(*,'(5(f9.5,tr2))') lgP(i),lgRho(i),dlgRho(i),lgEps(i),dlgEps(i)
         call sane_eos% assert(dlgRho(i) > 0.0_dp)
