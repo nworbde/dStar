@@ -38,7 +38,7 @@ program test_NScool_tov
     call check_okay('dStar_atm_startup',ierr)
     
     Tref = 1.0d8
-    call dStar_crust_load_table('hz90',eos_handle, Tref,ierr)
+    call dStar_crust_load_table('net_rp',eos_handle, Tref,ierr)
     call check_okay('dStar_crust_load_table',ierr)
     print *,'crust table loaded'
     
@@ -48,7 +48,7 @@ program test_NScool_tov
     lgPend = 27.0
     allocate(y(num_tov_variables))
     print *, 'integrating'
-    call tov_integrate(lgPstart, lgPend, Mcore, Rcore, y, ierr)
+    call tov_integrate(lgPstart, lgPend, Mcore, Rcore, 0.05_dp, y, ierr)
     print *,'done'
     print *,y
     

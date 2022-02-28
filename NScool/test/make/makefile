@@ -16,6 +16,9 @@ $(TEST) : $(TEST_OBJS)
 test_args: test_argparse.o
 	$(LOADER) $(FCopenmp) -o $@ test_argparse.o $(LOAD_LOCAL) $(LOAD_OTHER)
 
+test_NScool_tov: test_NScool_tov.o
+	$(LOADER) $(FCopenmp) -o $@ test_NScool_tov.o $(LOAD_LOCAL) $(LOAD_OTHER)
+
 %.o: $(TEST_SRC_DIR)/%.f
 	$(TEST_COMPILE) $(FCfree) $(FCimpno) -I$(DSTAR_INC) $<
 
