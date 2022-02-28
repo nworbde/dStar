@@ -46,7 +46,7 @@ contains
 
         open(newunit=unitno,file=trim(cache_filename), &
         &   action='read',status='old',form='unformatted', iostat=ierr)
-        if (open_cache_failure% raised(ierr,message='opening'//trim(cache_filename))) return
+        if (open_cache_failure% raised(ierr,message='opening '//trim(cache_filename))) return
 
         read(unitno) nz
         read(unitno) nion

@@ -6,15 +6,18 @@ LOAD_OTHER = -L$(DSTAR_LIB_DIR) -ldstar_eos -lsuperfluid -lnucchem -lconstants -
 DSTAR_INC = ../../../include
 
 HZ90_GENERATOR = generate_HZ90
-HZ90_GENERATOR_OBJS =  HZ90_comp.o composition_handler.o generate_HZ90.o
+HZ90_GENERATOR_OBJS =  HZ90_comp.o generate_HZ90.o
 
 PREPROCESSOR = process_abuntime
-PREPROCESSOR_OBJS = HZ90_comp.o abuntime.o composition_handler.o process_abuntime.o
+PREPROCESSOR_OBJS = HZ90_comp.o abuntime.o process_abuntime.o
 
 PRINTER = print_composition
-PRINTER_OBJS = composition_handler.o print_composition.o
+PRINTER_OBJS = print_composition.o
 
 default: install
+
+$(HZ90_GENERATOR): $(HZ90_GENERATOR_OBJS)
+	$(LOADER) $(FCopenmp) -o $@ $(HZ90_GENERATOR_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
 
 $(PREPROCESSOR) : $(PREPROCESSOR_OBJS)
 	$(LOADER) $(FCopenmp) -o $@ $(PREPROCESSOR_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
@@ -22,14 +25,11 @@ $(PREPROCESSOR) : $(PREPROCESSOR_OBJS)
 $(PRINTER) : $(PRINTER_OBJS)
 	$(LOADER) $(FCopenmp) -o $@ $(PRINTER_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
 
-$(HZ90_GENERATOR): $(HZ90_GENERATOR_OBJS)
-	$(LOADER) $(FCopenmp) -o $@ $(HZ90_GENERATOR_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
-
 %.o: $(TEST_SRC_DIR)/%.f
 	$(TEST_COMPILE) $(FCfree) $(FCimpno) -I$(DSTAR_INC) $<
 
-install: $(PREPROCESSOR) $(PRINTER) $(HZ90_GENERATOR)
-	cp $(PREPROCESSOR) $(PRINTER) $(HZ90_GENERATOR) ..
+install: $(HZ90_GENERATOR) $(PREPROCESSOR) $(PRINTER)
+	cp $(HZ90_GENERATOR) $(PREPROCESSOR) $(PRINTER) ..
 
 clean:
-	-@rm -f *.o *.mod $(PREPROCESSOR) $(PRINTER) $(HZ90_GENERATOR)
+	-@rm -f *.o *.mod $(HZ90_GENERATOR) $(PREPROCESSOR) $(PRINTER)
