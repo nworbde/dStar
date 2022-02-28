@@ -33,6 +33,7 @@ contains
             call do_free_crust_table(tab)
         end if
 
+        ! attempt to read from a cache file
         call generate_crust_filename(prefix,Tref,table_name)
         cache_filename = trim(crust_datadir)//'/cache/'//trim(table_name)//'.bin'
         inquire(file=cache_filename,exist=have_cache)
@@ -44,11 +45,7 @@ contains
         ! if we don't have the table, or could not load it, then generatue a 
         ! new one and write to cache
         ierr = 0
-        tab% nv = crust_default_number_table_points
-        tab% lgP_min = crust_default_lgPmin
-        tab% lgP_max = crust_default_lgPmax
-        tab% T = Tref
-        call do_generate_default_crust_table(prefix,eos_handle,tab,ierr)
+        call do_generate_crust_table(prefix,eos_handle,Tref, tab,ierr)
         if (crust_table_failure% raised(ierr)) return
         tab% is_loaded = .TRUE.
 
@@ -69,87 +66,58 @@ contains
         end if
     end subroutine do_load_crust_table
     
-    subroutine do_generate_default_crust_table(prefix,eos_handle,tab,ierr)
+    subroutine do_generate_crust_table(prefix,eos_handle,T,tab,ierr)
+        use exceptions_lib
         use constants_def, only: avogadro
         use nucchem_def
         use nucchem_lib
-        use hz90
         use interp_1d_def
         use interp_1d_lib
+        use composition_handler
         character(len=*), intent(in) :: prefix
         integer, intent(in) :: eos_handle
+        real(dp), intent(in) :: T
         type(crust_table_type), pointer :: tab
         integer, intent(out) :: ierr
+        ! for the composition table
+        character(len=crust_filename_length) :: composition_filename
+        integer :: N, Nisos
+        real(dp), dimension(:), allocatable :: lgP
+        character(len=iso_name_length), dimension(:), allocatable :: isos
+        real(dp), dimension(:,:), allocatable :: Y
+        ! interpolation storage
         real(dp), dimension(:), pointer :: work=>null()
         real(dp), pointer, dimension(:,:) :: Y_val
         real(dp), pointer, dimension(:) :: Yptr
         real(dp), pointer, dimension(:,:) :: lgRho_val, lgEps_val
-        real(dp) :: lgPmin, delta_lgP, Xsum, T
-        integer :: N, Nisos, i
-        integer :: ncharged
-        integer, dimension(:), allocatable :: charged_ids
-        real(dp), dimension(:), allocatable :: lgP,lgRho,lgEps
-        real(dp), dimension(:,:), allocatable :: Yion, Y
+        real(dp), dimension(:), allocatable :: lgRho,lgEps
+        real(dp), dimension(:,:), allocatable :: Yion
         type(composition_info_type), dimension(:), allocatable :: ion_info
+        integer, dimension(:), allocatable :: charged_ids
         integer, dimension(:), allocatable :: indcs
-        character(len=iso_name_length), dimension(:), allocatable :: isos
-        character(len=crust_filename_length) :: abuntime_filename
-        logical :: have_abuntime
-        integer :: unitno
-        
-        ierr = 0
-        select case(trim(prefix))
-        
-            case('HZ90')
-            lgPmin = tab% lgP_min
-            delta_lgP = tab% lgP_max - lgPmin
-            N = tab% nv
-            Nisos = HZ90_number
-            allocate(lgP(N), lgRho(N), lgEps(N), Yion(Nisos,N), &
-            &   Y(Nisos, N), ion_info(N), indcs(Nisos), charged_ids(Nisos), &
-            &   isos(Nisos), stat=ierr)
-            if (failure('do_generate_default_crust_table: allocating memory', ierr)) return
-            isos = HZ90_network
-            
-            ! set lgP; then determine the corresponding composition
-            lgP = [ (lgPmin + real(i-1,dp)*(delta_lgP)/real(N-1,dp), i = 1,N)]
-            call set_HZ90_composition(lgP, Y)
-            indcs = [(get_nuclide_index(HZ90_network(i)),i=1,HZ90_number)]
-        
-            case('rp03')
-            ! check to see if the abuntime cache exists
-            abuntime_filename = &
-            &   trim(crust_datadir)//'/cache/'//trim(prefix)//'.bin'
-            inquire(file=abuntime_filename, exist=have_abuntime)
-            if (have_abuntime) then
-                open(newunit=unitno,file=trim(abuntime_filename), &
-                &   action='read',status='old',form='unformatted', iostat=ierr)
-                if (failure('opening'//trim(abuntime_filename),ierr)) return
-
-                read(unitno) N
-                read(unitno) Nisos
-                allocate(isos(Nisos), lgP(N), lgRho(N), lgEps(N), Y(Nisos,N), &
-                &   Yion(Nisos,N), ion_info(N), indcs(Nisos), &
-                &   charged_ids(Nisos), stat=ierr)
-                if (failure('allocating abuntime tables',ierr)) then
-                    close(unitno)
-                    return
-                end if
-                read(unitno) isos
-                read(unitno) T
-                read(unitno) lgP
-                read(unitno) Y
-                close(unitno)
-                indcs = [(get_nuclide_index(adjustl(isos(i))),i=1,Nisos)]
-            else
-                print *,'missing composition file '//trim(prefix)//'.bin'
-                stop
-            end if
+        integer :: ncharged, i
+        real(dp) :: Xsum
+        character(len=*), parameter :: routine_name='do_generate_crust_table'
+        type(failure) :: read_composition_error=failure(scope=routine_name, &
+        &   message='unable to read composition')
+        type(failure) :: allocation_error=failure(scope=routine_name)
+        type(failure) :: interpolation_error=failure(scope=routine_name)
                 
-            case default
-            print *,'malformed prefix in do_generate_default_crust_table'
-            stop
-        end select
+        ierr = 0
+        composition_filename = trim(crust_datadir)//'/'//trim(prefix)//'.bin'
+        call read_composition_cache(composition_filename,N,Nisos,isos,lgP,Y,ierr)
+        if (read_composition_error% raised(ierr)) return
+
+        tab% nv = N
+        tab% nisos = Nisos
+        tab% T = T
+        tab% lgP_min = minval(lgP)
+        tab% lgP_max = maxval(lgP)
+        allocate(lgRho(N), lgEps(N), Yion(Nisos,N), ion_info(N), indcs(Nisos), charged_ids(Nisos), stat=ierr)
+        if (allocation_error% raised(ierr,'unable to allocate storage')) return
+        
+        ! set up markers for the nuclei
+        indcs = [(get_nuclide_index(adjustl(isos(i))),i=1,Nisos)]
 
         ! set the composition moments and densities
         do i = 1, N
@@ -157,17 +125,16 @@ contains
             &   ion_info(i), Xsum, ncharged, charged_ids, Yion(:,i), &
             &   abunds_are_mass_fractions=.FALSE., exclude_neutrons=.TRUE.)
         end do
-        call find_densities(eos_handle,lgP,lgRho,lgEps, &
-            & Yion,ncharged,charged_ids,ion_info,tab% T)
+        call find_densities(eos_handle,lgP,lgRho,lgEps,Yion,ncharged,charged_ids,ion_info,tab% T)
         
         call do_allocate_crust_table(tab, N, Nisos, ierr)
-        if (failure('do_allocate_crust_table', ierr)) return
+        if (allocation_error% raised(ierr,'unable to allocate crust table')) return
         
         ! copy network information to table
         tab% network = isos
 
         ! construct interpolants
-        tab% lgP = lgP        
+        tab% lgP = lgP
         allocate(work(tab% nv*pm_work_size))
         
         ! composition
@@ -177,7 +144,7 @@ contains
             Yptr(1:4*N) => tab% Y(1:4*N,i)
             call interp_pm(tab% lgP, tab% nv, Yptr, pm_work_size, work, &
             &   'do_generate_default_crust_table: Y',ierr)
-            if (failure(trim(nuclib% name(indcs(i))),ierr)) return
+            if (interpolation_error% raised(ierr,trim(nuclib% name(indcs(i))))) return
         end do
 
         ! eos
@@ -187,38 +154,40 @@ contains
         lgEps_val(1,:) = lgEps
 
         call interp_pm(tab% lgP, tab% nv, tab% lgRho, pm_work_size, work, &
-        &   'do_generate_default_crust_table: Rho', ierr)
-        if (failure('lgRho',ierr)) return
+        &   routine_name//': Rho', ierr)
+        if (interpolation_error% raised(ierr,'unable to interpolate lgRho')) return
         call interp_pm(tab% lgP, tab% nv, tab% lgEps, pm_work_size, work, &
-        &   'do_generate_default_crust_table: Eps', ierr)
-        if (failure('lgEps',ierr)) return
+        &   routine_name//': Eps', ierr)
+        if (interpolation_error% raised(ierr,'unable to interpolate lgEps')) return
         
         deallocate(work)
-        deallocate(lgP, lgRho, lgEps, Yion, ion_info, indcs, charged_ids, isos)
+        deallocate(lgP, lgRho, lgEps, Yion, ion_info, indcs, charged_ids, isos, Y)
 
-    end subroutine do_generate_default_crust_table
+    end subroutine do_generate_crust_table
     
     subroutine do_read_crust_cache(cache_filename,tab,ierr)
         use exceptions_lib
         character(len=*), intent(in) :: cache_filename
         type(crust_table_type), pointer :: tab
         integer, intent(out) :: ierr
-        integer :: unitno, n, nisos
-        type(failure):: cache_error=failure(scope='do_read_crust_cache')
+        integer :: unitno, nv, nisos
+        type(failure) :: cache_error=failure(scope='do_read_crust_cache')
         
         open(newunit=unitno,file=trim(cache_filename), &
         &   action='read',status='old',form='unformatted', iostat=ierr)
         if (cache_error% raised(ierr,'opening'//trim(cache_filename))) &
         &   return
         
-        read(unitno) n
+        read(unitno) nv
         read(unitno) nisos
-        call do_allocate_crust_table(tab,n,nisos,ierr)
+        call do_allocate_crust_table(tab,nv,nisos,ierr)
         if (cache_error% raised(ierr,'allocating table')) then
             close(unitno)
             return
         end if
         
+        tab% nv = nv
+        tab% nisos = nisos
         read(unitno) tab% network
         read(unitno) tab% T
         read(unitno) tab% lgP
@@ -259,18 +228,18 @@ contains
     end subroutine do_write_crust_cache
     
     subroutine do_allocate_crust_table(tab,n,nisos,ierr)
-        type(crust_table_type),pointer :: tab
+        use exceptions_lib
+        type(crust_table_type), pointer :: tab
         integer, intent(in) :: n,nisos
         integer, intent(out) :: ierr
+        type(failure) :: allocation_error=failure(scope='do_allocate_crust_table', &
+        &   message='unable to allocate crust table')
 
         tab% nv = 0
         tab% nisos = 0
         allocate(tab% lgP(n),tab% lgEps(4*n), tab% lgRho(4*n), &
-        &   tab% network(nisos), &
-        &   tab% Y(4*n,nisos), stat=ierr)
-                
-        allocate(tab% lgP(n), tab% lgRho(4*n), tab% lgEps(4*n), stat=ierr)
-        if (ierr /= 0) return
+        &   tab% network(nisos), tab% Y(4*n,nisos), stat=ierr)
+        if (allocation_error% raised(ierr)) return                
         tab% nv = n
         tab% nisos = nisos
     end subroutine do_allocate_crust_table
@@ -307,6 +276,7 @@ contains
 
     subroutine find_densities(eos_handle,lgP,lgRho,lgEps, &
             & Yion,ncharged,charged_ids,ionic,Tref)
+        use exceptions_lib
         use constants_def
         use nucchem_def
         use num_lib
@@ -327,12 +297,15 @@ contains
         integer :: i,Ntab
         real(dp) :: x1, x3, y1, y3, epsx, epsy, lgRho_guess
         integer :: imax, ierr
+        type(warning) :: rootfind_error=warning(scope='find_densities')
+        type(alert) :: rootfind_status=alert(scope='find_densities')
+        character(len=128) :: error_message
         
         Pfac = 0.25*(threepisquare)**onethird *hbar*clight*avo**(4.0*onethird)
         Ntab = size(lgP)
         imax = 20
-        epsx = 1.0d-8
-        epsy = 1.0d-8
+        epsx = 1.0d-12
+        epsy = 1.0d-12
         
         ! decide the size of the parameter arrays
         lipar = 2 + ncharged
@@ -371,95 +344,97 @@ contains
             
             call look_for_brackets(lgRho_guess,0.05*lgRho_guess,x1,x3,match_density, &
             &   y1,y3,imax,lrpar,rpar,lipar,ipar,ierr)
-            if (ierr /= 0) then
-                write (*,*) 'unable to bracket root',lgP(i), x1, x3, y1, y3
+            if (rootfind_error% raised(ierr)) then
+                write(error_message,'(a,5f0.3)') &
+                &   'unable to bracket root: ',lgP(i), x1, x3, y1, y3
+                call rootfind_status% report(error_message)
                 cycle
             end if
             
             lgRho(i) = safe_root_with_initial_guess(match_density,lgRho_guess,x1,x3,y1,y3, &
             &   imax,epsx,epsy,lrpar,rpar,lipar,ipar,ierr)
-            if (ierr /= 0) then
-                write(*,*) 'unable to converge', lgP(i), x1, x3, y1, y3
+            if (rootfind_error% raised(ierr)) then
+                write(error_message,'(a,5f0.3)') &
+                &   'unable to converge: ',lgP(i), x1, x3, y1, y3
+                call rootfind_status% report(error_message)
                 cycle
             end if
-            ! get results from rpar
             lgEps(i) = rpar(ncharged+14)
         end do
     end subroutine find_densities
     
     real(dp) function match_density(lgRho, dfdlgRho, lrpar, rpar, lipar, ipar, ierr)
-       ! returns with ierr = 0 if was able to evaluate f and df/dx at x
-       ! if df/dx not available, it is okay to set it to 0
-       use constants_def
-       use superfluid_def, only: max_number_sf_types
-       use superfluid_lib, only: sf_get_results
-       use nucchem_def
-       use dStar_eos_def
-       use dStar_eos_lib
-       
-       integer, intent(in) :: lrpar, lipar
-       real(dp), intent(in) :: lgRho
-       real(dp), intent(out) :: dfdlgRho
-       integer, intent(inout), pointer :: ipar(:) ! (lipar)
-       real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
-       integer, intent(out) :: ierr
-       integer :: eos_handle, ncharged
-       type(composition_info_type) :: ionic
-       integer, dimension(:), allocatable :: charged_ids
-       real(dp), dimension(:), allocatable :: Yion
-       real(dp), dimension(num_dStar_eos_results) :: res
-       integer :: phase
-       real(dp) :: chi, lgPwant, lgP, kFn, kFp, Tcs(max_number_sf_types)
-       real(dp) :: rho, T, Eint
-       
-       eos_handle = ipar(1)
-       ncharged = ipar(2)
-       allocate(charged_ids(ncharged),Yion(ncharged))
-       charged_ids(:) = ipar(3:ncharged+2)
-       
-       Yion = rpar(1:ncharged)
-       ionic% A = rpar(ncharged+1)
-       ionic% Z = rpar(ncharged+2)
-       ionic% Z53 = rpar(ncharged+3)
-       ionic% Z2 = rpar(ncharged+4)
-       ionic% Z73 = rpar(ncharged+5)
-       ionic% Z52 = rpar(ncharged+6)
-       ionic% ZZ1_32 = rpar(ncharged+7)
-       ionic% Z2XoA2 = rpar(ncharged+8)
-       ionic% Ye = rpar(ncharged+9)
-       ionic% Yn = rpar(ncharged+10)
-       ionic% Q = rpar(ncharged+11)
-       
-       rho = 10.0**lgRho
-       T = rpar(ncharged+13)
-       chi = nuclear_volume_fraction(rho,ionic,default_nuclear_radius)
-       kFp = 0.0_dp
-       kFn = neutron_wavenumber(rho,ionic,chi)
-       call sf_get_results(kFp,kFn,Tcs)
-       call eval_crust_eos(eos_handle,rho,T,ionic,ncharged, &
-       &    charged_ids,Yion,Tcs,res,phase,chi)
-       Eint = res(i_lnE)
-       
-       lgPwant = rpar(ncharged+12)
-       lgP = res(i_lnP)/ln10
-
-       rpar(ncharged+14) = log10(rho*(1.0+dot_product(Yion(:),nuclib%mass_excess(charged_ids))/amu_n + Eint/clight2))
-       rpar(lrpar) = res(i_chiRho)
-       ierr = 0
-       match_density = lgP - lgPwant
-       deallocate(charged_ids,Yion)
-    end function match_density
-
-    function failure(msg,ierr)
-        use, intrinsic :: iso_fortran_env, only: error_unit
-        character(len=*), intent(in) :: msg
-        integer, intent(in) :: ierr
-        logical :: failure
+        ! returns with ierr = 0 if was able to evaluate f and df/dx at x
+        ! if df/dx not available, it is okay to set it to 0
+        use ieee_arithmetic
+        use exceptions_lib
+        use constants_def
+        use superfluid_def, only: max_number_sf_types
+        use superfluid_lib, only: sf_get_results
+        use nucchem_def
+        use dStar_eos_def
+        use dStar_eos_lib
         
-        failure = (ierr /= 0)
-        if (failure) then
-            write(error_unit,*) trim(msg),': ierr = ',ierr
-        end if
-    end function failure
+        integer, intent(in) :: lrpar, lipar
+        real(dp), intent(in) :: lgRho
+        real(dp), intent(out) :: dfdlgRho
+        integer, intent(inout), pointer :: ipar(:) ! (lipar)
+        real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
+        integer, intent(out) :: ierr
+        integer :: eos_handle, ncharged
+        type(composition_info_type) :: ionic
+        integer, dimension(:), allocatable :: charged_ids
+        real(dp), dimension(:), allocatable :: Yion
+        real(dp), dimension(num_dStar_eos_results) :: res
+        integer :: phase
+        real(dp) :: chi, lgPwant, lgP, kFn, kFp, Tcs(max_number_sf_types)
+        real(dp) :: rho, T, Eint
+        type(assertion) :: lgP_is_num = assertion(scope='match_density', &
+        &    message='pressure is a number')
+        type(crust_eos_component), dimension(num_crust_eos_components) :: eos_components
+       
+        ierr = 0
+        eos_handle = ipar(1)
+        ncharged = ipar(2)
+        allocate(charged_ids(ncharged),Yion(ncharged))
+        charged_ids(:) = ipar(3:ncharged+2)
+        
+        Yion = rpar(1:ncharged)
+        ionic% A = rpar(ncharged+1)
+        ionic% Z = rpar(ncharged+2)
+        ionic% Z53 = rpar(ncharged+3)
+        ionic% Z2 = rpar(ncharged+4)
+        ionic% Z73 = rpar(ncharged+5)
+        ionic% Z52 = rpar(ncharged+6)
+        ionic% ZZ1_32 = rpar(ncharged+7)
+        ionic% Z2XoA2 = rpar(ncharged+8)
+        ionic% Ye = rpar(ncharged+9)
+        ionic% Yn = rpar(ncharged+10)
+        ionic% Q = rpar(ncharged+11)
+        
+        rho = 10.0**lgRho
+        T = rpar(ncharged+13)
+        ! when searching for a root, the density can be > nuclear, so that chi > 1.0,
+        ! which results in a bad neutron number density.
+        ! we cap chi at the value appropriate a density of 1.0e14 g/cc.
+        chi = nuclear_volume_fraction(min(rho,1.0e14_dp),ionic,default_nuclear_radius)
+
+        kFp = 0.0_dp
+        kFn = neutron_wavenumber(rho,ionic,chi)
+        call sf_get_results(kFp,kFn,Tcs)
+        call eval_crust_eos(eos_handle,rho,T,ionic,ncharged, &
+        &    charged_ids,Yion,Tcs,res,phase,chi,eos_components)
+        Eint = exp(res(i_lnE))
+        
+        lgPwant = rpar(ncharged+12)
+        lgP = res(i_lnP)/ln10
+        call lgP_is_num% assert(.not. ieee_is_nan(lgP))
+           
+        rpar(ncharged+14) = log10(rho* &
+        &   (1.0+dot_product(Yion(:),nuclib%mass_excess(charged_ids))/amu_n + Eint/clight2))
+        rpar(lrpar) = res(i_chiRho)
+        match_density = lgP - lgPwant
+        deallocate(charged_ids,Yion)
+    end function match_density
 
 end module dStar_crust_mod
