@@ -1,5 +1,5 @@
 module create_model
-     use NScool_def
+    use NScool_def
     use constants_def, only: dp
     use constants_lib
     use nucchem_def
@@ -54,7 +54,6 @@ contains
     end subroutine do_create_crust_model
     
     subroutine do_startup_microphysics(s, ierr)
-        use, intrinsic :: iso_fortran_env, only: error_unit, output_unit
         use exceptions_lib
         use constants_def
         use nucchem_lib
@@ -136,7 +135,6 @@ contains
     end subroutine do_startup_microphysics
     
     subroutine do_setup_crust_zones(s, ierr)
-        use, intrinsic :: iso_fortran_env, only: error_unit, output_unit
         use exceptions_lib
         use constants_def
         use nucchem_lib
@@ -169,14 +167,17 @@ contains
         type(assertion) :: allocation_okay=assertion(scope='do_setup_crust_zones', &
         &   message='memory allocated')
         
-        call status% report('Loading crust model')
+        call status% report('Initializing crust')
         call dStar_crust_startup(trim(dStar_data_dir),ierr)
         if (crust_error% raised(ierr)) return
-        call dStar_crust_load_table('hz90',s% eos_handle, s% Tcore, ierr)
 
-        call status% report('Loading atmosphere model')
+        call status% report('Initializing atmosphere')
         call dStar_atm_startup(trim(dStar_data_dir),ierr)
         if (atm_error% raised(ierr)) return
+
+        call status% report('loading crust table')
+        call dStar_crust_load_table(s% crust_composition,s% eos_handle, s% crust_reference_temperature, ierr)
+        if (crust_error% raised(ierr)) return
 
         call status% report('Integrating TOV equations')
         allocate(y(num_tov_variables))
@@ -240,7 +241,6 @@ contains
     end subroutine do_setup_crust_zones
     
     subroutine do_setup_crust_composition(s, ierr)
-        use, intrinsic :: iso_fortran_env, only: error_unit
         use exceptions_lib
         use nucchem_def
         use nucchem_lib
