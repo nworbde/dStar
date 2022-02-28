@@ -148,5 +148,7 @@
     lg_atm_light_element_column = 8.0
     atm_model = 'bc09'
     
+    crust_reference_temperature = 1.0e8_dp
+    crust_composition = 'HZ90'
     fix_Qimp = .FALSE.
     Qimp = 0.0

@@ -80,6 +80,8 @@ module NScool_ctrls_io
         lgP_shell_Urca, &
         lg_atm_light_element_column, &
         atm_model, &
+        crust_reference_temperature, &
+        crust_composition, &
         fix_Qimp, &
         Qimp
         
@@ -229,6 +231,8 @@ contains
 
         s% lg_atm_light_element_column = lg_atm_light_element_column
         s% atm_model = atm_model
+        s% crust_reference_temperature = crust_reference_temperature
+        s% crust_composition = crust_composition
         s% fix_Qimp = fix_Qimp
         s% Qimp = Qimp
         
