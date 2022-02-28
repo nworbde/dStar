@@ -425,7 +425,6 @@ contains
         call eval_crust_eos(eos_handle,rho,T,ionic,ncharged, &
         &    charged_ids,Yion,Tcs,res,phase,chi,eos_components)
         Eint = exp(res(i_lnE))
-        
         lgPwant = rpar(ncharged+12)
         lgP = res(i_lnP)/ln10
         call lgP_is_num% assert(.not. ieee_is_nan(lgP))
