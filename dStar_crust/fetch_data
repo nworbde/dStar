@@ -28,33 +28,30 @@ function verify_datafile {
     return 0
 }
 
-ab_datafiles=( rp03.data )
-chksums=( 928ea08d1abd61acfc891a15f1b7f45f )
+ab_datafiles=(  net_fe56 \
+                net_rp )
+chksums=(   a13e73a69de59b681efd14f003732e93 \
+            71883cb3f9e54fc76f31aee0ff08194d )
+
 archive=JINAcrust_data.txz
-URL=https://dl.dropboxusercontent.com/u/52649885/dStar/$archive
 
 echo
 echo "Installing JINA crust tables"
 echo "-----------------------------------------------------"
 
-echo "establishing data directory..."
-mkdir -p data
-check_okay
-cd data
-
 chkr=""
-if [ `which md5sum` ]; then
-    chkr=`which md5sum`
-    echo "using $chkr"
-elif [ `which md5` ]; then
+if [ `which md5` ]; then
     chkr=`which md5`
+    echo "using $chkr"
+elif [ `which md5sum` ]; then
+    chkr=`which md5sun`
     echo "using $chkr"
 else
     echo "no md5 or md5sum available, skipping verification"
 fi
 
 need_to_fetch=0
-for i in `seq 1`; do
+for i in `seq 2`; do
     indx=$((i-1))
     df="${ab_datafiles[$indx]}"
     if [ -f $df ]; then
@@ -76,16 +73,11 @@ for i in `seq 1`; do
 done
 
 if [ $need_to_fetch -eq 1 ]; then
-    # check for zip file
-    if [ ! -f $archive ]; then
-        echo "fetching data from $URL..."
-        curl -fS $URL > $archive
-        check_okay
-    fi
+    echo "unpacking crust archive"
     tar -xf $archive
     check_okay
     echo "verifying datafiles..."
-    for i in `seq 1`; do
+    for i in `seq 2`; do
         indx=$((i-1))
         printf "   ${ab_datafiles[$indx]}: "
         if [ $chkr ]; then

@@ -59,10 +59,6 @@ datafile=$stem
 archive=$stem+'.txz'
 
 cd preprocessor
-cd make
-make
-check_okay("make")
-cd ..
 
 if [ ! -f $datadir/$datafile ]; then
     if [ -f $datadir/$archive ]; then
@@ -76,6 +72,8 @@ fi
 
 ./process_abuntime $stem $deltaP $threshold
 check_okay "./process_abuntime $stem $deltaP $threshold"
+
 ./print_composition $stem $print_threshold
 check_okay "./print_composition $stem $print_threshold"
+
 cd ..
