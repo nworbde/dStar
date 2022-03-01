@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # defaults
+crust_datadir=../../data/crust_data
 datadir=../data
 deltaP=0.005
 threshold=0.001
@@ -56,7 +57,7 @@ while getopts ":d:t:p:" options; do
 done
 
 datafile=$stem
-archive=$stem+'.txz'
+archive="${stem}.txz"
 
 cd preprocessor
 
@@ -76,4 +77,6 @@ check_okay "./process_abuntime $stem $deltaP $threshold"
 ./print_composition $stem $print_threshold
 check_okay "./print_composition $stem $print_threshold"
 
-cd ..
+processed_file="${stem}.bin"
+cp $datadir/$processed_file $crust_datadir/$processed_file
+check_okay "cp $datadir/$processed_file $crust_datadir/$processed_file"
