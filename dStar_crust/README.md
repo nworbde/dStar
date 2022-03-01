@@ -1,6 +1,8 @@
 SETTING THE CRUST COMPOSITION FROM AN ABUNTIME FORMAT FILE
 ==========================================================
 
+By default, a composition table using the Haensel & Zdunik (1990) composition is created when the module `dStar_crust` is built. To install a composition in abuntime format, follow the following directions.
+
 1. Place the abuntime file in the 'data' directory.
 2. Run the `preprocess_composition` script. This script takes three arguments: the name of the abuntime file (preferably without extensions, as that name will be used as the "stem" for other files); a parameter `-d` that sets the increment in `lg(P)` between entries in the composition table; a parameter `-t` that sets the abundance (relative to the maximum at each point) for an isotope to be included in the composition table; and a parameter `-p` that sets a minimum abundance when printing out a summary of the table. Thus, for example,
 
@@ -65,4 +67,11 @@ where you will note the last few isotopes are from Haensel and Zdunik (1990) and
         33.493       n  8.036E-01 ti88   2.232E-03
         33.498       n  8.036E-01 ti88   2.232E-03
         
-where the first column is `lg(P)` followed by the most prominent isotopes at that pressure.
+where the first column is `lg(P)` followed by the most prominent isotopes at that pressure. To use the composition, specify the following variables in the inlist.
+
+        real(dp) :: crust_reference_temperature ! default is 1.0e8K
+        character(len=16) :: crust_composition  ! default is 'HZ90'
+        
+Here the string (16 character max) `crust_composition` is the name of the abuntime file.
+
+
