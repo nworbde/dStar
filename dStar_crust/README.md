@@ -6,13 +6,13 @@ By default, a composition table using the Haensel & Zdunik (1990) composition is
 1. Place the abuntime file in the 'data' directory.
 2. Run the `preprocess_composition` script. This script takes three arguments: the name of the abuntime file (preferably without extensions, as that name will be used as the "stem" for other files); a parameter `-d` that sets the increment in `lg(P)` between entries in the composition table; a parameter `-t` that sets the abundance (relative to the maximum at each point) for an isotope to be included in the composition table; and a parameter `-p` that sets a minimum abundance when printing out a summary of the table. Thus, for example,
 
-        21:20:47$ ./preprocess_composition net_rp -d 0.005 -t 0.001 -p 0.01
+        $ ./preprocess_composition net_rp -d 0.005 -t 0.001 -p 0.01
 
     Here `net_rp` is the name of the abuntime file, the resulting preprocessed will have entries separated by roughly 0.005 in `lg(P)`, the table will be pruned to contain any isotopes with abundance exceeding 0.001 of the maximum at some location.
     
 3.  There will be three files generated: if the abuntime file is `net_rp` as in this example, the files will be named `net_rp.bin`, `net_rp_isos` and `net_rp_summary`. The first of these is a binary format composition file used by `dStar`. The script copies it to the directory `dStar/data/crust_data/`. The second and third of these files contain a list of isotopes in the composition file and a summary of the composition as a function of pressure in the crust.
 
-        21:43:37$ ./preprocess_composition net_rp -d 0.005 -t 0.01 -p 0.01
+        $ ./preprocess_composition net_rp -d 0.005 -t 0.01 -p 0.01
         nucchem_init: Loading nuclib from ../../data//nucchem
         nucchem_init: Retrieved 6342 nuclides. Writing nuclide dictionary
         process_abuntime: reading ../data/net_rp
