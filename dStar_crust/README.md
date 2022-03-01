@@ -72,6 +72,6 @@ where the first column is `lg(P)` followed by the most prominent isotopes at tha
         real(dp) :: crust_reference_temperature ! default is 1.0e8K
         character(len=16) :: crust_composition  ! default is 'HZ90'
         
-Here the string (16 character max) `crust_composition` is the name of the abuntime file.
+Here the string (16 character max) `crust_composition` is the name of the abuntime-format file.
 
 
