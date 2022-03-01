@@ -138,8 +138,8 @@ contains
         work = 0.0
         
         itol = 0
-        rtol = 1.0e-4
-        atol = 1.0e-5
+        rtol = 1.0e-5
+        atol = 1.0e-6
         iout = 2    ! want dense output
         lout = error_unit
         lipar = num_tov_ipar
