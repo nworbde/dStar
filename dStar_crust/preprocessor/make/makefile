@@ -14,6 +14,9 @@ PREPROCESSOR_OBJS = HZ90_comp.o abuntime.o process_abuntime.o
 PRINTER = print_composition
 PRINTER_OBJS = print_composition.o
 
+ANALYZER = analyze_crust
+ANALYZER_OBJS = analyze_crust.o
+
 default: install
 
 $(HZ90_GENERATOR): $(HZ90_GENERATOR_OBJS)
@@ -25,11 +28,14 @@ $(PREPROCESSOR) : $(PREPROCESSOR_OBJS)
 $(PRINTER) : $(PRINTER_OBJS)
 	$(LOADER) $(FCopenmp) -o $@ $(PRINTER_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
 
+$(ANALYZER) : $(ANALYZER_OBJS)
+	$(LOADER) $(FCopenmp) -o $@ $(ANALYZER_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
+
 %.o: $(TEST_SRC_DIR)/%.f
 	$(TEST_COMPILE) $(FCfree) $(FCimpno) -I$(DSTAR_INC) $<
 
-install: $(HZ90_GENERATOR) $(PREPROCESSOR) $(PRINTER)
-	cp $(HZ90_GENERATOR) $(PREPROCESSOR) $(PRINTER) ..
+install: $(HZ90_GENERATOR) $(PREPROCESSOR) $(PRINTER) $(ANALYZER)
+	cp $(HZ90_GENERATOR) $(PREPROCESSOR) $(PRINTER) $(ANALYZER) ..
 
 clean:
-	-@rm -f *.o *.mod $(HZ90_GENERATOR) $(PREPROCESSOR) $(PRINTER)
+	-@rm -f *.o *.mod $(HZ90_GENERATOR) $(PREPROCESSOR) $(PRINTER) $(ANALYZER)

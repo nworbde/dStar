@@ -35,3 +35,6 @@ tabulate_conductivity
 test_tabulated_mixture
 tabulate_mixture
 conductivity/test/inlist
+analyze_crust
+dStar_crust/test/*-table
+
