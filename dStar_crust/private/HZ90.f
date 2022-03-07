@@ -83,10 +83,6 @@ module hz90
     &   'pd106', 'ru106', 'mo106', 'zr106', 'sr106', 'kr106', 'se106', 'ge106', 'ni92',  &
     &   'fe86', 'cr80', 'ti74','ca68', 'ar62', 's56', 'si50', 'mg42', 'ca72', 'ar66', 's60', &
     &   'si54', 'cr92', 'ti86', 'ca80', 'ar74', 's68', 'ni124', 'fe120', 'cr118', 'ti116' ]
-!     real(dp), parameter, dimension(number_HZ08_layers) :: HZ08_transition_pressures = [ &
-!     & ]
-!     real(dp), parameter, dimension(number_HZ08_layers+1) :: HZ08_Xn = [ &
-!     & ]
 contains
     
     subroutine do_make_crust(lgP, Yion, Xneut, charged_ids, ncharged, ion_info)
@@ -110,12 +106,11 @@ contains
         
         Ntab = size(lgP)
         allocate(X(HZ90_number,Ntab))
-        
+
         lg_Pt = log10(transition_pressures)
         
         ! set the network pointers
         indcs = [(get_nuclide_index(HZ90_network(i)),i=1,HZ90_number)]
-
         ! and the reverse lookup
         network_indcs = 0
         network_indcs(indcs) = [(i,i=1,HZ90_number)]
@@ -304,7 +299,7 @@ contains
        call sf_get_results(kFp,kFn,Tcs)
        call eval_crust_eos(eos_handle,rho,T,ionic,ncharged, &
        &    charged_ids,Yion,Tcs,res,phase,chi,eos_components)
-       Eint = res(i_lnE)
+       Eint = exp(res(i_lnE))
        
        lgPwant = rpar(ncharged+12)
        lgP = res(i_lnP)/ln10
@@ -317,6 +312,6 @@ contains
        match_density = lgP - lgPwant
        deallocate(charged_ids,Yion)
     end function match_density
-    
+
 
 end module hz90

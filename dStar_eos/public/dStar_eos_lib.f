@@ -83,7 +83,22 @@ module dStar_eos_lib
         if (present(suppress_warnings)) rq% suppress_warnings = suppress_warnings
     end subroutine dStar_eos_set_controls
     
-    ! helper functions for the nuclear eos
+    ! helper functions
+    subroutine lattice_properties(rho,T,ionic,ne,rs,Gamma_e,Gamma,ionQ)
+        use nucchem_def, only: composition_info_type
+        use constants_def
+        real(dp), intent(in) :: rho,T
+        type(composition_info_type), intent(in) :: ionic
+        real(dp), intent(out) :: ne, rs, Gamma_e, Gamma, ionQ
+
+        ne = rho*ionic%Ye/amu
+        rs = (3.0/fourpi/ne)**onethird / a_Bohr
+        Gamma_e = 2.0*Rydberg/boltzmann/T/rs    
+        Gamma = Gamma_e * ionic% Z53
+        ionQ = sqrt(3.0*Gamma_e**2*Melectron/rs/amu * &
+        &   ionic% Z2XoA2 * ionic% A / ionic% Z)
+    end subroutine lattice_properties
+    
     function nuclear_volume_fraction(rho,ionic,nuclear_radius) result(chi)
         use nucchem_def, only: composition_info_type
         use constants_def
@@ -106,7 +121,7 @@ module dStar_eos_lib
         n = rho*ionic%Yn/amu/(1.0-chi)
         k = (threepisquare*n)**onethird / cm_to_fm
     end function neutron_wavenumber
-    
+   
     subroutine eval_crust_eos( &
         &   dStar_eos_handle,rho,T,ionic,ncharged,charged_ids,Yion,Tcs, &
         &   res,phase,chi,components)
@@ -156,23 +171,18 @@ module dStar_eos_lib
         call dStar_eos_ptr(dStar_eos_handle, rq, ierr)
         call got_pointer% assert(ierr == 0)
         
-        ! electrons...
-        ! some ion quantities are defined in terms of these as well.
-        ne = rho*ionic%Ye/amu
-        rs = (3.0/fourpi/ne)**onethird / a_Bohr
-        Gamma_e = 2.0*Rydberg/boltzmann/T/rs
-        
-        Gamma = 0.0
-        ionQ = 0.0
-                
+        ! electrons, ion quantities
+        call lattice_properties(rho,T,ionic,ne,rs,Gamma_e,Gamma,ionQ)
         ! set the nuclear size
         if (chi == use_default_nuclear_size) then
             chi = nuclear_volume_fraction(rho,ionic,default_nuclear_radius)
         end if
         
         ! electrons
-        call get_helm_eos_results(rho,T,ionic,f_e,u_e,p_e,s_e,cv_e,dpr_e,dpt_e,eta_e)
-        call ee_exchange(Gamma_e, rs, f_ex, u_ex, p_ex, s_ex, cv_ex, dpr_ex, dpt_ex)
+        call get_helm_eos_results( &
+        &   rho,T,ionic,f_e,u_e,p_e,s_e,cv_e,dpr_e,dpt_e,eta_e)
+        call ee_exchange( &
+        &   Gamma_e, rs, f_ex, u_ex, p_ex, s_ex, cv_ex, dpr_ex, dpt_ex)
         nek = ne*boltzmann
         nekT = nek*T
         uexfac = nekT/rho

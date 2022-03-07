@@ -105,7 +105,9 @@
     real(dp) :: lg_atm_light_element_column  ! lg(cgs), for the atmosphere fit
     character(len=8) :: atm_model
     
-    ! controls for the composition
+    ! controls for the crust composition
+    real(dp) :: crust_reference_temperature
+    character(len=16) :: crust_composition
     logical :: use_other_set_Qimp
     logical :: fix_Qimp
     real(dp) :: Qimp

@@ -1,0 +1,82 @@
+#!/bin/bash
+
+# defaults
+crust_datadir=../../data/crust_data
+datadir=../data
+deltaP=0.005
+threshold=0.001
+print_threshold=0.01
+
+usage() {
+    echo "Usage: $0 [db stem] [-d delta P] [-t threshold] [-p print threshold]"}
+    echo
+    echo "preprocesses abuntime files, with the name of the file in the parameter [db stem].
+The option [delta P] controls the spacing in log(P) and threshold sets the minimum abundance (relative to the max abundance at a given point) for a species to be tracked. The print threshold sets the level of detail in the summary."
+}
+
+exit_abnormal() {
+    usage
+    exit 1
+}
+
+check_okay() {
+    if [ $? -ne 0 ]; then
+        echo
+        pwd
+        echo "$1 FAILED"
+        echo
+        exit 1
+    fi
+}
+
+stem=$1
+shift
+if [ -z "$stem" ]; then
+    exit_abnormal
+fi
+
+while getopts ":d:t:p:" options; do
+    case "${options}" in
+    d)
+        deltaP=${OPTARG}
+        ;;
+    t)
+        threshold=${OPTARG}
+        ;;
+    p)
+        print_threshold=${OPTARG}
+        ;;
+    :)
+        echo "Error: -${OPTARG} requires an argument"
+        exit_abnormal
+        ;;
+    *)
+        exit_abnormal
+        ;;
+    esac
+done
+
+datafile=$stem
+archive="${stem}.txz"
+
+cd preprocessor
+
+if [ ! -f $datadir/$datafile ]; then
+    if [ -f $datadir/$archive ]; then
+        tar -xf $archive
+        check_okay "tar -xf $archive"
+    else
+        echo "$datafile not found"
+        exit_abnormal
+    fi
+fi
+
+./process_abuntime $stem $deltaP $threshold
+check_okay "./process_abuntime $stem $deltaP $threshold"
+
+./print_composition $stem $print_threshold
+check_okay "./print_composition $stem $print_threshold"
+
+processed_file="${stem}.bin"
+cp $datadir/$processed_file $crust_datadir/$processed_file
+check_okay "cp $datadir/$processed_file $crust_datadir/$processed_file"

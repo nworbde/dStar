@@ -2,4 +2,5 @@
 
 cd make; make clean
 cd ../test/make; make clean
+cd ../../preprocessor/make; make clean
 cd ../..

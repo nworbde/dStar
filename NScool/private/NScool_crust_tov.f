@@ -115,7 +115,7 @@ contains
         real(dp), intent(in) :: lgPend      ! cgs
         real(dp), intent(in) :: Mcore       ! Msun
         real(dp), intent(in) :: Rcore       ! km
-        real(dp), intent(in) :: lnP_rez     ! disired step in lnP
+        real(dp), intent(in) :: lnP_rez     ! desired step in lnP
         real(dp), dimension(:), pointer :: y
         integer, intent(out) :: ierr
         integer ,dimension(:), pointer :: iwork => null()
@@ -138,8 +138,8 @@ contains
         work = 0.0
         
         itol = 0
-        rtol = 1.0e-4
-        atol = 1.0e-5
+        rtol = 1.0e-5
+        atol = 1.0e-6
         iout = 2    ! want dense output
         lout = error_unit
         lipar = num_tov_ipar

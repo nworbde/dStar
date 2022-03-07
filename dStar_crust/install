@@ -1,24 +1,27 @@
 #!/bin/bash
 
-function check_okay {
+check_okay() {
 	if [ $? -ne 0 ]
 	then
 		echo
 		pwd
-		echo "FAILED"
+		echo "$1 FAILED"
 		echo
 		exit 1
 	fi
 }
 
 this_module=${PWD##*/}
+# ./fetch_data
+# check_okay
 mkdir -p ../data/crust_data/cache
-check_okay
+check_okay "mkdir -p ../data/crust_data/cache"
 ./build_and_test
-check_okay
+check_okay "./build_and_test"
+
 cd make
 make install
-check_okay
+check_okay "make install"
 cd ..
 echo "module" $this_module "passed tests and was exported"
 echo "****************************************************"

@@ -46,6 +46,7 @@
     target_resolution_lnP = 0.05
     
     lg_atm_light_element_column = 8.0
+    crust_composition = 'HZ90'
     fix_Qimp = .TRUE.
     Qimp = 100.0
     

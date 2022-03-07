@@ -1,0 +1,50 @@
+# JINA Crust Composition Files
+
+## Format
+
+(The description of the format is taken from the [ISSI team Galloway wiki](http://www.issibern.ch/teams/labtostars/private/pmwiki.php?n=Main.DetailsCrustComposition).)
+
+Each "abuntime" file contains the crust composition as a function of depth,[1] where depth is given as a `column_depth = time * accretion_rate`. For `abuntime_lx2_5.data`, the accretion rate is 0.3 Eddington, with the Eddington accretion rate being 88000 g/cm2/s.  The pressure is `gravity*column_depth`, with the `gravity = 1.85052e14`.
+
+File format:
+
+    Number_of_Nuclei
+    Data_for_timestep_1
+    0-------------------------------------------------------------------------------
+    Data_for_timestep_2
+    0-------------------------------------------------------------------------------
+    ....
+    0-------------------------------------------------------------------------------
+    Data_for_timestep_last
+    0-------------------------------------------------------------------------------
+
+Format of `Data_for_timestep_n`:
+
+    Time(s) Temperature(GK) Density(g/cm^3) EFermi_electrons(MeV) EFermi_neutrons(MeV)
+    isotope abundance (repeat 5 times per line)
+    (repeat)
+
+Fortran Format:
+
+    1x,i5 
+    1x,1e18.10,2e11.3,2X,2E18.10
+    1x,5(a5,1pe10.3)
+
+## Files
+
+### rp03.data  
+
+**Original**: `abuntime_lx2_5.txt`  
+**Description**: rp-process ashes under compression at 0.3 Eddington accretion.
+
+## Processing the files
+
+The raw files are large (more than 500 MB) and in an archaic format. During installation, a preprocessor transforms the files into a more useful format.  First, the file is sampled and points are selected that are roughly uniformly spaced in log(*P*) space.  The spacing in log(*P*) is controlled by the parameter
+
+    real(dp), parameter :: lgP_increment = 0.005_dp
+
+in `process_abuntime.f`.  Following this cull, the abundances are reduced: for each spatial point, we mark those nuclides with abundance greater than some fraction of the most abundant non-neutron species at that depth.  The value of this fraction is controlled by the parameter
+
+    real(dp), parameter :: abundance_threshold = 0.01_dp
+
+defined in `abuntime.f`. We then remove all nuclides that are below this threshold for all depths. Finally, the table is extended to lower and higher pressures with the Haensel and Zdunik (1990) composition. The crust table is then cached in Fortran binary form for loading in the `dStar_crust` module.
