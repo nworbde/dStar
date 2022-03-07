@@ -4,6 +4,9 @@ A collection of modules for computing neutron star structure and evolution.
 
 ## What's new
 
+### Crust composition from `abuntime`-format files
+As part of work with Rahul Jain and Hendrik Schatz, the crust composition is now specified by loading tables. Instructions are in the README file in the module `dStar_crust`. There are now scripts to preprocess files in an `abuntime` format (output from reaction network runs) into locally cached files of the composition.
+
 ### Neutron thermal conductivity
 Alex Deibel wrote routines to compute the thermal conductivity of normal neutrons (Deibel et al. [2017], Astrophys. Jour. 839: 95). In addition, the thermal conductivity via phonons in the superfluid phase (Aguilera et al. [2009], Phys. Rev. Lett. 102: 091101) is computed. The neutron conductivity is not included by default, but can be activated by setting 
 
