@@ -38,7 +38,7 @@
       
       logical, parameter :: dbg = .false.
       
-      include 'formats.dek'
+      include 'formats'
       
       ! alfa = 0 for with ele_pos,
       ! alfa = 1 for without ele_pos,
