@@ -80,11 +80,14 @@ class dStarReader:
         
         # now read in main section of data and convert to a recarry view
         self._arr = np.genfromtxt(file,skip_header=header_lines,names=True,dtype=None).view(np.recarray)
-        # only keep modes where t[i] - t[i-1] > 0
-        self._kept_models = [0]
-        for i in range(1,self._arr.shape[0]):
-            if self._arr.time[i] > self._arr.time[self._kept_models[-1]]:
-                self._kept_models.append(i)
+        
+        # if this has a time series,
+        # only keep models where t[i] - t[i-1] > 0
+        if 'time' in self._arr.dtype.names:
+            self._kept_models = [0]
+            for i in range(1,self._arr.shape[0]):
+                if self._arr.time[i] > self._arr.time[self._kept_models[-1]]:
+                    self._kept_models.append(i)
 
     @property
     def header(self):
@@ -206,16 +209,16 @@ class dStarCrustReader:
         # only keep modes where t[i] - t[i-1] > dt
         kept_models = [0]
         for i in range(1,self.models.shape[0]):
-            if self.times[i] > self.times[kept_models[-1]] + dt:
+            if self._times[i] > self._times[kept_models[-1]] + dt:
                 kept_models.append(i)
 
-        self._models = self.models[kept_models]
-        self._times = self.times[kept_models]
+        self._models = self._models[kept_models]
+        self._times = self._times[kept_models]
 
         # set the shape
-        self._nmodels = self.models.shape[0]
+        self._nmodels = self._models.shape[0]
         # read the first profile to get layout
-        d = dStarReader(directory+'/'+basename+str(self.models[0]))
+        d = dStarReader(directory+'/'+basename+str(self._models[0]))
         self._columns = d.columns
         self._nzones = d.num_lines
         self._crust = {}
@@ -224,7 +227,7 @@ class dStarCrustReader:
             self._crust[col][0,:] = d.data[col]
 
         for model in range(1,self._nmodels):
-            d = dStarReader(directory+'/profile'+str(self.models[model]),**kwargs)
+            d = dStarReader(directory+'/profile'+str(self._models[model]),**kwargs)
             for col in d.columns:
                 self._crust[col][model,:] = d.data[col]
         
