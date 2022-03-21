@@ -1,5 +1,6 @@
 program tabulate_conductivity
     use iso_fortran_env, only: output_unit, error_unit
+    use math_lib
     use utils_lib, only: StrLowCase
     use exceptions_lib
     use constants_lib
@@ -68,6 +69,7 @@ program tabulate_conductivity
     call set_verbosity(1)
     
     ! initialization
+    call math_init()
     ! physical constants
     call constants_init('',ierr)
     call check_okay% assert(ierr==0)

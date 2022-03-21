@@ -1,4 +1,5 @@
 module neutron_eos
+    use math_lib
     ! implements fit for pure neutron gas from Mackie & Baym 1977.
     ! Should have a more up-to-date fmla.
     !

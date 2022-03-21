@@ -8,6 +8,7 @@ module electron_eos
 contains
 
 subroutine get_helm_eos_results(rho,T,ionic,f,u,p,s,cv,dpr,dpt,eta)
+    use math_lib
     use exceptions_lib
     use constants_def, only: dp
     use dStar_eos_def

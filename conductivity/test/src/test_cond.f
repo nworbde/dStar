@@ -1,5 +1,6 @@
 program test_cond
     use, intrinsic :: iso_fortran_env, only: output_unit
+    use math_lib
     use exceptions_lib
     use constants_lib
     use nucchem_def
@@ -20,6 +21,8 @@ program test_cond
     real(dp) :: chi,Xsum
     real(dp), dimension(num_dStar_eos_results) :: res
     type(assertion) :: check_okay=assertion(scope='main')
+    
+    call math_init()
     
     call constants_init('',ierr)
     call check_okay% assert(ierr==0)

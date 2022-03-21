@@ -1,4 +1,5 @@
 program test_atm
+    use math_lib
     use constants_lib
     use constants_lib
     use nucchem_lib
@@ -11,6 +12,7 @@ program test_atm
 	real(dp) :: lgTb,g,Plight,Pb,lgTeff,dlgTeff,lgflux,dlgflux
 	integer :: ierr,i
     
+    call math_init()
     call constants_init('',ierr)
 	call check_okay('constants_init',ierr)
     call nucchem_init(datadir,ierr)

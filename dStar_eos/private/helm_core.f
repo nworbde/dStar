@@ -3,6 +3,7 @@
 !..routine helmeos computes the pressure, energy and entropy via tables
 
       module helm
+      use math_lib
       implicit none
       
       contains

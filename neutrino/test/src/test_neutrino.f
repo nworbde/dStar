@@ -1,4 +1,5 @@
 program test_neutrino
+    use math_lib
 	use constants_def
     use constants_lib
 	use superfluid_def
@@ -23,6 +24,7 @@ program test_neutrino
 	type(composition_info_type) :: ionic
 	real(dp) :: Xsum
 	
+    call math_init()
     call constants_init('',ierr)
     if (ierr /= 0) then
         write (*,*) 'unable to initialize constants'
@@ -74,7 +76,7 @@ program test_neutrino
 		write (*,'(/,10(a11,tr1),/,10(11("="),tr1))') &
 			&  'T','brem_np','brem_pp','brem_nn','mUrca_p','mUrca_n','dUrca','cooper_n','cooper_p','total'
 		do i = 1,20
-			T = 10.0**(7.0+2.0*(i-1.0)/19.0)
+			T = exp10(7.0_dp+2.0_dp*(i-1.0_dp)/19.0_dp)
 			call get_core_neutrino_emissivity(nn,np,T,Tc,which_channels,neu)
 			write(*,'(10(es11.4,tr1))') T,neu% brem_np, neu% brem_pp, neu% brem_nn, neu% mUrca_p, &
 				& neu% mUrca_n, neu% dUrca, neu% PBF_n, neu% PBF_p, neu% total
@@ -82,6 +84,7 @@ program test_neutrino
 	end subroutine do_one_core
 	
 	subroutine do_one_crust(rho)
+        use math_lib
 		real(dp), intent(in) :: rho
 		real(dp) :: lgr, lgT, T, nn, kn, Tc(max_number_sf_types)
 		real(dp) :: chi
@@ -95,7 +98,7 @@ program test_neutrino
 		call sf_get_results(0.0_dp,kn,Tc)
 		do ii = 1, 11
 			lgT = 7.5 + real(ii-1,dp)/10.0_dp
-			T = 10.0_dp**lgT
+			T = exp10(lgT)
 			call get_crust_neutrino_emissivity(rho,T,ionic,chi,Tc(neutron_1S0),eps)
 			print '(5f6.2,6es14.6)', &
 			 	&   lgr,lgT,ionic%Z,ionic%A,ionic%Yn, &

@@ -60,6 +60,7 @@ contains
 
     subroutine nubrems(nn,np,T9,vps,vns,vnt,eps,eps_np,eps_pp,eps_nn)
         ! bremsstrahlung
+        use math_lib
         real(dp), intent(in) :: nn,np,T9,vps,vns,vnt
         real(dp), intent(out) :: eps,eps_np, eps_pp, eps_nn
         real(dp), parameter :: Qnn = 7.4e19_dp, Qnp = 1.5e20_dp, Qpp = 7.4e19_dp
@@ -115,6 +116,7 @@ contains
 
     subroutine mUrca(nn,np,T9,vps,vns,vnt,eps, eps_p, eps_n)
     ! modified Urca
+        use math_lib
         real(dp), intent(in) :: nn, np, T9, vps, vns, vnt
         real(dp), intent(out) :: eps, eps_p, eps_n
         real(dp), parameter :: Qn = 8.55e21_dp, Qp = 8.53e21_dp
@@ -147,6 +149,7 @@ contains
     end subroutine mUrca
 
     subroutine dUrca(nn,np,T9,vps,vns,vnt,eps)
+        use math_lib
     ! direct Urca
         real(dp), intent(in) :: nn, np, T9, vps, vns, vnt
         real(dp), intent(out) :: eps
@@ -168,6 +171,7 @@ contains
     end subroutine dUrca
     
     subroutine nupbf(nn,np,T9,vps,vns,vnt,eps,eps_n,eps_p)
+        use math_lib
         real(dp), intent(in) :: nn,np,T9,vps,vns,vnt
         real(dp), intent(out) :: eps, eps_n, eps_p
         real(dp), parameter :: Q = 1.170e21_dp*3.0, a_cns=1.0, a_cnt=3.18
@@ -226,6 +230,7 @@ contains
 
     contains
     subroutine effective_masses(n,x, mn,mp)
+        use math_lib
         real(dp), parameter :: fm_to_cm = 1.0e-13_dp
         real(dp), parameter :: Mneutron = 1.674927351e-24_dp
         real(dp), parameter :: Mproton  = 1.672621777e-24_dp

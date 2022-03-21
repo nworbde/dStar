@@ -5,6 +5,7 @@ contains
     
     subroutine conductivity(rq,rho,T,chi,Gamma,eta,mu_e,ionic,Tns,kappa)
         use exceptions_lib
+        use math_lib
         use constants_def
         use nucchem_def, only: composition_info_type
         use neutron_conductivity

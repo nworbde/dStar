@@ -15,7 +15,7 @@
 !..function ifermi52 is a rational function fit for the inverse of order 5/2
 
 module fermi
-
+    use math_lib
 contains
 
       double precision function zfermim12(x)

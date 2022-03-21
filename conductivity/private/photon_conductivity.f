@@ -5,6 +5,7 @@ module photon_conductivity
 contains
     
     function electron_scattering(eta_e,theta,Ye) result(kTh)
+        use math_lib
         use constants_def
         real(dp), intent(in) :: eta_e   ! electron chemical pot./kT
         real(dp), intent(in) :: theta ! T/mc**2
@@ -29,6 +30,7 @@ contains
     ! Agrees to 10% with Itoh et al. 1991
     !
     function freefree(rho,T,eta_e,ionic) result(kff)
+        use math_lib
         use nucchem_def, only: composition_info_type
         use constants_def
         real(dp), intent(in) :: rho,T,eta_e

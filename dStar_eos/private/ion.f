@@ -20,6 +20,7 @@ contains
     subroutine ion_mixture(rq,rs,Gamma_e,ionic,ncharged,charged_ids,Yion, &
     &   Gamma,ionQ,phase,f,u,p,s,cv,dpr,dpT,err)
         use exceptions_lib
+        use math_lib
         use constants_def, only: dp, amu, Melectron
         use dStar_eos_def
         use dStar_eos_private_def
@@ -92,6 +93,7 @@ contains
 
     subroutine LM_corrections(rs,Gamma_e,ionic,f,u,p,s,cv,dpr,dpt)
         use constants_def
+        use math_lib
         use nucchem_def
         real(dp), intent(in) :: rs,Gamma_e
         type(composition_info_type), intent(in) :: ionic
@@ -132,6 +134,7 @@ contains
 
     subroutine one_ion(Gamma_e,rs,Z,A,phase,f,u,p,s,cv,dpr,dpt)
         use iso_fortran_env, only: error_unit
+        use math_lib
         use constants_def
         use dStar_eos_def
 
@@ -171,6 +174,7 @@ contains
     end subroutine one_ion
 
     subroutine ie_liquid(Gamma_e,rs,Z,f,u,p,s,cv,dpr,dpt)
+        use math_lib
         use constants_def
     
         real(dp), intent(in) :: Gamma_e, rs, Z
@@ -279,13 +283,14 @@ contains
     end subroutine ie_liquid
 
     subroutine ie_lattice(Gamma,theta,rs,Z,f,u,p,s,cv,dpr,dpt)
+        use math_lib
         use constants_def
     
         real(dp), intent(in) :: Gamma,theta,rs,Z
         real(dp), intent(out) :: f,u,p,s,cv,dpr,dpt
         real(dp), parameter, dimension(4) :: a = [1.1866,0.684,17.9,41.5]
-        real(dp), parameter :: e1 = exp(1.0), px = 0.205
-        real(dp) :: aTF
+        real(dp), parameter :: px = 0.205
+        real(dp) :: aTF, e1
         real(dp) :: xrs,xr,lZ,r3,b(4),finf,finfx,finf_x,finf_xx,q1u,q1d,q1,q1x,q1x_x,q1_x,q1_xx
         real(dp) :: y0,y0_x,y0_g,y0_xx,y0_gg,y0_xg,y1,y1_x,y1_g,y1_xx,y1_gg,y1_xg
         real(dp) :: sa,supa,supa_x,supa_g,supa_xx,supa_gg,supa_xg
@@ -294,6 +299,7 @@ contains
         real(dp) :: gr3,gr3x,gr3_x,gr3_xx,gr3g,gr3_g,gr3_gg,gr3_xg,w,w_x,w_g,w_xx,w_gg,w_xg
         real(dp) :: f_x,f_g,f_xx,f_gg,f_xg
 
+        e1 = exp(1.0_dp)
         aTF = (54.0/175.0)*(12.0/pi)**onethird*finestructure
         xrs = finestructure*(9.0*pi/4.0)**onethird
         xr = xrs/rs
@@ -397,6 +403,7 @@ contains
     end subroutine ie_lattice
 
     subroutine ii_liquid(Gamma,theta,f,u,p,s,cv,dpr,dpt)
+        use math_lib
         use constants_def
     
         real(dp), intent(in) :: Gamma, theta
@@ -443,6 +450,7 @@ contains
     end subroutine ii_liquid
 
     subroutine ii_lattice(Gamma,theta,f,u,p,s,cv,dpr,dpt)
+        use math_lib
         use constants_def
     
         real(dp), intent(in) :: Gamma, theta

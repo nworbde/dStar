@@ -6,6 +6,7 @@ contains
     
     function ee_PCY(ne,T) result(nu)
         ! fmla. from Potekhin, Chabrier, and Yakovlev (1997)
+        use math_lib
         use constants_def
         real(dp), intent(in) :: ne, T
         real(dp) :: nu
@@ -43,6 +44,7 @@ contains
     function ee_SY06(ne,T) result(nu)
         ! uses fmla of Shternin & Yakovlev (2006). Checked against routine courtesy of D. Page.
         !
+        use math_lib
         use constants_def
         real(dp), intent(in) :: ne, T
         real(dp) :: nu
@@ -91,6 +93,7 @@ contains
 
     function eion(kF,Gamma_e,eta,Ye,Z,Z2,Z53,A) result(nu)
         ! implements fmla. of Baiko et al. (1999)
+        use math_lib
         use constants_def
         real(dp), intent(in) :: kF, Gamma_e, eta, Ye, Z, Z2, Z53, A
         real(dp) :: nu
@@ -101,7 +104,7 @@ contains
         ! end interface
         real(dp), parameter :: um1 = 2.8, um2 = 12.973
         real(dp), parameter :: onesixth = 1.0/6.0, fourthird = 4.0*onethird
-        real(dp), parameter :: sw_max = log(huge(1.0_dp))
+        real(dp) :: sw_max
         real(dp) :: electroncompton
         real(dp) :: aB
         real(dp) :: eifac
@@ -109,6 +112,7 @@ contains
         real(dp) :: Gs,Gk0,Gk1,GkZ,Gk,a0,D1,D,s,w1,w,sw,fac
         real(dp) :: L1,L2,Lei
     
+        sw_max = log(huge(1.0_dp))
         electroncompton = hbar/Melectron/clight
         aB = electroncompton/finestructure
         eifac = fourthird*clight*finestructure**2/electroncompton/pi
@@ -169,6 +173,7 @@ contains
 
     function eQ(kF,T,Ye,Z,Z2,A,Q) result (nu)
         ! impurity scattering: Iton (1994), also Potekhin, priv. communication
+        use math_lib
         use constants_def
         real(dp), intent(in) :: kF,T,Ye,Z,Z2,A,Q
         real(dp) :: nu
@@ -195,6 +200,7 @@ contains
     end function eQ
 
     function eQ_page(kF,T,Ye,Z,Z2,A,Q) result(nu)
+        use math_lib
         use constants_def
         real(dp), intent(in) :: kF,T,Ye,Z,Z2,A,Q
         real(dp) :: nu

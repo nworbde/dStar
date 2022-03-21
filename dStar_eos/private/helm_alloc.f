@@ -24,7 +24,7 @@ c ***********************************************************************
 c ***********************************************************************
 
       module helm_alloc
-
+          use math_lib
       
       implicit none
 
@@ -203,11 +203,11 @@ c ***********************************************************************
          
             do j=1,jmax
                tsav = h% logtlo + (j-1)*h% logtstp
-               h% t(j) = 10.0d0**(tsav)
+               h% t(j) = exp10(tsav)
             enddo
             do i=1,imax
                dsav = h% logdlo + (i-1)*h% logdstp
-               h% d(i) = 10.0d0**(dsav)
+               h% d(i) = exp10(dsav)
             enddo
          end if
          
@@ -229,10 +229,10 @@ c ***********************************************************************
          
           do j=1,jmax
             tsav = h% logtlo + (j-1)*h% logtstp
-            h% t(j) = 10.0d0**(tsav)
+            h% t(j) = exp10(tsav)
             do i=1,imax
                dsav = h% logdlo + (i-1)*h% logdstp
-               h% d(i) = 10.0d0**(dsav)
+               h% d(i) = exp10(dsav)
                read(19,*) 
      >            h% f(i,j), h% fd(i,j), h% ft(i,j),
      >            h% fdd(i,j), h% ftt(i,j), h% fdt(i,j),

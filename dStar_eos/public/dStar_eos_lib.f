@@ -85,6 +85,7 @@ module dStar_eos_lib
     
     ! helper functions
     subroutine lattice_properties(rho,T,ionic,ne,rs,Gamma_e,Gamma,ionQ)
+        use math_lib
         use nucchem_def, only: composition_info_type
         use constants_def
         real(dp), intent(in) :: rho,T
@@ -125,6 +126,7 @@ module dStar_eos_lib
     subroutine eval_crust_eos( &
         &   dStar_eos_handle,rho,T,ionic,ncharged,charged_ids,Yion,Tcs, &
         &   res,phase,chi,components)
+        use math_lib
         use exceptions_lib
         use nucchem_def, only: composition_info_type
         use superfluid_def, only: max_number_sf_types, neutron_1S0

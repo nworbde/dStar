@@ -14,6 +14,7 @@ contains
         ! Implements formalism described in
         ! Aguilera et al. (2009), PRL 102: 091101
         !
+        use math_lib
         use nucchem_def, only: composition_info_type
         use constants_def
         real(dp), intent(in) :: nn, nion, temperature
@@ -289,6 +290,7 @@ contains
 
     subroutine structure_factor_phonon(n,x,h,y,dy,lrpar,rpar,lipar,ipar,ierr)
         ! integrand for eq. (16), Deibel et al. (2017)
+        use math_lib
         use constants_def
 
         integer, intent(in) :: n, lrpar, lipar
@@ -335,6 +337,7 @@ contains
 
     subroutine structure_factor_impurity(n,x,h,y,dy,lrpar,rpar,lipar,ipar,ierr)
         ! integrand for eq. (20), Deibel et al. (2017)
+        use math_lib
         use constants_def
 
         integer, intent(in) :: n, lrpar, lipar
@@ -380,6 +383,7 @@ contains
     end subroutine structure_factor_impurity
     
     function core_neutron_conductivity(nn,np,mneff,mpeff,T,Tcs) result (Kn)
+        use math_lib
         use constants_def
         use superfluid_def, only: max_number_sf_types, proton_1S0, neutron_1S0, neutron_3P2
         ! input nn, np: densities (fm**-3)

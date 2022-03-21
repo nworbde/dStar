@@ -43,6 +43,7 @@ module bc09
 contains
     
     subroutine do_get_bc09_Teff(grav, Plight, Pb, lgTb, lgTeff, lgflux, ierr)
+        use math_lib
         use exceptions_lib
         use constants_def
         use dStar_eos_lib
@@ -95,6 +96,7 @@ contains
     
     subroutine do_integrate_bc09_atm( &
     &   grav,lgyb,lgy_light,lgTeff,lgTb,rho,eos_handle,cond_handle,ierr)
+        use math_lib
         use iso_fortran_env, only: error_unit
         use exceptions_lib
         use constants_def
@@ -145,7 +147,7 @@ contains
         lipar = number_base_ipar + number_species
         allocate(ipar(lipar), rpar(lrpar))
         
-        Teff = 10.0**lgTeff
+        Teff = exp10(lgTeff)
         tau = twothird
         
         ! set photosphere to be pure He and compute moments
@@ -282,6 +284,7 @@ contains
     subroutine find_photospheric_pressure(Teff,grav,tau,rho_ph,P_ph,kappa, &
         &   lrpar,rpar,lipar,ipar,ierr)
         use exceptions_lib
+        use math_lib
         use constants_def
         use nucchem_def
         use nucchem_lib
@@ -370,6 +373,7 @@ contains
     real(dp) function photosphere(lnrho, dfdlnrho, lrpar, rpar, lipar, ipar, ierr)
        ! returns with ierr = 0 if was able to evaluate f and df/dx at x
        ! if df/dx not available, it is okay to set it to 0
+       use math_lib
        use constants_def
        use superfluid_def, only: max_number_sf_types, neutron_1S0
        use nucchem_def
@@ -440,6 +444,7 @@ contains
     
     subroutine deriv(n, lnP, h, lnT4, dlnT4dlnP, lrpar, rpar, lipar, ipar, ierr)
         use exceptions_lib
+        use math_lib
         use constants_def
         use nucchem_def
         use nucchem_lib
@@ -601,6 +606,7 @@ contains
 
     real(dp) function eval_pressure(lnrho, dlnPdlnrho, lrpar, rpar, lipar, ipar, ierr)
        ! returns with ierr = 0 if was able to evaluate lnP and dlnP/dlnrho at rho
+       use math_lib
        use exceptions_lib
        use constants_def
        use superfluid_def, only: max_number_sf_types

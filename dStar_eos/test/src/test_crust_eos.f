@@ -1,4 +1,5 @@
 program test_crust_eos
+    use math_lib
     use constants_def, only: dp
     use constants_lib
 	use nucchem_def
@@ -21,6 +22,7 @@ program test_crust_eos
 	Z = [0.0,8.0,26.0]; A = [1.0,16.0,56.0]
 	N = A-Z
 	
+    call math_init()
     call constants_init('',ierr)
 	call nucchem_init('../../data',ierr)
 	call sf_startup('../../data',ierr)

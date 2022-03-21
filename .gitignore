@@ -11,6 +11,7 @@ data/nucchem
 *.a
 *.o
 *.mod
+*.smod
 *.pyc
 test_output.data
 test_output

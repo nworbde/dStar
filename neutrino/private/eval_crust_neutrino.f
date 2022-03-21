@@ -62,6 +62,8 @@ module eval_crust_neutrino
         !                       r = density*Ye [g cm**-3]
         ! Returns:  q = plasma neutrino emissivity [ergs/g/s]
         !
+        use math_lib
+        use constants_def
         real(dp), intent(in) :: t, r
         real(dp), intent(out) :: q
         real(dp) :: rdouble,x,y,enum,fxy,lamb,gamd,gam,ft,fl,qap
@@ -78,29 +80,30 @@ module eval_crust_neutrino
         else
             fxy = 1.05_dp + (0.39_dp -1.25_dp*x - 0.35_dp*sin(4.5_dp*x) &
             & -0.3_dp*exp(-(4.5_dp*x + 0.9_dp)**2)) &
-            & * exp(-(enum/(0.57-0.25*x))**2)
+            & * exp(-(enum/(0.57_dp-0.25_dp*x))**2)
         end if
 
         ! equation (2.10)
-        lamb = 1.686e-10*t
+        lamb = 1.686e-10_dp*t
 
         ! equations (4.6)-(4.8)
-        gamd = 1.1095e11*r/((t**2)*sqrt(1.0+(1.019e-6*r)**(2./3.)))
+        gamd = 1.1095e11_dp*r/((t**2)*sqrt(1.0_dp+(1.019e-6_dp*r)**(two_thirds)))
         gam = sqrt(gamd)
-      ft   = 2.4 + 0.6*sqrt(gam) + 0.51*gam + 1.25*gam**1.5
-      fl   = (8.6*gamd + 1.35*(gam**(7./2.)))/(225. - 17.*gam + gamd )
+      ft   = 2.4_dp + 0.6_dp*sqrt(gam) + 0.51_dp*gam + 1.25_dp*gam**1.5_dp
+      fl   = (8.6_dp*gamd + 1.35_dp*(gam**(7.0_dp/2.0_dp)))/(225.0_dp - 17.0_dp*gam + gamd )
 
         ! equation (4.5)
-      if (abs(sqrt(gamd)) > 700.0) then
-        qap=0.0
+      if (abs(sqrt(gamd)) > 700.0_dp) then
+        qap=0.0_dp
       else
-        qap = fxy*(fl+ft)*exp(-gam)*(gamd**3)*(lamb**9)*3.0e21
+        qap = fxy*(fl+ft)*exp(-gam)*(gamd**3)*(lamb**9)*3.0e21_dp
       end if  
         q = qap*cvd
     end subroutine plasma
 
     subroutine pair(temp, rhom, qpai )
         use constants_def, only: onethird
+        use math_lib
         ! pair.f
         ! modified from mkfit routine
         ! Itoh et al. ApJSS 102: 411 (1996)
@@ -113,33 +116,33 @@ module eval_crust_neutrino
         real(dp), intent(out) :: qpai
         real(dp) :: lam,xi,qp1,qp2,qp,fp1,fp2,fp,axi,g
 
-        real(dp), parameter :: a0 =  6.002e19, a1 =  2.084e20, a2 =  1.872e21
-        real(dp), parameter :: b1 =  9.383e-1, b2 = -4.141e-1, b3 =  5.829e-2, c =  5.5924e0
-        real(dp), parameter :: bh1 =  1.2383, bh2 = -0.8141, bh3 =  0.0, ch =  4.9924
+        real(dp), parameter :: a0 =  6.002e19_dp, a1 =  2.084e20_dp, a2 =  1.872e21_dp
+        real(dp), parameter :: b1 =  9.383e-1_dp, b2 = -4.141e-1_dp, b3 =  5.829e-2_dp, c =  5.5924e0_dp
+        real(dp), parameter :: bh1 =  1.2383_dp, bh2 = -0.8141_dp, bh3 =  0.0_dp, ch =  4.9924_dp
         real(dp), parameter :: coep = (cn_cv**2 + cn_ca**2) + cn_dn*(cn_cvp**2 + cn_cap**2)
         real(dp), parameter :: coem = (cn_cv**2 - cn_ca**2) + cn_dn*(cn_cvp**2 - cn_cap**2)
 
         ! equations (2.9)-(2.10)
-        lam = temp/5.9302e9
-        xi = ( rhom*1.0e-9 )**( onethird )/lam
+        lam = temp/5.9302e9_dp
+        xi = ( rhom*1.0e-9_dp )**( onethird )/lam
 
         ! equation (2.6)
-        qp1 = 10.74800*lam**2 + 0.3967*sqrt(lam) + 1.005
-        qp2 = rhom/(7.692e7*lam**3 + 9.715e6*sqrt(lam))
-        qp = (1.0/qp1)*(1.0 + qp2)**(-0.3)
+        qp1 = 10.74800_dp*lam**2 + 0.3967_dp*sqrt(lam) + 1.005_dp
+        qp2 = rhom/(7.692e7_dp*lam**3 + 9.715e6_dp*sqrt(lam))
+        qp = (1.0_dp/qp1)*(1.0_dp + qp2)**(-0.3_dp)
 
         axi = a0+a1*xi+a2*xi**2
 
         ! equation (2.7)
-        if (xi > 100.0) then
-            fp1 = 0.0
-        else if (temp < 1.0e10) then
+        if (xi > 100.0_dp) then
+            fp1 = 0.0_dp
+        else if (temp < 1.0e10_dp) then
             fp1 = axi*exp(-c*xi)
         else
             fp1 = axi*exp(-ch*xi)
         end if
 
-        if (temp < 1.0e10) then
+        if (temp < 1.0e10_dp) then
             fp2 = xi**3 + b1/lam + b2/( lam**2 ) + b3/( lam**3 )
         else
             fp2 = xi**3 + bh1/lam + bh2/( lam**2 ) + bh3/( lam**3 )
@@ -147,13 +150,13 @@ module eval_crust_neutrino
         fp = fp1/fp2
 
         ! equation (2.8)
-        g = 1.0 - 13.04*lam**2 + 133.5*lam**4 +  1534.0*lam**6 + 918.6*lam**8
+        g = 1.0_dp - 13.04_dp*lam**2 + 133.5_dp*lam**4 +  1534.0_dp*lam**6 + 918.6_dp*lam**8
 
         ! equation (2.5)
-        if ( lam < 7.0e-3 ) then
-            qpai = 0.0
+        if ( lam < 7.0e-3_dp ) then
+            qpai = 0.0_dp
         else
-            qpai = 0.5*coep*(1.0 + coem/coep*qp)*g*exp(-2.0/lam)*fp
+            qpai = 0.5_dp*coep*(1.0_dp + coem/coep*qp)*g*exp(-2.0_dp/lam)*fp
         end if
     end subroutine pair
 
@@ -193,35 +196,36 @@ module eval_crust_neutrino
     !                   xi = normalized Fermi momentum
     !   returns: fp = fitting function (eq. [3.4]-[3.8])
     !
+        use constants_def, only: pi
         real(dp),intent(in) :: lamb,xi
         real(dp),intent(out) :: fp
-      real(dp) :: a(0:2), cc(0:2,0:6), d(0:2,1:5)
+        real(dp) :: a(0:2), cc(0:2,0:6), d(0:2,1:5)
         real(dp) :: pjt,tau, c, temp
-        real(dp), parameter :: pi = 3.141592654_dp
+!         real(dp), parameter :: pi = 3.141592654_dp
         real(dp), parameter :: b(3) = [ 6.290e-3_dp, 7.483e-3_dp, 3.061e-4_dp ]
         integer :: i, j, k
 
         temp = lamb*5.9302e9_dp
         if (temp < 1.0e7_dp) then
             ! print *, 'WARNING: temperature < 1.0e7 K'
-            fp = 0.0
+            fp = 0.0_dp
             return
-        else if (temp < 1.0e8) then
+        else if (temp < 1.0e8_dp) then
             include 'c7-8.par'
             include 'd7-8.par'
-            c = 0.5654 + log10(temp/1.0e7_dp)
+            c = 0.5654_dp + log10(temp/1.0e7_dp)
             tau = log10(temp/1.0e7_dp)
         else if (temp < 1.0e9_dp) then
             include 'c8-9.par'
-        include 'd8-9.par'
-        c   =  1.5654_dp
-        tau = log10(temp/1.0e8_dp)
-      else
-        include 'c9.par'
-        include 'd9.par'
-        c   =  1.5654_dp
-        tau = log10(temp/1.0e9_dp)
-      endif
+            include 'd8-9.par'
+            c   =  1.5654_dp
+            tau = log10(temp/1.0e8_dp)
+        else
+            include 'c9.par'
+            include 'd9.par'
+            c   =  1.5654_dp
+            tau = log10(temp/1.0e9_dp)
+        endif
 
         do j = 0, 2
             a(j)  = 0.5_dp*cc(j,0) + 0.5_dp*cc(j,6)*cos(10.0_dp*pi*tau)
@@ -242,6 +246,7 @@ module eval_crust_neutrino
     
     subroutine pbf(kF,T,Tns,qpbf)
         use constants_def
+        use math_lib
         ! pair-breaking and formation emissivity. Based on fmal. published by 
         ! Yakovlev & collaborators. 
         !

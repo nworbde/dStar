@@ -1,4 +1,5 @@
 program tabulate_mixture
+    use math_lib
     use iso_fortran_env, only: output_unit, error_unit
     use utils_lib, only: StrLowCase
     use exceptions_lib
@@ -125,6 +126,7 @@ program tabulate_mixture
     
     ! initialization
     ! physical constants
+    call math_init()
     call constants_init('',ierr)
     call check_okay% assert(ierr==0)
     
