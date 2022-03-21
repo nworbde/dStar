@@ -1,4 +1,5 @@
 module init
+    use math_lib
     use NScool_def, only: get_NScool_info_ptr
     use NScool_private_def
     use constants_def
@@ -10,7 +11,8 @@ contains
         integer, intent(out) :: ierr
         ierr = 0    
         call NScool_private_def_init(my_dStar_dir)
-    
+        
+        call math_init()
         call constants_init('',ierr)
     end subroutine do_NScool_init
 
