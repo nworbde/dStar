@@ -1,4 +1,5 @@
 module NScool_evolve
+    use math_lib
     use NScool_def
     
     integer, parameter :: i_id = 1
@@ -57,7 +58,7 @@ contains
 
         ! set up the equation parameters
         n = s% nz
-        t = 0.0      
+        t = 0.0_dp
         tend = s% epoch_duration
         h = s% dt
         max_step_size = s% maximum_timestep
@@ -100,7 +101,7 @@ contains
         call isolve_work_sizes(n, nzmax, imas, mljac, mujac, mlmas, mumas, liwork, lwork)
         allocate(work(lwork), iwork(liwork))
         iwork = 0
-        work = 0.0
+        work = 0.0_dp
 
         allocate(ipar(num_deriv_ipar),rpar(num_deriv_rpar))
 
@@ -436,9 +437,9 @@ contains
             
         call dStar_atm_get_results(lgTb,lgTeff,dlgTeff,lgflux,dlgflux, ierr)
         if (ierr /= 0) return
-        s% Lsurf = s% area(1) * 10.0**lgflux     ! emergent luminosity
+        s% Lsurf = s% area(1) * exp10(lgflux)     ! emergent luminosity
         s% dlnLsdlnT = dlgflux
-        s% Teff = 10.0**lgTeff     ! surface effective temperature
+        s% Teff = exp10(lgTeff)     ! surface effective temperature
         s% L(1) = s% Lsurf        
         s% L(2:s% nz) = -s% area(2:s% nz)**2 *s% rho_bar(2:s% nz)*s% Kcond(2:s% nz)  &
         &   * (s% ePhi(1:s% nz-1)*s% T(1:s% nz-1) - s% ePhi(2:s% nz)*s% T(2:s% nz))  &
@@ -529,21 +530,21 @@ contains
         s% enuc = 0.0_dp
         
         ! outer crust
-        Ptop = 10.0**s% lgP_min_heating_outer
-        Pbot = 10.0**s% lgP_max_heating_outer
+        Ptop = exp10(s% lgP_min_heating_outer)
+        Pbot = exp10(s% lgP_max_heating_outer)
         Q = s% Q_heating_outer
         call do_one
         
         ! inner crust
-        Ptop = 10.0**s% lgP_min_heating_inner
-        Pbot = 10.0**s% lgP_max_heating_inner
+        Ptop = exp10(s% lgP_min_heating_inner)
+        Pbot = exp10(s% lgP_max_heating_inner)
         Q = s% Q_heating_inner
         call do_one
         
         ! extra, if it exists
         if (s% turn_on_extra_heating) then
-            Ptop = 10.0**s% lgP_min_heating_shallow
-            Pbot = 10.0**s% lgP_max_heating_shallow
+            Ptop = exp10(s% lgP_min_heating_shallow)
+            Pbot = exp10(s% lgP_max_heating_shallow)
             Q = s% Q_heating_shallow
             call do_one
         end if

@@ -132,6 +132,7 @@ contains
 
     subroutine store_controls(s,ierr)
         use iso_fortran_env, only : error_unit
+        use math_lib
         use exceptions_lib
         use constants_def, only : Msun, julian_day
         use num_lib, only : solver_option
@@ -178,8 +179,8 @@ contains
 
         s% Mcore = core_mass
         s% Rcore = core_radius
-        s% Psurf = 10.0**lgPcrust_top
-        s% Pcore = 10.0**lgPcrust_bot
+        s% Psurf = exp10(lgPcrust_top)
+        s% Pcore = exp10(lgPcrust_bot)
         s% target_resolution_lnP = target_resolution_lnP
         s% Tcore = core_temperature
         s% lgP_min_heating_outer = lgP_min_heating_outer

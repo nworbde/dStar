@@ -20,8 +20,8 @@ module NScool_crust_tov
     integer, parameter :: num_tov_rpar = 4
     
     integer, parameter :: tov_default_max_steps = 1000
-    real(dp), parameter :: tov_default_max_step_size = 0.0
-    real(dp), parameter :: tov_default_starting_step = 1.0e-5
+    real(dp), parameter :: tov_default_max_step_size = 0.0_dp
+    real(dp), parameter :: tov_default_starting_step = 1.0e-5_dp
     
     integer, parameter :: tov_model_expansion_count = 100
     
@@ -109,6 +109,7 @@ contains
     
     subroutine tov_integrate(lgPstart, lgPend, Mcore, Rcore, lnP_rez, y, ierr)
         use, intrinsic :: iso_fortran_env, only: error_unit
+        use math_lib
         use num_lib
         
         real(dp), intent(in) :: lgPstart    ! cgs
@@ -135,30 +136,30 @@ contains
         allocate(iwork(liwork), work(lwork),ipar(num_tov_ipar), rpar(num_tov_rpar))
         iwork = 0
         iwork(5) = num_tov_variables
-        work = 0.0
+        work = 0.0_dp
         
         itol = 0
-        rtol = 1.0e-5
-        atol = 1.0e-6
+        rtol = 1.0e-5_dp
+        atol = 1.0e-6_dp
         iout = 2    ! want dense output
         lout = error_unit
         lipar = num_tov_ipar
         lrpar = num_tov_rpar
                 
-        y(tov_radius)      = 0.0
-        y(tov_baryon)      = 0.0
-        y(tov_mass)        = 0.0
-        y(tov_potential)   = 0.5*log(1.0-2.0*Mcore/(Rcore*1.0e5/length_g))
-        y(tov_volume)      = 0.0
+        y(tov_radius)      = 0.0_dp
+        y(tov_baryon)      = 0.0_dp
+        y(tov_mass)        = 0.0_dp
+        y(tov_potential)   = 0.5_dp*log(1.0_dp-2.0_dp*Mcore/(Rcore*1.0e5_dp/length_g))
+        y(tov_volume)      = 0.0_dp
 
         n = num_tov_variables
         lnP = lgPstart * ln10 - log(pressure_g)
         lnPend = lgPend * ln10 - log(pressure_g)
-        h = -0.1
+        h = -0.1_dp
         rpar(tov_output_step_crust) = lnP_rez
         rpar(tov_last_recorded_step) = lnP + rpar(tov_output_step_crust)
         rpar(tov_core_mass) = Mcore
-        rpar(tov_core_radius) = Rcore*1.0e5/length_g
+        rpar(tov_core_radius) = Rcore*1.0e5_dp/length_g
 
         npts = ceiling(lnP - lnPend)/rpar(tov_output_step_crust) + 1
         
@@ -176,13 +177,15 @@ contains
         deallocate(work, iwork)
         
         ! now apply the boundary condition to correct phi: exp(phi) = sqrt(1-2m/r)
-        phi_correction  = 0.5*log(1.0-2.0*(y(tov_mass)+rpar(tov_core_mass))/(y(tov_radius)+rpar(tov_core_radius))) &
+        phi_correction  = &
+        &   0.5_dp*log(1.0_dp-2.0_dp*(y(tov_mass)+rpar(tov_core_mass))/(y(tov_radius)+rpar(tov_core_radius))) &
             & -y(tov_potential)
         
         tov_model% potential(1: tov_model% nzs) = tov_model% potential(1: tov_model% nzs) + phi_correction
     end subroutine tov_integrate
     
     subroutine tov_derivs_crust(n,lnP,h,y,dy,lrpar,rpar,lipar,ipar,ierr)
+        use math_lib
         use dStar_crust_lib
 
         integer, intent(in) :: n, lrpar, lipar
@@ -208,8 +211,8 @@ contains
         lgP = lnP/ln10 + log10(pressure_g)          ! convert P to cgs
         call dStar_crust_get_results(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
 
-        eps = 10.0**(lgEps)   ! mass-energy density, in g cm**-3
-        rho = 10.0**(lgRho)               ! g cm**-3
+        eps = exp10(lgEps)   ! mass-energy density, in g cm**-3
+        rho = exp10(lgRho)               ! g cm**-3
         r2 = r*r
         r3 = r2*r
         fourpir2 = fourpi*r2
@@ -219,9 +222,9 @@ contains
         eps_g = eps / density_g
 
         ! correction factors, see Thorne (1977)
-        Lambda = 1.0/sqrt(1.0-2.0*m/r)
-        Hfac = 1.0+P/eps_g
-        Gfac = (1.0 + fourpi*r3*P/m)
+        Lambda = 1.0_dp/sqrt(1.0_dp-2.0_dp*m/r)
+        Hfac = 1.0_dp+P/eps_g
+        Gfac = (1.0_dp + fourpi*r3*P/m)
         g = m/r2 * Gfac*Lambda
 
         dy(tov_radius)      = -P/g/eps_g/Hfac/Lambda
@@ -233,6 +236,7 @@ contains
     end subroutine tov_derivs_crust
 
     subroutine tov_solout_crust(nr, xold, x, n, y, rwork_y, iwork_y, interp_y, lrpar, rpar, lipar, ipar, irtrn)
+        use math_lib
         use dStar_crust_lib
         
         integer, intent(in) :: nr, n, lrpar, lipar
@@ -299,6 +303,7 @@ contains
     end subroutine tov_solout_crust
     
     subroutine tov_write_crust()
+        use math_lib
         use dStar_crust_lib
         real(dp) ::  lnP, lgP, xwant, lgx, r, a, m, phi, p, vol
         real(dp) :: rho, eps, lgRho, dlgRho, lgEps, dlgEps
@@ -317,8 +322,8 @@ contains
             lgP = log10(s% pressure(i)) + log10(pressure_g)            ! convert P to cgs
             call dStar_crust_get_results(lgP,lgRho,dlgRho,lgEps,dlgEps,ierr)
             if (ierr /= 0) return
-            write (*,'(5(f14.10,tr2),4(es15.8,tr1))') a, m, r*length_g*1.0e-5, 1.0/sqrt(1.0-2.0*m/r), phi,  &
-            &   10.0**lgP, 10.0**lgRho, 10.0**lgEps, vol*length_g**3
+            write (*,'(5(f14.10,tr2),4(es15.8,tr1))') a, m, r*length_g*1.0e-5_dp, 1.0/sqrt(1.0_dp-2.0_dp*m/r), phi,  &
+            &   exp10(lgP), exp10(lgRho), exp10(lgEps), vol*length_g**3
         end do
     end subroutine tov_write_crust
 

@@ -15,7 +15,8 @@ module NScool_terminal
    
    contains
    subroutine do_write_terminal(id,ierr,print_header)
-       use constants_def
+      use math_lib
+      use constants_def
       use iso_fortran_env, only : output_unit
       integer, intent(in) :: id
       integer, intent(out) :: ierr
@@ -49,19 +50,9 @@ module NScool_terminal
       
       ! write the row
       write(output_unit,terminal_val_fmt) s% model, s% tsec, s% dt, log10(s% Lsurf), log10(s% Teff),  &
-         &  log10(Lnu), safelog10(Lnuc), maxval(s% lnT)/ln10, log10(s% P(maxloc(s% lnT))),  &
+         &  log10(Lnu), safe_log10(Lnuc), maxval(s% lnT)/ln10, log10(s% P(maxloc(s% lnT))),  &
          &  minval(s% lnT)/ln10, log10(s% P(minloc(s% T)))
       
-     contains
-         function safelog10(x)
-             real(dp), intent(in) :: x
-             real(dp) :: safelog10
-             if (x <= 0.0_dp) then
-                 safelog10 = 0.0_dp
-             else
-                 safelog10 = log10(x)
-             end if
-         end function safelog10
    end subroutine do_write_terminal
 
 end module NScool_terminal

@@ -23,6 +23,7 @@ module NScool_history
    
    contains
    subroutine do_write_history(id,ierr)
+      use math_lib
       use utils_lib, only: alloc_iounit, free_iounit, append_line
       use constants_def, only: julian_day
       use exceptions_lib
@@ -81,20 +82,10 @@ module NScool_history
          return
       end if
       write(iounit,history_val_fmt) s% model, s% tsec/julian_day,  &
-          & safelog10(s% Mdot), log10(s% Teff), log10(s% Lsurf), &
-          & log10(Lnu), safelog10(Lnuc)
+          & safe_log10(s% Mdot), log10(s% Teff), log10(s% Lsurf), &
+          & log10(Lnu), safe_log10(Lnuc)
       close(iounit)
       call free_iounit(iounit)
-  contains
-      function safelog10(x)
-          real(dp), intent(in) :: x
-          real(dp) :: safelog10
-          if (x <= 0.0_dp) then
-              safelog10 = 0.0_dp
-          else 
-              safelog10 = log10(x)
-          end if
-      end function safelog10
    end subroutine do_write_history
 
 end module NScool_history
