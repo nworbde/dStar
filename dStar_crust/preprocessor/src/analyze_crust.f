@@ -1,5 +1,6 @@
 program analyze_crust
     use exceptions_lib
+    use math_lib
     use constants_def, only: dp
     use constants_lib
     use nucchem_def
@@ -37,6 +38,7 @@ program analyze_crust
     composition_filename = datadir//trim(composition_stem)//'.bin'
     output_filename = trim(composition_stem)//'-table'
     
+    call math_init()
     call constants_init('',ierr)
     call check_okay('constants_init',ierr)
     

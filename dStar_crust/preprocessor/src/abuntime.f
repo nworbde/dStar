@@ -9,13 +9,14 @@ module abuntime
     real(dp), parameter :: mdot = 8.8e4_dp*0.3_dp
     real(dp), parameter :: default_lgP_increment = 0.005_dp
     real(dp), parameter :: default_abundance_threshold = 0.01_dp
-    real(dp), parameter :: default_lgPmin = 22.0
-    real(dp), parameter :: default_lgPmax = 33.5
+    real(dp), parameter :: default_lgPmin = 22.0_dp
+    real(dp), parameter :: default_lgPmax = 33.5_dp
     
 contains
 
     subroutine read_abuntime(filename, nz, nion, T, lgP, isos, Y, ierr, lgP_increment)
         use iso_fortran_env, only: error_unit, iostat_end
+        use math_lib
         use exceptions_lib
         use const_def
         use nucchem_def
@@ -59,7 +60,7 @@ contains
 
         nz = 1
         nloop = 1
-        last_lgP = -100.0
+        last_lgP = -100.0_dp
         nrejected = 0
         do
             ! size check
@@ -98,7 +99,7 @@ contains
 
         call realloc_abuntime_arrays(nz,ierr)
         if (allocate_abuntime_failure% raised(ierr)) return
-        T = T*1.0e9
+        T = T*1.0e9_dp
         
     contains
         subroutine realloc_abuntime_arrays(newsize,ierr)

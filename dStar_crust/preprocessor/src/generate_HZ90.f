@@ -8,8 +8,8 @@ program generate_HZ90_table
 
     implicit none
     integer, parameter :: HZ90_number_table_points = 2048
-    real(dp), parameter :: HZ90_lgPmin = 22.0
-    real(dp), parameter :: HZ90_lgPmax = 33.5
+    real(dp), parameter :: HZ90_lgPmin = 22.0_dp
+    real(dp), parameter :: HZ90_lgPmax = 33.5_dp
     character(len=*), parameter :: datadir = '../data/'
     character(len=*), parameter :: cache_stem = 'HZ90'
     

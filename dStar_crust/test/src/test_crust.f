@@ -1,5 +1,6 @@
 program test_crust
     use exceptions_lib
+    use math_lib
     use constants_def, only: dp
     use constants_lib
     use nucchem_def
@@ -20,6 +21,7 @@ program test_crust
     real(dp) :: Tref
     type(assertion) :: sane_eos=assertion(scope='main',message='dlgRho > 0')
 
+    call math_init()
     call constants_init('',ierr)
     call check_okay('constants_init',ierr)
     

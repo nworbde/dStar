@@ -1,4 +1,5 @@
 module HZ90_comp
+    use math_lib
     use const_def, only: dp
     use exceptions_lib
     use nucchem_def
@@ -37,10 +38,10 @@ module HZ90_comp
     &   2.637d30,2.771d30,3.216d30,3.825d30,4.699d30,6.043d30,7.233d30,9.238d30, &
     &   1.228d31,1.602d31 ]
     real(dp), parameter, dimension(HZ90_number_layers) :: Xn = [ &
-    &   0.0, 0.0, 0.0, 0.0, 0.0,  &
-    &   4.0/56.0, 10.0/56.0, 16.0/56.0, 22.0/56.0, &
-    &   50.0/112.0, 56.0/112.0, 62.0/112.0, 68.0/112.0, 158.0/224.0, &
-    &   164.0/224.0, 170.0/224.0, 176.0/224.0, 360.0/448.0 ]
+    &   0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp,  &
+    &   4.0_dp/56.0_dp, 10.0_dp/56.0_dp, 16.0_dp/56.0_dp, 22.0_dp/56.0_dp, &
+    &   50.0_dp/112.0_dp, 56.0_dp/112.0_dp, 62.0_dp/112.0_dp, 68.0_dp/112.0_dp, 158.0_dp/224.0_dp, &
+    &   164.0_dp/224.0_dp, 170.0_dp/224.0_dp, 176.0_dp/224.0_dp, 360.0_dp/448.0_dp ]
 
 contains
     
@@ -65,26 +66,26 @@ contains
         n_indx = network_indcs(get_nuclide_index('n'))
         
         ! loop over layers to set composition
-        Y = 0.0
+        Y = 0.0_dp
         ! first layer
         indx = network_indcs(get_nuclide_index(HZ90_ion_composition(1)))
         where(lgP <= lgPt(1)) 
             Y(n_indx,:) = Xn(1)
-            Y(indx,:) = (1.0-Xn(1))/nuclib% A(indcs(indx))
+            Y(indx,:) = (1.0_dp-Xn(1))/nuclib% A(indcs(indx))
         end where
         ! middle layers
         do i = 2, HZ90_number_transitions
             indx = network_indcs(get_nuclide_index(HZ90_ion_composition(i)))
             where(lgP > lgPt(i-1) .and. lgP <= lgPt(i))
                 Y(n_indx,:) = Xn(i)
-                Y(indx,:) = (1.0-Xn(i))/nuclib% A(indcs(indx))
+                Y(indx,:) = (1.0_dp-Xn(i))/nuclib% A(indcs(indx))
             end where
         end do
         ! last layer
         indx = network_indcs(get_nuclide_index(HZ90_ion_composition(HZ90_number_layers)))
         where (lgP > lgPt(HZ90_number_transitions))
             Y(n_indx,:) = Xn(HZ90_number_layers)
-            Y(indx,:) = (1.0-Xn(HZ90_number_layers))/nuclib% A(indcs(indx))
+            Y(indx,:) = (1.0_dp-Xn(HZ90_number_layers))/nuclib% A(indcs(indx))
         end where
         
     end subroutine do_generate_HZ90_table

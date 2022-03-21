@@ -5,6 +5,7 @@ module dStar_crust_mod
 contains
     
     subroutine do_load_crust_table(prefix,eos_handle,Tref,ierr)
+        use math_lib
         use exceptions_lib
         character(len=*), intent(in) :: prefix
         integer, intent(in) :: eos_handle
@@ -56,8 +57,8 @@ contains
         ! write informative message about range of table
         if (dbg) then
             write(alert_msg,'(a,2f8.3)') 'lgNb min, max = ', &
-            &   10.0**(minval(lgRho_val(1,:)-log10(amu))-39.0), &
-            &   10.0**(maxval(lgRho_val(1,:)-log10(amu))-39.0)
+            &   exp10(minval(lgRho_val(1,:)-log10(amu))-39.0_dp), &
+            &   exp10(maxval(lgRho_val(1,:)-log10(amu))-39.0_dp)
             call status% report(alert_msg)
             write(alert_msg,'(t21,a,2f8.3)') 'lgP min, max = ', &
             &   tab% lgP_min, tab% lgP_max
@@ -280,6 +281,7 @@ contains
 
     subroutine find_densities(eos_handle,lgP,lgRho,lgEps, &
             & Yion,ncharged,charged_ids,ionic,Tref)
+        use math_lib
         use exceptions_lib
         use constants_def
         use nucchem_def
@@ -305,7 +307,7 @@ contains
         type(alert) :: rootfind_status=alert(scope='find_densities')
         character(len=128) :: error_message
         
-        Pfac = 0.25*(threepisquare)**onethird *hbar*clight*avo**(4.0*onethird)
+        Pfac = 0.25_dp*(threepisquare)**onethird *hbar*clight*avo**(4.0*onethird)
         Ntab = size(lgP)
         imax = 20
         epsx = 1.0d-12
