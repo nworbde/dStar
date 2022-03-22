@@ -1,5 +1,4 @@
 program tabulate_conductivity
-    use iso_fortran_env, only: output_unit, error_unit
     use math_lib
     use utils_lib, only: StrLowCase
     use exceptions_lib

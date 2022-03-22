@@ -228,7 +228,6 @@ contains
     end subroutine set_table_limits
     
     subroutine eval_PPP_electron_table(rho,T,Z,K,ierr)
-        use iso_fortran_env, only: error_unit
         use num_lib, only: binary_search
         use interp_2d_lib_db, only: interp_evbicub_db
         use exceptions_lib

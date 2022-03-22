@@ -1,5 +1,5 @@
 program test_tabulated_mixture
-    use iso_fortran_env, only: output_unit, error_unit
+    use iso_fortran_env, only: output_unit
     use utils_lib, only: StrUpCase
     use exceptions_lib
     use constants_lib

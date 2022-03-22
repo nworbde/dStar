@@ -1,6 +1,5 @@
 program tabulate_mixture
     use math_lib
-    use iso_fortran_env, only: output_unit, error_unit
     use utils_lib, only: StrLowCase
     use exceptions_lib
     use constants_lib
