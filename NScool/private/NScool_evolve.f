@@ -136,7 +136,7 @@ contains
     end subroutine do_integrate_crust
 
     subroutine evaluate_timestep(nr, xold, x, n, y, rwork_y, iwork_y, interp_y, lrpar, rpar, lipar, ipar, irtrn)
-       use iso_fortran_env, only : output_unit, error_unit
+       use iso_fortran_env, only : output_unit
        use exceptions_lib
        use NScool_terminal, only : do_write_terminal
        use NScool_history, only : do_write_history

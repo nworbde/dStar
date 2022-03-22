@@ -133,8 +133,8 @@ contains
     end subroutine LM_corrections
 
     subroutine one_ion(Gamma_e,rs,Z,A,phase,f,u,p,s,cv,dpr,dpt)
-        use iso_fortran_env, only: error_unit
         use math_lib
+        use exceptions_lib
         use constants_def
         use dStar_eos_def
 
@@ -146,6 +146,8 @@ contains
         real(dp) :: fii,uii,pii,sii,cvii,dprii,dptii
         real(dp), dimension(number_lattice_products) :: fiil,uiil,piil,siil,cviil,dpriil, dptiil
         real(dp), parameter :: sevensixth = 7.0/6.0
+        type(alert) :: bad_ion_phase = alert(scope='one_ion',message='bad value of ion phase')
+
         Gamma = Gamma_e*Z**fivethird
         theta = Gamma*sqrt(3.0*Melectron/A/amu/rs)/Z**sevensixth
         select case (phase)
@@ -161,7 +163,7 @@ contains
                 fie = 0.0; fii = 0.0; pie = 0.0; pii = 0.0
                 sie = 0.0; sii = 0.0; cvie = 0.0; cvii = 0.0
                 dprie = 0.0; dprii = 0.0; dptie = 0.0; dptii = 0.0
-                write (error_unit,'(a)') 'ion_eos: one_ion:: bad value of ion phase'
+                call bad_ion_phase% report()
         end select
     
         f = fie + fii

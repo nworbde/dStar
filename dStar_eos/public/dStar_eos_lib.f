@@ -27,7 +27,6 @@ module dStar_eos_lib
     end subroutine dStar_eos_shutdown
 
     function alloc_dStar_eos_handle(ierr)
-        use, intrinsic :: iso_fortran_env, only: error_unit
         use exceptions_lib
         use dStar_eos_private_def
         integer, intent(out) :: ierr
@@ -45,7 +44,6 @@ module dStar_eos_lib
     end subroutine free_dStar_eos_handle
 
     subroutine dStar_eos_ptr(handle, rq, ierr)
-        use, intrinsic :: iso_fortran_env, only: error_unit
         use exceptions_lib
         use dStar_eos_private_def
         integer, intent(in) :: handle
@@ -59,7 +57,6 @@ module dStar_eos_lib
     
     subroutine dStar_eos_set_controls(handle,gamma_melt_pt,rsi_melt_pt,nuclide_abundance_threshold, &
         &       pasta_transition_in_fm3,cluster_transition_in_fm3,suppress_warnings)
-        use, intrinsic :: iso_fortran_env, only: error_unit
         use exceptions_lib
         use dStar_eos_private_def, only : dStar_eos_general_info
         integer, intent(in) :: handle

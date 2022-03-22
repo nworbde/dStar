@@ -9,7 +9,7 @@ module NScool_epochs
 contains
     
     subroutine do_load_epochs(s, ierr)
-        use iso_fortran_env, only : IOSTAT_END, error_unit
+        use iso_fortran_env, only : IOSTAT_END
         use exceptions_lib
         use constants_def, only : julian_day
         use storage, only: allocate_NScool_epoch_arrays

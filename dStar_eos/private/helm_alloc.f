@@ -36,7 +36,6 @@ c ***********************************************************************
          ! This routine allocates a Helm_Table and places pointer to it in h.
          ! It also allocates the arrays in the Helm_Table record.
          
-         use, intrinsic :: iso_fortran_env, only: error_unit
          use exceptions_lib
          use dStar_eos_def
          
@@ -119,7 +118,6 @@ c ***********************************************************************
 
 
       subroutine read_helm_table(h, data_dir, ierr)
-         use iso_fortran_env, only : error_unit
          use exceptions_lib
          use dStar_eos_def
 

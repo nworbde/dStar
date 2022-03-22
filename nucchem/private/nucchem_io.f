@@ -164,21 +164,5 @@ contains
         if (ierr /= 0) return
         call integer_dict_create_hash(nuclide_dict,ierr)
     end subroutine do_parse_nuclides
-    
-!     function io_failure(action,ierr)
-!         use iso_fortran_env, only: error_unit
-!         character(len=*), intent(in) :: action
-!         integer, intent(in) :: ierr
-!         logical :: io_failure
-!         character(len=*), parameter :: err_format = &
-!         &  '("Error while ",a,". error code = ",i0)'
-!
-!         if (ierr == 0) then
-!             io_failure = .FALSE.
-!             return
-!         end if
-!         io_failure = .TRUE.
-!         write (error_unit,err_format) action, ierr
-!     end function io_failure
 
 end module nucchem_io

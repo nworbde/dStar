@@ -47,7 +47,6 @@ contains
     end subroutine sf_load_gaps
 
     subroutine sf_load_one(prefix,type,ierr)
-        use, intrinsic :: iso_fortran_env, only : error_unit
         use load_sf, only : load_sf_table
         character(len=*), intent(in) :: prefix
         integer, intent(in) :: type

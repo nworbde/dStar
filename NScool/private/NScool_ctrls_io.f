@@ -131,7 +131,6 @@ contains
     end subroutine set_default_controls
 
     subroutine store_controls(s,ierr)
-        use iso_fortran_env, only : error_unit
         use math_lib
         use exceptions_lib
         use constants_def, only : Msun, julian_day

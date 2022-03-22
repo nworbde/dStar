@@ -5,7 +5,6 @@ module nucchem_lib
 contains    
     subroutine nucchem_init(datadir, ierr)
         use exceptions_lib
-        use iso_fortran_env, only: error_unit
         use nucchem_io
         character(len=*), intent(in) :: datadir
         integer, intent(out) :: ierr
@@ -48,7 +47,6 @@ contains
     subroutine compute_composition_moments(nnuclides, nuclide_ids, abunds, &
     &   comp, Xsum, ncharged, charged_ids, Yion, abunds_are_mass_fractions, &
     &   exclude_neutrons, renormalize_mass_fractions)
-        use iso_fortran_env, only : error_unit
         use exceptions_lib
         integer, intent(in) :: nnuclides
         integer, dimension(nnuclides), intent(in) :: nuclide_ids
@@ -137,7 +135,6 @@ contains
     ! routines to lookup nuclides
     !   
     function get_nuclide_index(nuclei) result(indx)
-        use iso_fortran_env, only : error_unit
         use exceptions_lib
         use utils_lib, only: integer_dict_lookup
         character(len=*), intent(in) :: nuclei
