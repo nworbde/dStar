@@ -2,13 +2,13 @@ module dStar_eos_lib
     use dStar_eos_def
     
     contains
-    subroutine dStar_eos_startup(datadir)
+    subroutine dStar_eos_startup(ierr)
         use exceptions_lib
+        use constants_def, only: dstar_data_dir
         use dStar_eos_private_def
         use helm_alloc
-        character(len=*), intent(in) :: datadir
+        integer, intent(out) :: ierr
         integer, parameter :: imax = 261, jmax = 101  ! dimensions of our version of helm table
-        integer :: ierr
         character(len=128) :: eos_datadir
         type(failure) :: startup_error=failure(scope='dStar_eos_startup')
         
@@ -16,7 +16,7 @@ module dStar_eos_lib
         call alloc_helm_table(eos_ht, imax, jmax, ierr)
         if (startup_error% raised(ierr,'unable to alloc helm table')) return
         
-        eos_datadir = trim(datadir)//'/eos'
+        eos_datadir = trim(dstar_data_dir)//'/eos'
         call read_helm_table(eos_ht,eos_datadir,ierr)
         if (startup_error% raised(ierr,'unable to read helm table')) return
     end subroutine dStar_eos_startup

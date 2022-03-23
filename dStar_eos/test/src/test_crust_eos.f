@@ -23,14 +23,14 @@ program test_crust_eos
 	N = A-Z
 	
     call math_init()
-    call constants_init('',ierr)
-	call nucchem_init('../../data',ierr)
-	call sf_startup('../../data',ierr)
+    call constants_init('../..','',ierr)
+	call nucchem_init(ierr)
+	call sf_startup(ierr)
 	call sf_load_gaps('ns','gc','t72',ierr)
 	
-	call dStar_eos_startup('../../data')
+	call dStar_eos_startup(ierr)
 	eos_handle = alloc_dStar_eos_handle(ierr)
-		
+	
 	! get indices
 	chem_ids = [(get_nuclide_index_from_ZN(Z(i),N(i)),i=1,3)]
 
