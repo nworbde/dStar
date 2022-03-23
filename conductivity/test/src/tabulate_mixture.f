@@ -87,7 +87,7 @@ program tabulate_mixture
         add_impurity
             
     ! set defaults
-    datadir = '../../data'
+    datadir = '../..'
     lgrho_min = default_lgrho_min
     lgrho_max = default_lgrho_max
     delta_lgrho = default_delta_lgrho
@@ -126,11 +126,11 @@ program tabulate_mixture
     ! initialization
     ! physical constants
     call math_init()
-    call constants_init('',ierr)
+    call constants_init(datadir,'',ierr)
     call check_okay% assert(ierr==0)
     
     ! isotope data
-    call nucchem_init(datadir,ierr)
+    call nucchem_init(ierr)
     call chemistry_okay% assert(ierr==0)
     ! set the chemistry
     call chemistry_okay% set_message('locating nuclide information')
@@ -149,14 +149,16 @@ program tabulate_mixture
     A = [ (nuclib% A(charged_ids(j)), j = 1, ncharged) ]
     
     ! equation of state
-    call dStar_eos_startup(datadir)
+    call dStar_eos_startup(ierr)
+    call check_okay% assert(ierr==0)
     eos_handle = alloc_dStar_eos_handle(ierr)
     call eos_okay% assert(ierr==0)
     ! suppress the warnings for degenerate ions
     call dStar_eos_set_controls(eos_handle,suppress_warnings=.TRUE.)
     
     ! thermal conductivity
-    call conductivity_startup(datadir)
+    call conductivity_startup(ierr)
+    call check_okay% assert(ierr==0)
     cond_handle = alloc_conductivity_handle(ierr)
     call conductivity_okay% assert(ierr==0)
     ! set electron-electron scattering formula to Potekhin, Chabrier and Yakovlev (1997)

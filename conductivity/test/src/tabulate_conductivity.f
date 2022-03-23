@@ -59,7 +59,7 @@ program tabulate_conductivity
     ! get user inputs
     if (command_argument_count() /= 2) then
         call get_command_argument(0,progname)
-        stop 'Usage: '//trim(progname)//' <path/of/dStar/data/directory> <species>'
+        stop 'Usage: '//trim(progname)//' <path/of/dStar/directory> <species>'
     end if
     call get_command_argument(1,datadir)
     call get_command_argument(2,nuclide)
@@ -70,22 +70,23 @@ program tabulate_conductivity
     ! initialization
     call math_init()
     ! physical constants
-    call constants_init('',ierr)
+    call constants_init(datadir,'',ierr)
     call check_okay% assert(ierr==0)
     
     ! isotope data
-    call nucchem_init(datadir,ierr)
+    call nucchem_init(ierr)
     call check_okay% assert(ierr==0)
     
     ! equation of state
-    call dStar_eos_startup(datadir)
+    call dStar_eos_startup(ierr)
     eos_handle = alloc_dStar_eos_handle(ierr)
     call check_okay% assert(ierr==0)
     ! suppress the warnings for degenerate ions
     call dStar_eos_set_controls(eos_handle,suppress_warnings=.TRUE.)
     
     ! thermal conductivity
-    call conductivity_startup(datadir)
+    call conductivity_startup(ierr)
+    call check_okay% assert(ierr==0)
     cond_handle = alloc_conductivity_handle(ierr)
     call check_okay% assert(ierr==0)
     ! set electron-electron scattering formula to Potekhin, Chabrier and Yakovlev (1997)

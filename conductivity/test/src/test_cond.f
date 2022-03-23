@@ -8,7 +8,6 @@ program test_cond
     use dStar_eos_lib
     use conductivity_lib
     
-    character(len=*), parameter :: datadir = '../../data'
     integer :: eos_handle,cond_handle,ierr,i,j
     ! composition taken from HZ090 for Fe-chain accreted crust
     integer, dimension(2:14), parameter ::  zz = [2,2,2,2,26,26,26,26,24,20,14,24,24], &
@@ -24,14 +23,17 @@ program test_cond
     
     call math_init()
     
-    call constants_init('',ierr)
+    call constants_init('../..','',ierr)
     call check_okay% assert(ierr==0)
 
-    call nucchem_init(datadir,ierr)
+    call nucchem_init(ierr)
     call check_okay% assert(ierr==0)
 
-    call dStar_eos_startup(datadir)
-    call conductivity_startup(datadir)
+    call dStar_eos_startup(ierr)
+    call check_okay% assert(ierr==0)
+
+    call conductivity_startup(ierr)
+    call check_okay% assert(ierr==0)
 
     eos_handle = alloc_dStar_eos_handle(ierr)
     call check_okay% assert(ierr==0)    

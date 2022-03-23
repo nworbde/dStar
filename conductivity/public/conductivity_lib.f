@@ -3,17 +3,17 @@ module conductivity_lib
 
 contains
 
-    subroutine conductivity_startup(datadir)
+    subroutine conductivity_startup(ierr)
         use exceptions_lib
+        use constants_def, only: dstar_data_dir
         use PPP_electron
         implicit none
-        character(len=*), intent(in) :: datadir
+        integer, intent(out) :: ierr
         character(len=256) :: cond_datadir
-        integer :: ierr
         type(alert) :: status = alert(scope='conductivity_startup')
-        call conductivity_def_init
         
-        cond_datadir = trim(datadir) // '/conductivity'
+        call conductivity_def_init
+        cond_datadir = trim(dstar_data_dir) // '/conductivity'
         call load_PPP_electron_table(cond_datadir,ierr)
         if (ierr == unable_to_load_table) then
             call status% report( &

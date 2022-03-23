@@ -49,16 +49,18 @@ program test_tabulated_mixture
     call set_verbosity(1)
     
     ! initialize microphysics
-    call constants_init('',ierr)
+    call constants_init('../..','',ierr)
     call check_okay% assert(ierr==0)
-    call nucchem_init(datadir,ierr)
+    call nucchem_init(ierr)
     call check_okay% assert(ierr==0)
-    call dStar_eos_startup(datadir)
+    call dStar_eos_startup(ierr)
+    call check_okay% assert(ierr==0)
     eos_handle = alloc_dStar_eos_handle(ierr)
     call check_okay% assert(ierr==0)
     ! Suppress the warnings for degenerate ions
     call dStar_eos_set_controls(eos_handle,suppress_warnings=.TRUE.)
-    call conductivity_startup(datadir)
+    call conductivity_startup(ierr)
+    call check_okay% assert(ierr==0)
     cond_handle = alloc_conductivity_handle(ierr)
     call check_okay% assert(ierr==0)
     call conductivity_set_controls(cond_handle,which_ee_scattering=icond_pcy)    
