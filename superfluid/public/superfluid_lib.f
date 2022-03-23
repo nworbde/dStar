@@ -3,9 +3,9 @@ module superfluid_lib
     
 contains
 
-    subroutine sf_startup(datadir,ierr)
+    subroutine sf_startup(ierr)
         use exceptions_lib
-        character(len=*), intent(in) :: datadir
+        use constants_def, only: dstar_data_dir
         integer, intent(out) :: ierr
         type(alert) :: already_initialized = alert( &
         &   scope='sf_startup',message='module already initialized')
@@ -14,7 +14,7 @@ contains
             call already_initialized% report
             return
         end if
-        sf_datadir = trim(datadir)//'/Tc_data'
+        sf_datadir = trim(dstar_data_dir)//'/Tc_data'
         sf_scale = 1.0_dp
         sf_is_initialized = .true.
         ierr = 0

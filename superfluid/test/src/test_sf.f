@@ -1,5 +1,7 @@
 program test_sf
 	use, intrinsic :: iso_fortran_env, only : output_unit, error_unit
+    use constants_def
+    use constants_lib
 	use superfluid_def
 	use superfluid_lib
 	
@@ -7,7 +9,9 @@ program test_sf
 	integer :: i, ierr
 	real(dp) :: kF_1, kF_2, k, Tc(max_number_sf_types)
 	
-	call sf_startup('../../data',ierr)
+    call constants_init('../..','',ierr)
+    if (failure('constants_init')) stop
+	call sf_startup(ierr)
     if (failure('startup')) stop
     
 	call sf_load_gaps('ccdk93','gc','ao85',ierr)
