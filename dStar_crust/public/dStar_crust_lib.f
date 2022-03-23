@@ -118,7 +118,7 @@ contains
         type(composition_info_type), dimension(:), intent(out) :: ion_info  ! (nz)
         integer, intent(out) :: ierr
         type(crust_table_type), pointer :: tab
-        real(dp), dimension(:,:), allocatable :: Y
+        real(dp), dimension(:), allocatable :: Y
         integer :: N, Nisos, i
         integer, dimension(:), allocatable :: indcs
         real(dp) :: Xsum
@@ -126,18 +126,18 @@ contains
         &   message='unable to find composition')
         
         tab => crust_table
-        N = tab% nv
+        N = size(lgP)
         Nisos = tab% Nisos
         
-        allocate(Y(Nisos,N),indcs(Nisos))
+        allocate(Y(Nisos),indcs(Nisos))
         indcs = [(get_nuclide_index(adjustl(tab% network(i))),i=1,Nisos)]
         
-        do i = 1, size(lgP)
-            call dStar_crust_get_composition(lgP(i),Y(:,i),ierr)
+        do i = 1, N
+            call dStar_crust_get_composition(lgP(i),Y(:),ierr)
             if (get_composition_error% raised(ierr)) return
             ! ensure abundances are positive definite and renormalize
-            where (Y(:,i) < 0.0_dp) Y(:,i) = 0.0_dp
-            call compute_composition_moments(Nisos, indcs, Y(:,i), &
+            where (Y(:) < 0.0_dp) Y(:) = 0.0_dp
+            call compute_composition_moments(Nisos, indcs, Y(:), &
             &   ion_info(i), Xsum, ncharged, charged_ids, Yion(:,i), &
             &   abunds_are_mass_fractions=.FALSE., exclude_neutrons=.TRUE., &
             &   renormalize_mass_fractions=.TRUE.)
