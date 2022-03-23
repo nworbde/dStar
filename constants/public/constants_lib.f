@@ -4,16 +4,20 @@ module constants_lib
     implicit none
 contains
     
-    subroutine constants_init(mesa_dir_init,ierr)
+    subroutine constants_init(dstar_dir_init,mesa_dir_init,ierr)
         use const_lib
         use exceptions_lib
-        character(len=*), intent(in) :: mesa_dir_init
+        character(len=*), intent(in) :: dstar_dir_init,mesa_dir_init
         integer, intent(out) :: ierr
-        type(assertion) :: mesa_const_init = assertion(scope='constants_init')
+        type(assertion) :: constants_init_okay = assertion(scope='constants_init')
         ierr = 0
+        
+        call constants_init_okay% set_message('initializing dstar constants')
+        call do_constants_init(dstar_dir_init,ierr)
+        call constants_init_okay% assert(ierr==0)
+        call constants_init_okay% set_message('initializing mesa constants')
         call const_init(mesa_dir_init,ierr)
-        call mesa_const_init% assert(ierr==0)
-!         call initialize_constants
+        call constants_init_okay% assert(ierr==0)
     end subroutine constants_init
 
 end module constants_lib

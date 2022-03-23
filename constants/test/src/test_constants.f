@@ -3,9 +3,11 @@ program test_constants
     use constants_lib
     integer :: ierr
             
-    call constants_init('',ierr)
+    call constants_init('../..','',ierr)
     if (ierr /= 0) stop
     
+    write(*,'(a28," = ",a20)') 'dstar_dir',dstar_dir
+    write(*,'(a28," = ",a20)') 'dstar_data_dir',dstar_data_dir
 	call do_one('pi',pi)
 	call do_one('twopi',twopi)
 	call do_one('threepi',threepi)

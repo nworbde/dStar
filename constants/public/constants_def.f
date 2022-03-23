@@ -66,5 +66,33 @@ module constants_def
     real(dp), parameter :: density_g = mass_g/length_g**3
     real(dp), parameter :: pressure_g = density_g*potential_g
     real(dp), parameter :: time_g = length_g/clight
-
+    
+    integer, parameter :: dir_name_length=128
+    character(len=dir_name_length), save :: dstar_dir
+    character(len=dir_name_length), save :: dstar_data_dir  ! = trim(dstar_dir)//'/data'
+    
+contains
+    subroutine do_constants_init(dstar_dir_init,ierr)
+        use exceptions_lib
+        implicit none
+        character(len=*), intent(in) :: dstar_dir_init
+        integer, intent(out) :: ierr
+        type(alert) :: dstar_unspecified = alert(scope='do_constants_init')
+        ierr = 0
+        dstar_dir = dstar_dir_init
+        
+        if (len_trim(dstar_dir) == 0) then
+            call get_environment_variable('DSTAR_DIR',dstar_dir)
+        end if
+        
+        if (len_trim(dstar_dir) > 0) then
+            dstar_data_dir = trim(dstar_dir)//'/data'
+        else
+            ierr = -1
+            call dstar_unspecified% report('dStar directory is unspecified; set environment variable DSTAR_DIR')
+            return
+        end if 
+        
+    end subroutine do_constants_init
+    
 end module constants_def
