@@ -25,7 +25,7 @@ program test_neutrino
 	real(dp) :: Xsum
 	
     call math_init()
-    call constants_init('',ierr)
+    call constants_init('../..','',ierr)
     if (ierr /= 0) then
         write (*,*) 'unable to initialize constants'
         stop
@@ -38,7 +38,7 @@ program test_neutrino
 	kp = (3.0*pi**2*np)**one_third
 	
 	print '(a)','setting gaps'
-	call sf_startup('../../data',ierr)
+	call sf_startup(ierr)
 	call sf_load_gaps('ns','gc','t72',ierr)
 	call sf_get_results(kp,kn,Tc)
 	print '(A,es11.4)','Tcns = ',Tc(neutron_1S0)
@@ -55,7 +55,7 @@ program test_neutrino
 	call do_one_core
 	
     print '(/,/,a)', 'crust neutrino emissivity'
-    call nucchem_init('../../data', ierr)
+    call nucchem_init(ierr)
     
 	do i = 6,14
 		N = [1,aa(i)-zz(i)]
