@@ -4,7 +4,7 @@ DSTAR_LIB = ../../../lib
 DSTAR_INC = ../../../include
 
 LOAD_LOCAL = -L$(LOCAL_LIB_DIR) -lnucchem 
-LOAD_OTHER = -L$(DSTAR_LIB) -lexceptions -L$(MESA_LIB_DIR) -lconst -lutils
+LOAD_OTHER = -L$(DSTAR_LIB) -lconstants -lexceptions -L$(MESA_LIB_DIR) -lconst -lutils
 
 TEST = tester
 TEST_OBJS = test_nucchem.o

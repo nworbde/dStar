@@ -3,10 +3,10 @@ module nucchem_lib
     implicit none
 
 contains    
-    subroutine nucchem_init(datadir, ierr)
+    subroutine nucchem_init(ierr)
         use exceptions_lib
+        use constants_def, only: dstar_data_dir
         use nucchem_io
-        character(len=*), intent(in) :: datadir
         integer, intent(out) :: ierr
         character(len=*),parameter :: nuclib_db = 'nuclib_db'
         character(len=160) :: nuclib_filename
@@ -17,12 +17,12 @@ contains
         type(assertion) :: parse_okay=assertion(scope='nucchem_init',message='parse nuclides')
         character(len=128) :: msg
 
-        nuclib_filename = trim(datadir)//'/nucchem/'//nuclib_db
-        nuclib_cache = trim(datadir)//'/nucchem/cache/'//nuclib_db//'.bin'
+        nuclib_filename = trim(dstar_data_dir)//'/nucchem/'//nuclib_db
+        nuclib_cache = trim(dstar_data_dir)//'/nucchem/cache/'//nuclib_db//'.bin'
         
         ierr = 0
         call status% report(message= &
-        &   'Loading nuclib from '//trim(datadir)//'/nucchem')
+        &   'Loading nuclib from '//trim(dstar_data_dir)//'/nucchem')
         call do_load_nuclib(nuclib_filename,nuclib_cache,ierr)
         call io_okay% assert(ierr==0)
 

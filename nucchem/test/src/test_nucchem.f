@@ -1,5 +1,6 @@
 program test_nucchem
     use exceptions_lib
+    use constants_lib
 	use nucchem_def
 	use nucchem_lib
 
@@ -12,7 +13,9 @@ program test_nucchem
     type(assertion) :: initialization=assertion(scope='main', &
     &   message='nucchem is uninitialized')
 	
-    call nucchem_init('../../data',ierr)
+    call constants_init('../..','',ierr)
+    call initialization% assert(ierr==0)
+    call nucchem_init(ierr)
     call initialization% assert(ierr==0)
 	
 	! check the composition average
