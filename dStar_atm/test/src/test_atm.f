@@ -13,14 +13,15 @@ program test_atm
 	integer :: ierr,i
     
     call math_init()
-    call constants_init('',ierr)
+    call constants_init('../..','',ierr)
 	call check_okay('constants_init',ierr)
-    call nucchem_init(datadir,ierr)
+    call nucchem_init(ierr)
 	call check_okay('nucchem_init',ierr)
-    call dStar_eos_startup(datadir)
-    call conductivity_startup(datadir)
+    call dStar_eos_startup(ierr)
+    call check_okay('eos_startup',ierr)
+    call conductivity_startup(ierr)
     call check_okay('conductivity_startup',ierr)
-	call dStar_atm_startup(datadir,ierr)
+	call dStar_atm_startup(ierr)
 	call check_okay('dStar_atm_startup',ierr)
 	
 	write (*,'(5(a9,tr2),/,5("=========",tr2))') 'lgTb','lgTeff','dlgTeff','lgflux','dlgflux'

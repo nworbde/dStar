@@ -2,9 +2,8 @@ module dStar_atm_lib
     use dStar_atm_def
     
 contains
-    subroutine dStar_atm_startup(datadir, ierr)
+    subroutine dStar_atm_startup(ierr)
         use exceptions_lib
-        character(len=*), intent(in) :: datadir
         integer, intent(out) :: ierr
         type(alert) :: already_initialized=alert(level=1,scope='dStar_atm_startup', &
         &   message='module already initialized')
@@ -13,7 +12,7 @@ contains
             call already_initialized% report
             return
         end if
-        atm_datadir = trim(datadir)//'/atm_data'
+        atm_datadir = trim(dstar_data_dir)//'/atm_data'
         atm_is_initialized = .TRUE.
         ierr = 0
     end subroutine dStar_atm_startup
