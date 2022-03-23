@@ -1,6 +1,8 @@
 program generate_HZ90_table
+    use math_lib
     use const_def, only: dp
     use exceptions_lib
+    use constants_lib
     use nucchem_def
     use nucchem_lib
     use HZ90_comp
@@ -10,7 +12,7 @@ program generate_HZ90_table
     integer, parameter :: HZ90_number_table_points = 2048
     real(dp), parameter :: HZ90_lgPmin = 22.0_dp
     real(dp), parameter :: HZ90_lgPmax = 33.5_dp
-    character(len=*), parameter :: datadir = '../data/'
+    character(len=*), parameter :: cache_dir = '../data/'
     character(len=*), parameter :: cache_stem = 'HZ90'
     
     real(dp), dimension(HZ90_number_table_points) :: lgP
@@ -27,7 +29,9 @@ program generate_HZ90_table
     character(len=64) :: cache_filename
 
     ierr = 0
-    call nucchem_init('../../data/',ierr)
+    call math_init()
+    call constants_init('../..','',ierr)
+    call nucchem_init(ierr)
     call nucchem_is_online% assert(ierr==0)
     
     nz = HZ90_number_table_points
@@ -40,7 +44,7 @@ program generate_HZ90_table
     
     call do_generate_HZ90_table(lgP,Y)
     
-    cache_filename = datadir//cache_stem//'.bin'
+    cache_filename = cache_dir//cache_stem//'.bin'
     call write_composition_cache(cache_filename,nz,nion,HZ90_network,lgP,Y,ierr)
     call write_cache% assert(ierr==0)
     write(alert_msg,'(a,a)') 'wrote HZ90 table to ',cache_filename

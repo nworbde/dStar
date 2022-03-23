@@ -2,9 +2,8 @@ module dStar_crust_lib
     use dStar_crust_def
     
 contains
-    subroutine dStar_crust_startup(datadir, ierr)
+    subroutine dStar_crust_startup(ierr)
         use exceptions_lib
-        character(len=*), intent(in) :: datadir
         integer, intent(out) :: ierr
         type(alert) :: initialization=alert(scope='dStar_crust_startup', &
         &   message='already initialized')
@@ -14,7 +13,7 @@ contains
             call initialization% report
             return
         end if
-        crust_datadir = trim(datadir)//'/crust_data'
+        crust_datadir = trim(dstar_data_dir)//'/crust_data'
         crust_is_initialized = .TRUE.
         ierr = 0
     end subroutine dStar_crust_startup

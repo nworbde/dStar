@@ -1,6 +1,8 @@
 program process_abuntime
     use exceptions_lib
-    use const_def, only: dp
+    use math_lib
+    use constants_def
+    use constants_lib
     use nucchem_def
     use nucchem_lib
 	use superfluid_def
@@ -9,7 +11,7 @@ program process_abuntime
     use abuntime
     use composition_handler
 
-    character(len=*), parameter :: datadir = '../data/'
+    character(len=*), parameter :: cache_dir = '../data/'
     integer :: argument_count
     character(len=64) :: argument
     character(len=64) :: abuntime_stem,abuntime_filename, abuntime_cache
@@ -26,6 +28,8 @@ program process_abuntime
     type(alert) :: status=alert(scope='process_abuntime')
     type(assertion) :: command_arguments=assertion(scope='process_abuntime', &
         & message='USAGE: process_abuntime <file stem> <increment in lgP> <abundance threshold>')
+    type(assertion) :: init_okay=assertion(scope='process_abuntime', &
+        & message='unable to initialize constants')
     type(assertion) :: nucchem_load_okay=assertion(scope='process_abuntime', &
         & message='unable to initialize nucchem')
     type(assertion) :: abuntime_load_okay=assertion(scope='process_abuntime', &
@@ -47,11 +51,15 @@ program process_abuntime
     call get_command_argument(3,argument)
     read(argument,*) abundance_threshold
     
-    abuntime_filename = datadir//trim(abuntime_stem)
-    abuntime_cache = datadir//trim(abuntime_stem)//'.bin'
+    abuntime_filename = cache_dir//trim(abuntime_stem)
+    abuntime_cache = cache_dir//trim(abuntime_stem)//'.bin'
 
     ierr = 0
-    call nucchem_init('../../data/',ierr)
+    call math_init()
+    call constants_init('../..','',ierr)
+    call init_okay% assert(ierr==0)
+    
+    call nucchem_init(ierr)
     call nucchem_load_okay% assert(ierr==0)
     
     write(alert_msg,'(a)') 'reading '//trim(abuntime_filename)

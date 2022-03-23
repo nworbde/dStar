@@ -18,7 +18,7 @@ program analyze_crust
     character(len=iso_name_length), dimension(:), allocatable :: isos
     real(dp), dimension(:,:), allocatable :: Y, Yion
     integer :: ncharged, N, Nisos
-    character(len=*), parameter :: datadir = '../../data/crust_data/'
+    character(len=*), parameter :: cache_dir = '../../data/crust_data/'
     character(len=128) :: composition_filename, output_filename, composition_stem
     type(composition_info_type), dimension(:), allocatable :: ion_info
     integer :: eos_handle, iounit, argument_count
@@ -35,23 +35,23 @@ program analyze_crust
     call command_arguments% assert(argument_count==1)
 
     call get_command_argument(1,composition_stem)
-    composition_filename = datadir//trim(composition_stem)//'.bin'
+    composition_filename = cache_dir//trim(composition_stem)//'.bin'
     output_filename = trim(composition_stem)//'-table'
     
     call math_init()
-    call constants_init('',ierr)
+    call constants_init('../..','',ierr)
     call check_okay('constants_init',ierr)
     
-    call nucchem_init('../../data',ierr)
+    call nucchem_init(ierr)
     call check_okay('nucchem_init',ierr)
     
-    call sf_startup('../../data',ierr)
+    call sf_startup(ierr)
     call check_okay('sf_startup',ierr)
     
     call sf_load_gaps('ns','gc','t72',ierr)
     call check_okay('sf_load_gaps',ierr)
     
-    call dStar_eos_startup('../../data')
+    call dStar_eos_startup(ierr)
     call check_okay('dStar_eos_startup',ierr)
     
     eos_handle = alloc_dStar_eos_handle(ierr)
@@ -60,7 +60,7 @@ program analyze_crust
     ! switch off the warnings about quantum effects
     call dStar_eos_set_controls(eos_handle,suppress_warnings=.TRUE.)
     
-    call dStar_crust_startup('../../data',ierr)
+    call dStar_crust_startup(ierr)
     call check_okay('dStar_crust_startup',ierr)
 
     Tref = 1.0d8

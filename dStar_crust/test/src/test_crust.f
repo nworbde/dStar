@@ -1,7 +1,7 @@
 program test_crust
     use exceptions_lib
     use math_lib
-    use constants_def, only: dp
+    use constants_def, only: dp, dstar_data_dir
     use constants_lib
     use nucchem_def
     use nucchem_lib
@@ -22,19 +22,19 @@ program test_crust
     type(assertion) :: sane_eos=assertion(scope='main',message='dlgRho > 0')
 
     call math_init()
-    call constants_init('',ierr)
+    call constants_init('../..','',ierr)
     call check_okay('constants_init',ierr)
     
-    call nucchem_init('../../data',ierr)
+    call nucchem_init(ierr)
     call check_okay('nucchem_init',ierr)
     
-    call sf_startup('../../data',ierr)
+    call sf_startup(ierr)
     call check_okay('sf_startup',ierr)
     
     call sf_load_gaps('ns','gc','t72',ierr)
     call check_okay('sf_load_gaps',ierr)
     
-    call dStar_eos_startup('../../data')
+    call dStar_eos_startup(ierr)
     call check_okay('dStar_eos_startup',ierr)
     
     eos_handle = alloc_dStar_eos_handle(ierr)
@@ -43,7 +43,7 @@ program test_crust
     ! switch off the warnings about quantum effects
     call dStar_eos_set_controls(eos_handle,suppress_warnings=.TRUE.)
     
-    call dStar_crust_startup('../../data',ierr)
+    call dStar_crust_startup(ierr)
     call check_okay('dStar_atm_startup',ierr)
     
     Tref = 1.0d8

@@ -1,5 +1,6 @@
 module abuntime
     ! reader for abuntime files
+    use math_lib
     use const_def, only: dp, pi
     use utils_def
     use utils_lib
@@ -16,7 +17,6 @@ contains
 
     subroutine read_abuntime(filename, nz, nion, T, lgP, isos, Y, ierr, lgP_increment)
         use iso_fortran_env, only: error_unit, iostat_end
-        use math_lib
         use exceptions_lib
         use const_def
         use nucchem_def

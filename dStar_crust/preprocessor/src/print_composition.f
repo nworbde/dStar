@@ -1,11 +1,12 @@
 program print_composition
     use exceptions_lib
-    use const_def, only: dp
+    use constants_def, only: dp
+    use constants_lib
     use nucchem_def
     use nucchem_lib
     use composition_handler
     
-    character(len=*), parameter :: datadir = '../data/'
+    character(len=*), parameter :: cache_dir = '../data/'
     integer :: argument_count
     character(len=64) :: argument
     real(dp) :: abundance_threshold
@@ -28,6 +29,8 @@ program print_composition
     character(len=128) :: alert_msg
     type(assertion) :: command_arguments=assertion(scope='print_composition', &
         & message='USAGE: print_composition <file stem> <abundance threshold>')
+    type(assertion) :: init_okay=assertion(scope='process_abuntime', &
+        & message='unable to initialize constants')
     type(assertion) :: nucchem_load_okay=assertion(scope='process_abuntime', &
         & message='unable to initialize nucchem')
     type(assertion) :: read_cache_okay=assertion(scope='print_composition', &
@@ -42,11 +45,13 @@ program print_composition
     call get_command_argument(2,argument)
     read(argument,*) abundance_threshold
     
-    cache_filename = datadir//trim(abuntime_stem)//'.bin'
-    iso_filename = datadir//trim(abuntime_stem)//'_isos'
-    summary_filename = datadir//trim(abuntime_stem)//'_summary'
+    cache_filename = cache_dir//trim(abuntime_stem)//'.bin'
+    iso_filename = cache_dir//trim(abuntime_stem)//'_isos'
+    summary_filename = cache_dir//trim(abuntime_stem)//'_summary'
     
-    call nucchem_init('../../data/',ierr)
+    call constants_init('../..','',ierr)
+    call init_okay% assert(ierr==0)
+    call nucchem_init(ierr)
     call nucchem_load_okay% assert(ierr==0)
     
     call read_composition_cache(cache_filename,nz,nion,isos,lgP,Yion,ierr)
@@ -75,7 +80,7 @@ program print_composition
     do i = 1, nz
         threshold(1:ncharged,i) = Yion(1:ncharged,i) > abundance_threshold*maxval(Yion(1:ncharged,i))
     end do
-    above_thresh = count(threshold,dim=1)
+    above_thresh = count(threshold(1:ncharged,:),dim=1)
     nabund = maxval(above_thresh)
     write(alert_msg,'(a,es11.4,a,i5,a,f7.3)')  &
     &   'max number of isotopes with Y > ', &
