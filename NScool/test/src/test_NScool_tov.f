@@ -13,19 +13,19 @@ program test_NScool_tov
     real(dp), dimension(:), pointer :: y
     integer :: eos_handle, ierr
     
-    call constants_init('',ierr)
+    call constants_init('../..','',ierr)
     call check_okay('constants_init',ierr)
     
-    call nucchem_init('../../data',ierr)
+    call nucchem_init(ierr)
     call check_okay('nucchem_init',ierr)
 	
-    call sf_startup('../../data',ierr)
+    call sf_startup(ierr)
     call check_okay('sf_startup',ierr)
 	
     call sf_load_gaps('ns','gc','t72',ierr)
     call check_okay('sf_load_gaps',ierr)
 	
-    call dStar_eos_startup('../../data')
+    call dStar_eos_startup(ierr)
     call check_okay('dStar_eos_startup',ierr)
 	
     eos_handle = alloc_dStar_eos_handle(ierr)
@@ -34,7 +34,7 @@ program test_NScool_tov
     ! switch off the warnings about quantum effects
     call dStar_eos_set_controls(eos_handle,suppress_warnings=.TRUE.)
     
-    call dStar_crust_startup('../../data',ierr)
+    call dStar_crust_startup(ierr)
     call check_okay('dStar_atm_startup',ierr)
     
     Tref = 1.0d8

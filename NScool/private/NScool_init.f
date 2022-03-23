@@ -7,13 +7,17 @@ module init
     
 contains
     subroutine do_NScool_init(my_dStar_dir, ierr)
+        use exceptions_lib
         character(len=*), intent(in) :: my_dStar_dir
         integer, intent(out) :: ierr
-        ierr = 0    
-        call NScool_private_def_init(my_dStar_dir)
+        type(assertion) :: init_okay = assertion(scope='do_NScool_init', &
+        & message='unable to initialize constants. Is DSTAR_DIR set or specified in the inlist?')
+        ierr = 0
         
         call math_init()
-        call constants_init('',ierr)
+        call constants_init(my_dStar_dir,'',ierr)
+        call init_okay% assert(ierr==0)
+        call NScool_private_def_init()
     end subroutine do_NScool_init
 
     subroutine do_NScool_shutdown()

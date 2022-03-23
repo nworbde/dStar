@@ -61,7 +61,6 @@ contains
         use dStar_eos_lib
         use conductivity_def
         use conductivity_lib
-        use NScool_private_def, only: dStar_data_dir
 
         type(NScool_info), pointer :: s
         integer, intent(out) :: ierr
@@ -78,11 +77,11 @@ contains
         type(alert) :: status=alert(scope='do_startup_microphysics')
         
         call status% report('Initializing nuclides')
-        call nucchem_init(trim(dStar_data_dir),ierr)
+        call nucchem_init(ierr)
         if (nucchem_error% raised(ierr)) return
         
         call status% report('Loading superfluid gaps')
-        call sf_startup(trim(dStar_data_dir),ierr)
+        call sf_startup(ierr)
         if (superfluid_error% raised(ierr)) return
         call sf_load_gaps( &
         &   trim(s% which_proton_1S0_gap),  &
@@ -92,7 +91,8 @@ contains
         sf_scale(1:max_number_sf_types) = s% scale_sf_critical_temperatures
     
         call status% report('Setting EOS options')
-        call dStar_eos_startup(trim(dStar_data_dir))
+        call dStar_eos_startup(ierr)
+        if (eos_error% raised(ierr)) return
         s% eos_handle = alloc_dStar_eos_handle(ierr)
         if (eos_error% raised(ierr)) return
         ! switch off the warnings about quantum effects
@@ -114,7 +114,8 @@ contains
         &   cluster_transition_in_fm3=s% eos_cluster_transition_in_fm3)
  
         call status% report('Setting thermal conductivity options')
-        call conductivity_startup(trim(dStar_data_dir))
+        call conductivity_startup(ierr)
+        if (cond_error% raised(ierr)) return
         s% cond_handle = alloc_conductivity_handle(ierr)
         if (cond_error% raised(ierr)) return
         call conductivity_set_controls(s% cond_handle, &
@@ -144,7 +145,6 @@ contains
         use conductivity_lib
         use dStar_crust_def
         use dStar_crust_lib
-        use NScool_private_def, only: dStar_data_dir
         use NScool_crust_tov
         use storage
         
@@ -168,11 +168,11 @@ contains
         &   message='memory allocated')
         
         call status% report('Initializing crust')
-        call dStar_crust_startup(trim(dStar_data_dir),ierr)
+        call dStar_crust_startup(ierr)
         if (crust_error% raised(ierr)) return
 
         call status% report('Initializing atmosphere')
-        call dStar_atm_startup(trim(dStar_data_dir),ierr)
+        call dStar_atm_startup(ierr)
         if (atm_error% raised(ierr)) return
 
         call status% report('loading crust table')
