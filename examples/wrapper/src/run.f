@@ -1,4 +1,5 @@
 program run_dStar
+    use iso_fortran_env, only: output_unit
 	use exceptions_lib
     use NScool_def
     use NScool_lib
@@ -23,30 +24,30 @@ program run_dStar
     call command_arg_set( &
         & 'dStar_directory',"sets the main dStar root directory",ierr, &
         & flag='D',takes_parameter=.TRUE.)
-    if (check_okay% failure(ierr,'set command argument dStar_directory')) stop
+    if (check_okay% raised(ierr,'set command argument dStar_directory')) stop
     
     call command_arg_set( &
         & 'inlist_file','sets the namelist parameter file',ierr, &
         & flag='I',takes_parameter=.TRUE.)
-    if (check_okay% failure(ierr,'set command argument inlist file')) stop
+    if (check_okay% raised(ierr,'set command argument inlist file')) stop
     
     call command_arg_set( &
         & 'Qheating','shallow heating per nucleon',ierr, &
         & flag='Q',takes_parameter=.TRUE.)
-    if (check_okay% failure(ierr,'set command argument shallow heating')) stop
+    if (check_okay% raised(ierr,'set command argument shallow heating')) stop
 
     call command_arg_set( &
         & 'Mcore','core mass',ierr, &
         & flag='M',takes_parameter=.TRUE.)
-    if (check_okay% failure(ierr,'set command argument core mass')) stop
+    if (check_okay% raised(ierr,'set command argument core mass')) stop
 
     call command_arg_set( &
         & 'Rcore','core radius',ierr, &
         & flag='R',takes_parameter=.TRUE.)
-    if (check_okay% failure(ierr,'set command argument core radius')) stop
+    if (check_okay% raised(ierr,'set command argument core radius')) stop
     
     call parse_arguments(ierr)
-    if (check_okay% failure(ierr,'parse_arguments')) stop
+    if (check_okay% raised(ierr,'parse_arguments')) stop
 
     my_dStar_dir = trim(get_command_arg('dStar_directory'))
     inlist = trim(get_command_arg('inlist_file'))
@@ -74,16 +75,16 @@ program run_dStar
     end if
     
     call NScool_init(my_dStar_dir, ierr)
-    if (check_okay% failure(ierr,'NScool_init')) stop
+    if (check_okay% raised(ierr,'NScool_init')) stop
     
     NScool_id = alloc_NScool(ierr)
-    if (check_okay% failure(ierr,'NScool_id')) stop
+    if (check_okay% raised(ierr,'NScool_id')) stop
 
     call NScool_setup(NScool_id,inlist,ierr)
-    if (check_okay% failure(ierr,'NScool_setup')) stop
+    if (check_okay% raised(ierr,'NScool_setup')) stop
     
     call get_NScool_info_ptr(NScool_id,s,ierr)
-    if (check_okay% failure(ierr,'get_NScool_info_ptr')) stop
+    if (check_okay% raised(ierr,'get_NScool_info_ptr')) stop
 
     s% Q_heating_shallow = Q_heating_shallow
     s% core_mass = core_mass
@@ -92,10 +93,10 @@ program run_dStar
     s% Rcore = core_radius
     
     call NScool_create_model(NScool_id,ierr)
-    if (check_okay% failure(ierr,'NScool_create_model')) stop
+    if (check_okay% raised(ierr,'NScool_create_model')) stop
     
     call NScool_evolve_model(NScool_id,ierr)        
-    if (check_okay% failure(ierr,'NScool_evolve_model')) stop
+    if (check_okay% raised(ierr,'NScool_evolve_model')) stop
 
     write(output_unit,*)
     write(output_unit,'(a7,a6,a11)') 'time','Teff','Flux/mdot'

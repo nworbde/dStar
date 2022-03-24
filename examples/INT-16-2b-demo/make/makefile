@@ -2,6 +2,7 @@ include $(MESA_DIR)/utils/makefile_header
 
 ifndef DSTAR_DIR
 $(error DSTAR_DIR environment variable is not set)
+endif
 
 DSTAR_LIB_DIR = $(DSTAR_DIR)/lib
 LOAD_OTHER = -L$(DSTAR_LIB_DIR) -lnscool -ldstar_crust -lsuperfluid -lconductivity -lneutrino -ldstar_eos -ldstar_atm -lnucchem -lconstants -lexceptions -L$(MESA_LIB_DIR) $(LOAD_MESA_NUMERICS)

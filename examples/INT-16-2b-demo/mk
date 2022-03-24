@@ -1,7 +1,5 @@
 #!/bin/bash
 
-DSTAR_DIR='../../'
-
 function check_okay {
 	if [ $? -ne 0 ]
 	then

@@ -214,6 +214,8 @@ contains
         s% ePhi(s% nz) = 0.5*(s% ePhi_bar(s% nz) + s% ePhicore)
         s% e2Phi(1:s% nz) = s% ePhi(1:s% nz)**2
         s% P(1:s% nz-1) = 0.5*(s% P_bar(1:s% nz-1)+s% P_bar(2:s% nz))
+        ! extrapolate last point
+        s% P(s% nz) = 1.5_dp*s% P_bar(s% nz) - 0.5*s% P_bar(s% nz-1)
         
         ! temperatures: set to be isothermal (exp(Phi)*T = const)
         s% T(1:s% nz) = s% Tcore * s% ePhicore / s% ePhi(1:s% nz)
