@@ -87,6 +87,8 @@ program run_dStar
     if (check_okay% raised(ierr,'get_NScool_info_ptr')) stop
 
     s% Q_heating_shallow = Q_heating_shallow
+    ! core_mass and core_radius are the controls in the inlist;
+    ! Mcore and Rcore are stored internally. We'll set them both here.
     s% core_mass = core_mass
     s% core_radius = core_radius
     s% Mcore = core_mass
