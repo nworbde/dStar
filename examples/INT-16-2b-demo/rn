@@ -1,8 +1,6 @@
-DSTAR_DIR='../../'
-
 for i in Q100-H0 Q4-H0 Q4-H1.7; do
     inlist=inlist-$i
     if [ -f $inlist ]; then
-        ./run_dstar -I $inlist -D $DSTAR_DIR
+        ./run_dstar -I $inlist
     fi
 done

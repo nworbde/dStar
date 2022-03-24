@@ -5,16 +5,11 @@ This directory contains a demonstration of how the thermal conductivity and heat
 
 1.  This directory may be copied anywhere on your computer. Note, however, that you need write permission to dStar/data to run as the code caches datafiles there.  I'll change this in the near future to allow you to set the cache location (useful for running on multi-user machines).  If you do copy this directory to another location on the computer, you will need to make the following edits.
 
-    1.  Edit make/makefile.  Replace the following macros with the correct paths
+    Ensure that the environment variable `DSTAR_DIR` is set. This is used in the makefile,
 
-            DSTAR_LIB_DIR = ../../dStar/lib
-            DSTAR_INC = ../../dStar/include
+        DSTAR_LIB_DIR = $(DSTAR_DIR)/lib
+        DSTAR_INC = $(DSTAR_DIR)/include
 
-    2.  Edit the line
-
-            DSTAR_DIR='../../'
-
-        in both `mk` and `rn` to point to the dStar directory.
     
 2.  Build the code: `./mk`
     
