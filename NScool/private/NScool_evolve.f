@@ -256,6 +256,9 @@ contains
         call got_pointer% assert(ierr == 0)
         call equations% assert(n == s% nz)
 
+        ! set current time in case it is needed in evaluating coefficients
+        s% tsec = x + s% epoch_start_time
+
         s% lnT(1:n) = y(1:n)
         s% T(1:n) = exp(s% lnT(1:n))
 
