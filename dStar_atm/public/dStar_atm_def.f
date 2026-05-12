@@ -2,9 +2,9 @@ module dStar_atm_def
     use constants_def
     
     integer, parameter :: atm_default_number_table_points = 256 !32 !64 !256
-    real(dp), parameter :: atm_default_lgTbmin = 7.0
+    real(dp), parameter :: atm_default_lgTbmin = 6.5 !7.0
     real(dp), parameter :: atm_default_lgTbmax = 9.5
-    real(dp), parameter :: default_lgTeff_min = 5.5
+    real(dp), parameter :: default_lgTeff_min = 5.3 ! 5.5
     real(dp), parameter :: default_lgTeff_max = 7.0
     
 

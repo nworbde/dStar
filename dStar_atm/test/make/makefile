@@ -10,10 +10,16 @@ LOAD_OTHER = -L$(DSTAR_LIB_DIR) -lconductivity -lneutrino -lconstants -ldstar_eo
 TEST = tester
 TEST_OBJS = test_atm.o #test_bc09.o
 
+BC_PRINT = bc_print
+BC_PRINT_OBJS = print_bc09_atm.o
+
 default: install
 
 $(TEST) : $(TEST_OBJS)
 	$(LOADER) $(FCopenmp) -o $@ $(TEST_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
+
+$(BC_PRINT) : $(BC_PRINT_OBJS)
+	$(LOADER) $(FCopenmp) -o $@ $(BC_PRINT_OBJS) $(LOAD_LOCAL) $(LOAD_OTHER)
 
 %.o: $(TEST_SRC_DIR)/%.f
 	$(TEST_COMPILE) $(FCfree) $(FCimpno) -I$(DSTAR_INC) $<

@@ -14,7 +14,7 @@ module create_model
 
     ! for tabulation of coefficients as a fcn of temprerature
     integer, parameter :: number_table_pts = 128
-    real(dp), parameter :: lgT_tab_min = 7.0
+    real(dp), parameter :: lgT_tab_min = 6.5 !7.0
     real(dp), parameter :: lgT_tab_max = 10.0
     
     character(len=*), parameter, private :: indent1 = '(tr4,"* ",a)'

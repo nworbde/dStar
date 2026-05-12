@@ -95,7 +95,7 @@ contains
     end subroutine do_get_bc09_Teff
     
     subroutine do_integrate_bc09_atm( &
-    &   grav,lgyb,lgy_light,lgTeff,lgTb,rho,eos_handle,cond_handle,ierr)
+    &   grav,lgyb,lgy_light,lgTeff,lgTb,rho,eos_handle,cond_handle,ierr,display_atm)
         use math_lib
         use iso_fortran_env, only: error_unit
         use exceptions_lib
@@ -112,6 +112,8 @@ contains
         real(dp), intent(inout) :: rho  ! set < 0 to compute a guess, on output, contains rho_photosphere
         integer, intent(in) :: eos_handle, cond_handle
         integer, intent(out) :: ierr
+        logical, intent(in), optional :: display_atm
+        logical :: print_atm
         ! composition
         integer, parameter :: number_species = 2
         integer, dimension(number_species) :: charged_ids, chem_ids
@@ -138,6 +140,13 @@ contains
         character(len=128) :: msg
         
         ierr = 0
+        
+        ! set output option
+        print_atm = .FALSE.
+        if (present(display_atm)) then
+            print_atm = display_atm
+        end if
+        
         ! composition is a He/Fe mix
         chem_ids = [ get_nuclide_index('he4'), get_nuclide_index('fe56') ]
         call composition_is_good% assert(all(chem_ids /= nuclide_not_found))
@@ -218,11 +227,14 @@ contains
         atol(:) = 1.0e-6_dp
         itol = 0
         iout = 0
+        if (print_atm) then
+            iout = 1
+        end if
         lout = error_unit
         iwork(:) = 0
         work(:) = 0.0
         call dop853(1,deriv,lnP,lnT4,lnPend,h,max_step_size,max_steps, &
-        &   rtol, atol, itol, null_solout, iout, work, lwork, iwork, liwork, &
+        &   rtol, atol, itol, bc09_solout, iout, work, lwork, iwork, liwork, &
         &   lrpar, rpar, lipar, ipar, lout, idid)
         
         if (idid < 0) then
@@ -268,7 +280,7 @@ contains
             iwork(:) = 0
             work(:) = 0.0_dp
             call dop853(1,deriv,lnP,lnT4,lnPend,h,max_step_size,max_steps, &
-            &   rtol, atol, itol, null_solout, iout, work, lwork, iwork, liwork, &
+            &   rtol, atol, itol, bc09_solout, iout, work, lwork, iwork, liwork, &
             &   lrpar, rpar, lipar, ipar, lout, idid)
         
             if (idid < 0) then
@@ -481,6 +493,58 @@ contains
         rpar(irho) = rho
 
     end subroutine deriv
+    
+    subroutine bc09_solout(nr, xold, x, n, y, rwork_y, iwork_y, interp_y, lrpar, rpar, lipar, ipar, irtrn)
+        use exceptions_lib
+        use math_lib
+        use constants_def
+        use nucchem_def
+        use nucchem_lib
+        use dStar_eos_lib
+        use conductivity_lib
+        use utils_lib
+        
+        integer, intent(in) :: nr, n, lrpar, lipar
+        real(dp), intent(in) :: xold, x
+        real(dp), intent(inout) :: y(:)
+        real(dp), intent(inout), target :: rwork_y(*)
+        integer, intent(inout), target :: iwork_y(*)
+        integer, intent(inout), pointer :: ipar(:) ! (lipar)
+        real(dp), intent(inout), pointer :: rpar(:) ! (lrpar)
+        integer, intent(out) :: irtrn
+        interface
+            double precision function interp_y(i, s, rwork_y, iwork_y, ierr)
+                integer, intent(in) :: i ! result is interpolated approximation of y(i) at x=s.
+                double precision, intent(in) :: s ! interpolation x value (between xold and x).
+                double precision, intent(inout), target :: rwork_y(*)
+                integer, intent(inout), target :: iwork_y(*)
+                integer, intent(out) :: ierr
+            end function interp_y
+        end interface
+        real(dp) :: Teff, grav, rho, P, T,kappa, del_ad, Z, A
+        integer :: ierr
+        
+        ierr = 0
+        irtrn = 0
+        
+        ! unpack the arguments
+        Teff = rpar(iTeff)
+        grav = rpar(igrav)
+        rho = rpar(irho)
+        A = rpar(icomp_A)
+        Z = rpar(icomp_Z)
+        P = exp(x)
+        T = Teff*exp(0.25*y(1))
+        
+        call get_coefficients(P,T,rho,lrpar,rpar,lipar,ipar,kappa,del_ad,ierr)
+        if (ierr /= 0) then
+            irtrn = -1
+            del_ad = -99.0
+            kappa = -99.0
+            rho = -99.0
+        end if
+        write(*,'(4(es11.4,tr1),2(f4.1,tr1))') rho,T,P,kappa,rpar(icomp_Z),rpar(icomp_A)
+    end subroutine bc09_solout
 
     subroutine get_coefficients(P,T,rho,lrpar,rpar,lipar,ipar,kappa,del_ad,ierr)
         use exceptions_lib
