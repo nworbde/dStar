@@ -1,12 +1,16 @@
 module dStar_atm_mod
     use dStar_atm_def
     integer, parameter :: atm_filename_length=128
+    
+    real(dp), dimension(4,atm_NT,atm_Ng), target, private, save :: atm_Teff_workspace
+    real(dp), dimension(4,atm_NT,atm_Ng), target, private, save :: atm_flux_workspace
+    
 contains
     
-    subroutine do_load_atm_table(prefix,grav,Plight,Pb,ierr)
+    subroutine do_load_atm_table(prefix,Plight,Pb,ierr)
         use exceptions_lib
         character(len=*), intent(in) :: prefix
-        real(dp), intent(in) :: grav,Plight,Pb
+        real(dp), intent(in) :: Plight,Pb
         integer, intent(out) :: ierr
         type(atm_table_type), pointer :: tab
         character(len=atm_filename_length) :: table_name, cache_filename
@@ -21,7 +25,7 @@ contains
             call do_free_atm_table(tab)
         end if
 
-        call generate_atm_filename(prefix,grav,Plight,Pb,table_name)
+        table_name = atm_filename(prefix,Plight,Pb)
         cache_filename = trim(atm_datadir)//'/cache/'//trim(table_name)//'.bin'
         inquire(file=cache_filename,exist=have_cache)
         if (have_cache) then
@@ -32,10 +36,7 @@ contains
         ! if we don't have the table, or could not load it, then generate a 
         ! new one and write to cache
         call status% report('generating table '//trim(table_name))
-        tab% nv = atm_default_number_table_points
-        tab% lgTb_min = atm_default_lgTbmin
-        tab% lgTb_max = atm_default_lgTbmax
-        call do_generate_atm_table(prefix,grav,Plight,Pb,tab)
+        call do_generate_atm_table(prefix,Plight,Pb,tab)
         tab% is_loaded = .TRUE.
         
         if (.not.have_cache) then
@@ -43,24 +44,30 @@ contains
         end if
     end subroutine do_load_atm_table
     
-    subroutine do_generate_atm_table(prefix,grav,Plight,Pb,tab)
+    subroutine do_generate_atm_table(prefix,Plight,Pb,tab,ierr)
         use exceptions_lib
         use pcy97
         use bc09
-        use interp_1d_def
-        use interp_1d_lib
+        use interp_2d_lib_db, only: interp_mkbicub_db
+
+        implicit none
         character(len=*), intent(in) :: prefix
-        real(dp), intent(in) :: grav,Plight,Pb
+        real(dp), intent(in) :: Plight,Pb
         type(atm_table_type), pointer :: tab
-        real(dp), dimension(:), pointer :: work=>null()
+        integer, intent(out) :: ierr
+        real(dp), dimension(:), pointer :: ftab => null()
+        character(len=*), parameter :: this_routine = 'do_generate_atm_table'
+        integer, parameter :: not_a_know = 0
         real(dp), pointer, dimension(:,:) :: lgTeff_val, lgflux_val
         real(dp) :: lgTbmin, delta_lgTb, lgTeffmin, delta_lgTeff
         integer :: N, i, ierr
         real(dp), dimension(:), allocatable :: lgTeff, lgflux, lgTb
-        type(assertion) :: prefix_okay=assertion(scope='do_generate_atm_table', &
+        type(assertion) :: prefix_okay=assertion(scope=this_routine, &
         &   message='atmosphere prefix is okay')
-        type(assertion) :: atm_model_made=assertion(scope='do_generate_atm_table', &
+        type(assertion) :: atm_model_made=assertion(scope=this_routine, &
         &   message='successfully generated atmosphere model')
+
+        tab => atm_table
 
         N = tab% nv
         allocate(lgTeff(N),lgflux(N),lgTb(N))
@@ -84,6 +91,8 @@ contains
             case default
             call prefix_okay% assert(.FALSE.)
         end select 
+
+        workspace(1,:,:) = tab% lgTeff
 
         call do_allocate_atm_table(tab, N, ierr)
         lgTeff_val(1:4,1:N) => tab% lgTeff(1:4*N)
@@ -168,28 +177,29 @@ contains
         tab% nv = n
     end subroutine do_allocate_atm_table
     
-    subroutine generate_atm_filename(prefix,grav,Plight,Pb,filename)
-        ! naming convention for flies is prefix_gggg_pppp_bbbb
-        ! where gggg = 100*log10(g), pppp = 100*log10(Plight), 
-        ! and bbbb = 100*log10(Pb), to 4 significant digits
+    function atm_filename(prefix,Plight,Pb,filename) result(filename)
+        ! naming convention for flies is prefix_pppp_bbbb
+        ! where pppp = 100*log10(Plight) and bbbb = 100*log10(Pb)
+        ! to 4 significant digits
         character(len=*), intent(in) :: prefix
-        real(dp), intent(in) :: grav,Plight,Pb
-        character(len=atm_filename_length), intent(out) :: filename
+        real(dp), intent(in) :: Plight,Pb
+        character(len=atm_filename_length) :: filename
         
-        write (filename,'(a,3("_",i0.4))') trim(prefix), &
-                & int(100.0*log10(grav)), int(100.0*log10(Plight)), int(100.0*log10(Pb))
-    end subroutine generate_atm_filename
+        write (filename,'(a,2("_",i0.4))') trim(prefix), &
+                & int(100.0*log10(Plight)), int(100.0*log10(Pb))
+    end function atm_filename
+    
+    subroutine do_set_atm_table_limits(tab)
+        type(atm_table_type), pointer :: tab
+        
+        tab% Tb_min = exp10(minval(tab% lgTb))
+        tab% Tb_max = exp10(maxval(tab% lgTb))
+        tab% grav_min = exp10(minval(tab% lggrav))
+        tab% grav_max = exp10(maxval(tab% lggrav))
+    end subroutine do_set_atm_table_limits
 
     subroutine do_free_atm_table(tab)
         type(atm_table_type), pointer :: tab
-        tab% nv = 0
-        tab% lgTb_min = 0.0
-        tab% lgTb_max = 0.0
-        if (allocated(tab% lgTb)) deallocate(tab% lgTb)
-        if (associated(tab% lgTeff)) deallocate(tab% lgTeff)
-        if (associated(tab% lgflux)) deallocate(tab% lgflux)
-        nullify(tab% lgTeff)
-        nullify(tab% lgflux)
         tab% is_loaded = .FALSE.
     end subroutine do_free_atm_table
 end module dStar_atm_mod
