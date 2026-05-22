@@ -3,7 +3,7 @@ include $(MESA_DIR)/utils/makefile_header
 DSTAR_LIB_DIR = ../../../lib
 DSTAR_INC = ../../../include
 LOAD_LOCAL = -L$(LOCAL_LIB_DIR) -lsuperfluid
-LOAD_OTHER = -L$(DSTAR_LIB_DIR) -lconstants -lexceptions -L$(MESA_LIB_DIR) -linterp_1d -lconst -lutils
+LOAD_OTHER = -L$(DSTAR_LIB_DIR) -lconstants -lexceptions -L$(MESA_LIB_DIR) $(LOAD_MESA_NUMERICS)
 
 TEST = tester
 TEST_OBJS = test_sf.o

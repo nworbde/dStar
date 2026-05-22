@@ -41,6 +41,8 @@ module bc09
     logical, parameter :: dbg = .FALSE.
     
 contains
+
+    include 'num_solout.dek'
     
     subroutine do_get_bc09_Teff(grav, Plight, Pb, lgTb, lgTeff, lgflux, ierr)
         use math_lib
@@ -366,7 +368,7 @@ contains
             return
         end if
 
-        lnrho_ph = safe_root_with_initial_guess(photosphere,lnrho_guess,lnrho1,lnrho3,ph1,ph3, &
+        lnrho_ph = safe_root(photosphere,lnrho1,lnrho3,ph1,ph3, &
             &   maximum_iterations,eps_lnrho,eps_ph,lrpar,rpar,lipar,ipar,ierr)
 
         if (converged_density% raised(ierr)) then
@@ -619,7 +621,7 @@ contains
         use constants_def
         use nucchem_def, only: composition_info_type
         use dStar_eos_lib
-        use num_lib, only: look_for_brackets, safe_root_with_initial_guess
+        use num_lib, only: look_for_brackets, safe_root
         real(dp), intent(in) :: P
         real(dp), intent(in) :: T
         real(dp), intent(in) :: lnrho_guess
@@ -658,7 +660,7 @@ contains
         &   lrpar, rpar, lipar, ipar, ierr)
         if (bracket_density% raised(ierr)) return
         
-        lnrho = safe_root_with_initial_guess(eval_pressure,lnrho_guess,lnrho1,lnrho3,p1,p3, &
+        lnrho = safe_root(eval_pressure,lnrho1,lnrho3,p1,p3, &
             &   maximum_iterations,eps_rho,eps_p,lrpar,rpar,lipar,ipar,ierr)
 
         if (converged_density% raised(ierr)) then

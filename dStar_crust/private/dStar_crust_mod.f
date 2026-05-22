@@ -357,7 +357,7 @@ contains
                 cycle
             end if
             
-            lgRho(i) = safe_root_with_initial_guess(match_density,lgRho_guess,x1,x3,y1,y3, &
+            lgRho(i) = safe_root(match_density,x1,x3,y1,y3, &
             &   imax,epsx,epsy,lrpar,rpar,lipar,ipar,ierr)
             if (rootfind_error% raised(ierr)) then
                 write(error_message,'(a,5f0.3)') &

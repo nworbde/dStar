@@ -71,8 +71,8 @@ program test_cond
 
     contains
     subroutine do_one(rho)
-		use superfluid_def, only: max_number_sf_types, neutron_1S0
-		use superfluid_lib
+        use superfluid_def, only: max_number_sf_types, neutron_1S0
+        use superfluid_lib
         real(dp), intent(in) :: rho
         real(dp) :: Gamma,eta,f,u,p,s,cv,chi_rho,chi_T
         integer :: phase
@@ -80,7 +80,7 @@ program test_cond
         type(conductivity_components) :: kappa
         type(crust_eos_component), dimension(num_crust_eos_components) :: eos_components
         integer :: ii
-		real(dp), dimension(max_number_sf_types) :: Tcs
+        real(dp), dimension(max_number_sf_types) :: Tcs
         
         ! for checking superfluid reduction/turn-on of phonon cond.
         Tcs = 1.0e8_dp

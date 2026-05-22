@@ -17,9 +17,9 @@ contains
         type(NScool_info), pointer :: s
         integer, intent(out) :: ierr
         character(len=*), parameter :: this_routine = 'do_load_epochs'
-        character(len=256) :: buffer, string
+        character(len=256) :: buffer, string, bad_line_msg
         integer :: file_id, t, n, i, m, i0, i1
-        integer :: lines_read,iostat,this_line,epoch_length,n_cycles
+        integer :: lines_read,iostat,this_line,epoch_length,n_cycles,bad_lines
         integer :: col_time, col_Mdot
         real(dp) :: delta_t
         real(dp), dimension(:,:), allocatable :: in_array
@@ -111,12 +111,19 @@ contains
         if (allocation_error% raised(ierr)) return
         
         lines_read = 0
+        bad_lines = 0
         read_table: do
             this_line = lines_read+1
             read(file_id,*,iostat=ierr) in_array(:,this_line)
             if (ierr == IOSTAT_END) then
                 ierr = 0
                 exit
+            else if (ierr /= 0) then
+                ! bad line, issue warning and skip
+                write(bad_line_msg,'(a,tr1,i0,tr1,a)') 'unable to read line',this_line+bad_lines,'of data; skipping'
+                call bad_token% report(bad_line_msg)
+                bad_lines = bad_lines+1
+                cycle
             end if
             lines_read = this_line
             if (this_line == size(in_array,dim=2)) then

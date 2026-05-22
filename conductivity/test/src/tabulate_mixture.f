@@ -5,8 +5,8 @@ program tabulate_mixture
     use constants_lib
     use nucchem_def
     use nucchem_lib
-	use superfluid_def, only: max_number_sf_types, neutron_1S0
-	use superfluid_lib
+    use superfluid_def, only: max_number_sf_types, neutron_1S0
+    use superfluid_lib
     use dStar_eos_lib
     use conductivity_lib
     use PPP_electron

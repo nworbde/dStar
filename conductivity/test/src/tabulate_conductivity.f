@@ -5,8 +5,8 @@ program tabulate_conductivity
     use constants_lib
     use nucchem_def
     use nucchem_lib
-	use superfluid_def, only: max_number_sf_types, neutron_1S0
-	use superfluid_lib
+    use superfluid_def, only: max_number_sf_types, neutron_1S0
+    use superfluid_lib
     use dStar_eos_lib
     use conductivity_lib
     use PPP_electron
@@ -50,20 +50,19 @@ program tabulate_conductivity
 
     ! for error checking
     integer :: ierr
-    type(assertion) :: check_okay=assertion(scope='main')
     character(len=64) :: progname
+    type(assertion) :: check_okay=assertion(scope='main')
+    type(failure) :: bad_inputs = failure(scope='main')
+    
     ! miscellaneous
     integer :: i,j,k
     real(dp) :: rho,T,K_e,eta,mu_e
     
-    ! get user inputs
-    if (command_argument_count() /= 2) then
-        call get_command_argument(0,progname)
-        stop 'Usage: '//trim(progname)//' <path/of/dStar/directory> <species>'
-    end if
-    call get_command_argument(1,datadir)
-    call get_command_argument(2,nuclide)
-    
+    ierr = 0
+    call get_user_inputs(ierr)
+    if (bad_inputs% raised(ierr, &
+        'Usage: '//trim(progname)//' <path/of/dStar/directory> <species>')) stop
+   
     ! turn off all status messages except for warnings and failures
     call set_verbosity(1)
     
@@ -145,6 +144,18 @@ program tabulate_conductivity
     call nucchem_shutdown
     
 contains
+    subroutine get_user_inputs(ierr)
+        integer, intent(out) :: ierr
+        ierr = 0
+        call get_command_argument(0,progname)
+        if (command_argument_count() /= 2) then
+            ierr = -1
+            return
+        end if
+        call get_command_argument(1,datadir)
+        call get_command_argument(2,nuclide)
+    end subroutine get_user_inputs
+
     subroutine interpolate_conductivity(cond_handle,rho,T, &
         &   chi, Gamma, eta, mu_e, ionic, Tcn, K_e)
         integer, intent(in) :: cond_handle
