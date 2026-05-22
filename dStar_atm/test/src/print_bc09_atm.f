@@ -6,14 +6,14 @@ program print_bc09_atm
     use nucchem_lib
     use dStar_eos_lib
     use conductivity_lib
-	use dStar_atm_def
-	use dStar_atm_lib
+    use dStar_atm_def
+    use dStar_atm_lib
     use bc09
-	
+    
     character(len=*), parameter :: datadir = '../../data'
     real(dp), parameter :: grav = 2.43e14_dp, Pb = 1.0e27_dp, Plight = 1.0e8_dp*grav, lgTeff = 5.3_dp
     logical, parameter :: print_atm = .TRUE.
-	integer :: ierr,i
+    integer :: ierr,i
     integer :: eos_handle, cond_handle
     real(dp) :: lgyb, lgy_light, rho_ph, lgTb
     type(failure) :: integration_failure=failure(scope='print_bc09_atm', &
@@ -68,15 +68,15 @@ program print_bc09_atm
 
 contains
     
-	subroutine check_okay(msg,ierr)
-		use iso_fortran_env, only : error_unit
-		character(len=*), intent(in) :: msg
-		integer, intent(inout) :: ierr
-		if (ierr /= 0) then
-			write (error_unit,*) trim(msg)//': ierr = ',ierr
-			if (ierr < 0) stop
-		end if
-	end subroutine check_okay
+    subroutine check_okay(msg,ierr)
+        use iso_fortran_env, only : error_unit
+        character(len=*), intent(in) :: msg
+        integer, intent(inout) :: ierr
+        if (ierr /= 0) then
+            write (error_unit,*) trim(msg)//': ierr = ',ierr
+            if (ierr < 0) stop
+        end if
+    end subroutine check_okay
 
 end program print_bc09_atm
 
