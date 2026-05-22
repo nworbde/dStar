@@ -58,10 +58,10 @@ program test_NScool
     write (output_unit,'(/,/,a,i3)') 'test_NScool exited with ierr = ',ierr
     
 contains
-	subroutine check_okay(msg,ierr)
+    subroutine check_okay(msg,ierr)
         use exceptions_lib
-		character(len=*), intent(in) :: msg
-		integer, intent(inout) :: ierr
+        character(len=*), intent(in) :: msg
+        integer, intent(inout) :: ierr
         type(assertion) :: all_good=assertion(scope='main')
         type(alert) :: okay=alert(scope='main')
         call all_good% set_message(trim(msg))
@@ -69,5 +69,5 @@ contains
         
         call all_good% assert(ierr==0)
         call okay% report
-	end subroutine check_okay
+    end subroutine check_okay
 end program test_NScool

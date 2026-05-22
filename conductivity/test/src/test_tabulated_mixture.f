@@ -5,8 +5,8 @@ program test_tabulated_mixture
     use constants_lib
     use nucchem_def
     use nucchem_lib
-	use superfluid_def, only: max_number_sf_types, neutron_1S0
-	use superfluid_lib
+    use superfluid_def, only: max_number_sf_types, neutron_1S0
+    use superfluid_lib
     use dStar_eos_lib
     use conductivity_lib
     use PPP_electron
@@ -33,7 +33,7 @@ program test_tabulated_mixture
     type(conductivity_components) :: kappa
     type(crust_eos_component), dimension(num_crust_eos_components) :: eos_components
     integer :: phase
-	real(dp), dimension(max_number_sf_types) :: Tcs
+    real(dp), dimension(max_number_sf_types) :: Tcs
     character(len=iso_name_length) :: name(2)
     type(assertion) :: check_okay=assertion(scope='main')
     real(dp), dimension(Nrho,NT,NX) :: diff
