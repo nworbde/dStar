@@ -67,10 +67,10 @@ program analyze_crust
 
     ierr = 0
     call read_composition_cache(composition_filename,N,Nisos,isos,lgP,Y,ierr)
-    if (read_composition_error% raised(ierr)) return
+    if (read_composition_error% raised(ierr)) stop 1
     
     allocate(lgRho(N), lgEps(N), Yion(Nisos,N), ion_info(N), indcs(Nisos), charged_ids(Nisos), stat=ierr)
-    if (allocation_error% raised(ierr,'unable to allocate storage')) return
+    if (allocation_error% raised(ierr,'unable to allocate storage')) stop 1
     ! set up markers for the nuclei
     indcs = [(get_nuclide_index(adjustl(isos(i))),i=1,Nisos)]
 
