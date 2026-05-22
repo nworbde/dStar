@@ -8,6 +8,9 @@ module neutron_conductivity
     real(dp), parameter, private :: int_default_starting_step = 1.0e-10_dp
     
 contains
+    
+    ! workaround since null_solout is not public in MESA
+    include 'num_solout.dek'
 
     function sPh(nn, nion, temperature, ionic)
         ! neutron superfluid phonon conductivity
@@ -149,7 +152,7 @@ contains
         call dop853(num_integration_variables, &
         &   structure_factor_impurity,kn_start,y,kn_end,h, &
         &   int_default_max_step_size,int_default_max_steps, &
-        &   rtol,atol,itol, null_solout, iout, work, lwork, iwork, liwork,  &
+        &   rtol,atol,itol, solout, iout, work, lwork, iwork, liwork,  &
         &   num_rpar, rpar, num_ipar, ipar, lout, idid)
 
         if (idid < 0) then
@@ -255,7 +258,7 @@ contains
         call dop853(num_integration_variables, &
         &   structure_factor_phonon,kn_start,y,kn_end,h, &
         &   int_default_max_step_size,int_default_max_steps, &
-        &   rtol,atol,itol, null_solout, iout, work, lwork, iwork, liwork,  &
+        &   rtol,atol,itol, solout, iout, work, lwork, iwork, liwork,  &
         &   num_rpar, rpar, num_ipar, ipar, lout, idid)
     
         if (idid < 0) then
