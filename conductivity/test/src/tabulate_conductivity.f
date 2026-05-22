@@ -5,8 +5,8 @@ program tabulate_conductivity
     use constants_lib
     use nucchem_def
     use nucchem_lib
-	use superfluid_def, only: max_number_sf_types, neutron_1S0
-	use superfluid_lib
+    use superfluid_def, only: max_number_sf_types, neutron_1S0
+    use superfluid_lib
     use dStar_eos_lib
     use conductivity_lib
     use PPP_electron
@@ -59,7 +59,8 @@ program tabulate_conductivity
     ! get user inputs
     if (command_argument_count() /= 2) then
         call get_command_argument(0,progname)
-        stop 'Usage: '//trim(progname)//' <path/of/dStar/directory> <species>'
+        write (*,*) 'Usage: '//trim(progname)//' <path/of/dStar/directory> <species>'
+        stop
     end if
     call get_command_argument(1,datadir)
     call get_command_argument(2,nuclide)
